@@ -1,7 +1,8 @@
 """
 Ryan Poliquin, started on 1/27/2025
 This code contains all definitions required to control Speck. It is broken into the basic objects that
-need to be controlled. These classes are combined into the top level class, Speck.
+need to be controlled. These classes are combined into the top level class, Speck. All pins are defined at the beginning
+of the code so that they may be modified for different implementations.
 _______________________________________________________________________________________________________________________
 Classes:
     Speck: The object representing Speck as a whole. All commands should be sent to this object and handled by the
@@ -16,19 +17,33 @@ References:
     Python. (2025, January 8). Python 3.13.1 documentation. Retrieved from Python: https://docs.python.org/3/
     Geeks for Geeks. (2024, August 2). Python Docstrings. Retrieved from Geeks for Geeks: https://www.geeksforgeeks.org/python-docstrings/
     https://forums.raspberrypi.com/viewtopic.php?t=173157
-    https://stackoverflow.com/questions/8247605/configuring-so-that-pip-install-can-work-from-github 
+    https://stackoverflow.com/questions/8247605/configuring-so-that-pip-install-can-work-from-github
+    https://gpiozero.readthedocs.io/en/latest/
 """
 # __________Import Statements__________
 import numpy as np
-from gpiozero import Servo
+from gpiozero import AngularServo
 import subprocess
+
+# __________Pin Definition__________
+PIN_LF_HIP_LAT = 1
+PIN_RF_HIP_LAT = 2
+PIN_LB_HIP_LAT = 3
+PIN_RB_HIP_LAT = 4
+PIN_LF_HIP_LONG = 1
+PIN_RF_HIP_LONG = 2
+PIN_LB_HIP_LONG = 3
+PIN_RB_HIP_LONG = 4
+PIN_LF_KNEE = 1
+PIN_RF_KNEE = 2
+PIN_LB_KNEE = 3
+PIN_RB_KNEE = 4
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
 # True = available; False = unavailable
-AvailablePins = np.array(40)
-for i in AvailablePins: # set all pins as to true to start
-    AvailablePins[i] = True
+AvailablePins = np.ones(40)
+
 
 # __________Class Definitions__________
 class Joint:
@@ -41,7 +56,7 @@ class Joint:
     :param self.current_angle: int: the angle that the joint is currently at
     """
 
-    def __init__(self, pin:int, min_angle=0, max_angle=180, starting_angle=0):
+    def __init__(self, pin: int, min_angle=0, max_angle=180, starting_angle=0):
         """
         Constructor for the Joint class.
         
@@ -50,17 +65,16 @@ class Joint:
         :param max_angle: int: the maximum angle that the joint can be set to
         :param starting_angle: int: the angle to set the joint to on startup
         """
-        if AvailablePins[pin]:  # If the pin is available, set it up and mark it as used
+        if AvailablePins[pin - 1] == 1:  # If the pin is available, set it up and mark it as used
             self.pin = pin
-            AvailablePins[pin] = False
-
-        # TODO: setup pin for analog PWM output
+            AvailablePins[pin - 1] = 0
         self.min_angle = min_angle
         self.max_angle = max_angle
         self.current_angle = starting_angle
+        self.servo = AngularServo(self.pin, min_angle=self.min_angle, max_angle=self.max_angle)
         self.set_angle(starting_angle)  # properly set the starting angle of the joint
 
-    def set_angle(self, angle:int):
+    def set_angle(self, angle: int):
         """
         A function used to set the angle of the joint.
 
@@ -70,12 +84,13 @@ class Joint:
         # check to make sure the requested angle is within the range of the joint
         if angle <= self.max_angle & angle >= self.min_angle:
             self.current_angle = angle  # update the current angle of the joint to the required angle
+            self.servo.angle = angle  # set the angle of the servo
         else:
             raise RuntimeError("The given angle was out of the joint's range " + str(self.min_angle))
             pass
         return None
 
-    def change_angle(self, change_in_angle:int):
+    def change_angle(self, change_in_angle: int):
         """
         A function used to change the angle of the joint.
 
@@ -96,29 +111,29 @@ class Leg:
     :param self.knee: Joint: a Joint object representing the knee joint
     """
 
-    def __init__(self, hip_lat_pin:int, hip_long_pin:int, knee_pin:int):
+    def __init__(self, hip_lat_pin: int, hip_long_pin: int, knee_pin: int):
         """
         Constructor for the Leg class.
         """
         # check to make sure all given pins are available. Raise an error if the pin is unavailable. Set the pins to taken
-        if AvailablePins[hip_lat_pin]:
+        if AvailablePins[hip_lat_pin-1] == 1:
             self.hip_lat = Joint(hip_lat_pin, starting_angle=0)
-            AvailablePins[hip_lat_pin] = False
+            AvailablePins[hip_lat_pin-1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
 
-        if AvailablePins[hip_long_pin]:
+        if AvailablePins[hip_long_pin-1] == 1:
             self.hip_long = Joint(hip_long_pin, starting_angle=0)
-            AvailablePins[hip_long_pin] = False
+            AvailablePins[hip_long_pin-1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_long_pin) + " is not available to use for the longitudinal hip joint.")
 
-        if AvailablePins[knee_pin]:
+        if AvailablePins[knee_pin-1] == 1:
             self.knee = Joint(knee_pin, starting_angle=0)
-            AvailablePins[knee_pin] = False
+            AvailablePins[knee_pin-1] = 0
         else:
             raise RuntimeError("Pin " + str(knee_pin) + " is not available for the knee joint")
-        self.current_position = {0,0,0}
+        self.current_position = {0, 0, 0}
 
     def set_position(self, x, y, z):
         """
@@ -164,7 +179,7 @@ class ObjectDetector:
     :param pin: int: the GPIO pin that the sensor is connected to
     """
 
-    def __init__(self, pin:int):
+    def __init__(self, pin: int):
         self.pin = pin
         self.value = int
 
@@ -183,10 +198,10 @@ class Speck:
         """
         Constructor for the Speck Class. Used to initialize Speck
         """
-        self.rf_leg = Leg(1,2,3)
-        self.lf_leg = Leg(4,5,6)
-        self.rb_leg = Leg(7,8,9)
-        self.lb_leg = Leg(10,11,12)
+        self.rf_leg = Leg(1, 2, 3)
+        self.lf_leg = Leg(4, 5, 6)
+        self.rb_leg = Leg(7, 8, 9)
+        self.lb_leg = Leg(10, 11, 12)
         self.ObjectSensors = {ObjectDetector(13), ObjectDetector(14), ObjectDetector(15)}
 
     def step(self):
@@ -207,19 +222,33 @@ class Speck:
         self.lb_leg.set_position()
         self.rb_leg.set_position()
 
+    def upgrade(self):
+        successful = False
+        wifi_ip = subprocess.check_output(['hostname', '-I'])
+        if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
+            subprocess.run(['sudo', 'apt', 'update'])  # update the package list
+            subprocess.run(['sudo', 'apt', 'upgrade'])  # update the packages
+            subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # update pip
+            subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # update gpiozero
+            subprocess.run(['pip', 'install', '--upgrade', 'numpy'])  # update numpy
+            subprocess.run(['git', 'clone',
+                            'git@github.com:rpoliqui/Speck.git'])  # update Speck code: https://github.com/rpoliqui/Speck
+            subprocess.run(['cd', 'Speck'])  # change directory to Speck
+            subprocess.run(['pip', 'install', '-e', '.'])  # install the Speck code
+            successful = True  # Speck was successfully updated
+        else:  # Wi-Fi is not connected, Speck cannot be updated
+            print("Speck cannot be updated without a wifi connection.")
+        return successful
+
     def update(self):
         successful = False
         wifi_ip = subprocess.check_output(['hostname', '-I'])
-        if wifi_ip is not None: # Wifi is connected, so Speck can be updated
-            subprocess.run(['sudo', 'apt', 'update']) # update the package list
-            subprocess.run(['sudo', 'apt', 'upgrade']) # update the packages
-            subprocess.run(['pip', 'install', '--upgrade', 'pip']) # update pip
-            subprocess.run(['pip', 'install', '--upgrade', 'gpiozero']) # update gpiozero
-            subprocess.run(['pip', 'install', '--upgrade', 'numpy']) # update numpy
-            subprocess.run(['git', 'clone', 'git@github.com:rpoliqui/Speck.git']) # update Speck code: https://github.com/rpoliqui/Speck
-            subprocess.run(['cd', 'Speck']) # change directory to Speck
-            subprocess.run(['pip', 'install', '-e', '.']) # install the Speck code
-            successful = True # Speck was successfully updated
-        else: # wifi is not connected, Speck cannot be updated
-            print("Speck cannot be updated without a wifi connection.") 
+        if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updatedyrs
+            subprocess.run(['git', 'clone',
+                            'git@github.com:rpoliqui/Speck.git'])  # update Speck code: https://github.com/rpoliqui/Speck
+            subprocess.run(['pip', 'install', '-e', '.'])  # install the Speck code
+            successful = True  # Speck was successfully updated
+        else:  # Wi-Fi is not connected, Speck cannot be updated
+            print("Speck cannot be updated without a wifi connection.")
         return successful
+
