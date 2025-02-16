@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling","numpy","gpiozero","GitPython",]
+requires = ["hatchling","numpy","gpiozero","GitPython"]
 build-backend = "hatchling.build"
 [project]
 name = "Speck"
@@ -14,8 +14,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-license = "CC0 1.0 Universal"
-license-files = ["LICEN[CS]E*"]
+license = "CC0-1.0"
+license-files = ["LICENSE"]
+
 
 [project.urls]
 Homepage = "https://github.com/rpoliqui/Speck"
