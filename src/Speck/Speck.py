@@ -19,11 +19,17 @@ References:
     https://forums.raspberrypi.com/viewtopic.php?t=173157
     https://stackoverflow.com/questions/8247605/configuring-so-that-pip-install-can-work-from-github
     https://gpiozero.readthedocs.io/en/latest/
+    https://gitpython.readthedocs.io/en/stable/tutorial.html
+    https://packaging.python.org/en/latest/tutorials/packaging-projects/
 """
 # __________Import Statements__________
 import numpy as np
 from gpiozero import AngularServo
+from git import Repo
 import subprocess
+from gpiozero.pins.native import NativeFactory
+from gpiozero.pins.pigpio import PiGPIOFactory
+from gpiozero import Device
 
 # __________Pin Definition__________
 PIN_LF_HIP_LAT = 1
@@ -44,6 +50,8 @@ PIN_RB_KNEE = 4
 # True = available; False = unavailable
 AvailablePins = np.ones(40)
 
+# __________Environment Setup__________
+# Device.pin_factory = PiGPIOFactory #update the default pin factory for more accurate servo control
 
 # __________Class Definitions__________
 class Joint:
@@ -222,33 +230,21 @@ class Speck:
         self.lb_leg.set_position()
         self.rb_leg.set_position()
 
-    def upgrade(self):
+    def update(self, scope="ESSENTIAL"):
         successful = False
         wifi_ip = subprocess.check_output(['hostname', '-I'])
         if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
-            subprocess.run(['sudo', 'apt', 'update'])  # update the package list
-            subprocess.run(['sudo', 'apt', 'upgrade'])  # update the packages
-            subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # update pip
-            subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # update gpiozero
-            subprocess.run(['pip', 'install', '--upgrade', 'numpy'])  # update numpy
-            subprocess.run(['git', 'clone',
-                            'git@github.com:rpoliqui/Speck.git'])  # update Speck code: https://github.com/rpoliqui/Speck
-            subprocess.run(['cd', 'Speck'])  # change directory to Speck
-            subprocess.run(['pip', 'install', '-e', '.'])  # install the Speck code
-            successful = True  # Speck was successfully updated
+            if scope == "ESSENTIAL":
+                Repo.clone_from('https://github.com/rpoliqui/Speck/', '../..')
+                successful = True  # Speck was successfully updated
+            elif scope == "ALL":
+                subprocess.run(['sudo', 'apt', 'update'])  # update the package list
+                subprocess.run(['sudo', 'apt', 'upgrade'])  # update the packages
+                subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # update pip
+                subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # update gpiozero
+                subprocess.run(['pip', 'install', '--upgrade', 'numpy'])  # update numpy
+                subprocess.run(['pip', 'install', '--upgrade', 'GitPython'])
+                successful = True  # Speck was successfully updated
         else:  # Wi-Fi is not connected, Speck cannot be updated
             print("Speck cannot be updated without a wifi connection.")
         return successful
-
-    def update(self):
-        successful = False
-        wifi_ip = subprocess.check_output(['hostname', '-I'])
-        if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updatedyrs
-            subprocess.run(['git', 'clone',
-                            'git@github.com:rpoliqui/Speck.git'])  # update Speck code: https://github.com/rpoliqui/Speck
-            subprocess.run(['pip', 'install', '-e', '.'])  # install the Speck code
-            successful = True  # Speck was successfully updated
-        else:  # Wi-Fi is not connected, Speck cannot be updated
-            print("Speck cannot be updated without a wifi connection.")
-        return successful
-

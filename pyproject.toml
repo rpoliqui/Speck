@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling","numpy","gpiozero","GitPython","subprocess"]
+build-backend = "hatchling.build"
+[project]
+name = "Speck"
+version = "0.0.1"
+authors = [
+  { name="Ryan Poliquin", email="rpoliquin01@gmail.com" },
+]
+description = "Package designed to control the Speck Mini Cargo Quadruped Robot"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "CC0 1.0 Universal"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/rpoliqui/Speck"
