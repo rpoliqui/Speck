@@ -234,10 +234,18 @@ class Speck:
     def update(self, scope="ESSENTIAL"):
         successful = False
         target_dir = os.getcwd()
+        repo = Repo(target_dir)
         wifi_ip = subprocess.check_output(['hostname', '-I'])
         if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
             if scope == "ESSENTIAL":  # Only install updates from GitHub
-                Repo.clone_from('https://github.com/rpoliqui/Speck/', target_dir)  # clone into current directory
+                # Check if the repository already exists in the current directory
+                if os.path.isdir(os.path.join(target_dir, '.git')):
+                    # If it exists, pull the latest changes
+                    origin = repo.remotes.origin
+                    origin.pull()
+                else:
+                    # If the repository doesn't exist, clone it
+                    Repo.clone_from('https://github.com/rpoliqui/Speck/', target_dir)
                 subprocess.run(['pip', 'install', 'e', target_dir])  # install Speck package
                 successful = True  # Speck was successfully updated
             elif scope == "ALL":

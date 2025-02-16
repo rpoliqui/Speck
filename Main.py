@@ -1,4 +1,4 @@
-from src.Speck import Speck
+from Speck import Speck
 
 if __name__ == "__main__":
     speck = Speck()
