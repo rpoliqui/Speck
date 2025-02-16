@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling","numpy","gpiozero","GitPython","subprocess"]
+requires = ["hatchling","numpy","gpiozero","GitPython",]
 build-backend = "hatchling.build"
 [project]
 name = "Speck"

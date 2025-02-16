@@ -27,6 +27,7 @@ import numpy as np
 from gpiozero import AngularServo
 from git import Repo
 import subprocess
+import os
 from gpiozero.pins.native import NativeFactory
 from gpiozero.pins.pigpio import PiGPIOFactory
 from gpiozero import Device
@@ -232,10 +233,12 @@ class Speck:
 
     def update(self, scope="ESSENTIAL"):
         successful = False
+        target_dir = os.getcwd()
         wifi_ip = subprocess.check_output(['hostname', '-I'])
         if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
-            if scope == "ESSENTIAL":
-                Repo.clone_from('https://github.com/rpoliqui/Speck/', '../..')
+            if scope == "ESSENTIAL":  # Only install updates from GitHub
+                Repo.clone_from('https://github.com/rpoliqui/Speck/', target_dir)  # clone into current directory
+                subprocess.run(['pip', 'install', 'e', target_dir])  # install Speck package
                 successful = True  # Speck was successfully updated
             elif scope == "ALL":
                 subprocess.run(['sudo', 'apt', 'update'])  # update the package list
@@ -243,7 +246,7 @@ class Speck:
                 subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # update pip
                 subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # update gpiozero
                 subprocess.run(['pip', 'install', '--upgrade', 'numpy'])  # update numpy
-                subprocess.run(['pip', 'install', '--upgrade', 'GitPython'])
+                subprocess.run(['pip', 'install', '--upgrade', 'GitPython'])  # update GitPython
                 successful = True  # Speck was successfully updated
         else:  # Wi-Fi is not connected, Speck cannot be updated
             print("Speck cannot be updated without a wifi connection.")
