@@ -297,6 +297,7 @@ class Speck:
                 subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # Update pip
                 subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # Update gpiozero
                 subprocess.run(['pip', 'install', '--upgrade', 'numpy'])  # Update numpy
+            successful = True
         else:  # Wi-Fi is not connected, Speck cannot be updated
             print("Speck cannot be updated without a wifi connection.")
         return successful
