@@ -184,7 +184,7 @@ class Leg:
         lat_hip_angle = math.atan(z / y) + math.atan(math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2) / HIP_LENGTH)
         knee_angle = math.acos(
             (z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) / (
-                        -2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
+                    -2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
         long_hip_angle = math.atan(x / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2))) + math.asin(
             (LOWER_LEG_LENGTH * math.sin(knee_angle)) / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2)))
         # set all three servos to the calculated angles
@@ -260,30 +260,43 @@ class Speck:
         self.rb_leg.set_position(0, 0, 0)
 
     def update(self, scope="ESSENTIAL"):
+        """
+        A function used to pull the most updated Speck code from the GitHub repository and ensure the pi is up-to-date
+        and ready to function
+
+        :param scope:type String: Specify the scope of the upgrade. Default value is "ESSENTIAL" which only pulls from
+        the GitHub repository. If scope = "ALL", then the raspberry pi is updated, all python packages are updated, and
+        all code is pulled from the GitHub repository
+        :return:
+        """
         successful = False
-        target_dir = os.getcwd()
-        repo = Repo(target_dir)
-        wifi_ip = subprocess.check_output(['hostname', '-I'])
+        subprocess.run(['sudo', 'apt', 'install', '-y', 'git'])  # install git on the pi
+        target_dir = os.getcwd()  # define the directory where the repository will be stored
+        wifi_ip = subprocess.check_output(['hostname', '-I'])  # get IP address of pi
         if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
-            if scope == "ESSENTIAL":  # Only install updates from GitHub
-                # Check if the repository already exists in the current directory
+            # Check if the repository already exists in the target directory
+            if (scope == "ESSENTIAL") | (scope == "ALL"):
+                print(
+                    "\n\n_____________________________________________________________________________________________________")
+                print("Installing Speck from GitHub\n")
                 if os.path.isdir(os.path.join(target_dir, '.git')):
-                    # If it exists, pull the latest changes
-                    origin = repo.remotes.origin
-                    origin.pull()
+                    # Pull the latest changes from GitHub and merge changes
+                    subprocess.run(['git', '-C', target_dir, 'pull', 'origin', 'main', '--ff-only'])
                 else:
-                    # If the repository doesn't exist, clone it
-                    Repo.clone_from('https://github.com/rpoliqui/Speck/', target_dir)
-                subprocess.run(['pip', 'install', 'e', target_dir])  # install Speck package
-                successful = True  # Speck was successfully updated
-            elif scope == "ALL":
-                subprocess.run(['sudo', 'apt', 'update'])  # update the package list
-                subprocess.run(['sudo', 'apt', 'upgrade'])  # update the packages
-                subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # update pip
-                subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # update gpiozero
-                subprocess.run(['pip', 'install', '--upgrade', 'numpy'])  # update numpy
-                subprocess.run(['pip', 'install', '--upgrade', 'GitPython'])  # update GitPython
-                successful = True  # Speck was successfully updated
+                    # If the repository doesn't exist, clone the repository from GitHub
+                    subprocess.run(['git', 'clone', 'https://github.com/rpoliqui/Speck/', target_dir])
+            if (scope == "ALL"):
+                print(
+                    "\n\n_____________________________________________________________________________________________________")
+                print("Updating Raspberry Pi and All python packages\n")
+                subprocess.run(['sudo', 'apt', '-y', 'update'])  # Update the package list
+                subprocess.run(['sudo', 'apt', '-y', 'upgrade'])  # Update the packages
+                subprocess.run(['sudo', 'apt', '-y', 'autoremove'])  # remove any unnecessary packages from the pi
+                subprocess.run(['pip', 'install',
+                                'pyzmq==21.0.0'])  # Update pyzmq for messages, was throwing error of outdated version
+                subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # Update pip
+                subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # Update gpiozero
+                subprocess.run(['pip', 'install', '--upgrade', 'numpy'])  # Update numpy
         else:  # Wi-Fi is not connected, Speck cannot be updated
             print("Speck cannot be updated without a wifi connection.")
         return successful
