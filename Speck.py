@@ -67,7 +67,7 @@ LOWER_LEG_LENGTH = 125
 AvailablePins = np.ones(40)
 
 # __________Environment Setup__________
-Device.pin_factory = PiGPIOFactory()  # update the default pin factory for more accurate servo control
+factory = PiGPIOFactory()  # define pin factory to use servos for more accurate servo control
 
 
 # __________Class Definitions__________
@@ -93,10 +93,11 @@ class Joint:
         if AvailablePins[pin - 1] == 1:  # If the pin is available, set it up and mark it as used
             self.pin = pin
             AvailablePins[pin - 1] = 0
-        self.min_angle = min_angle
-        self.max_angle = max_angle
-        self.current_angle = starting_angle
-        self.servo = AngularServo(self.pin, min_angle=self.min_angle, max_angle=self.max_angle)
+        self.min_angle = min_angle  # define min angle
+        self.max_angle = max_angle  # define max angle
+        self.current_angle = starting_angle  # set the starting angle
+        # create servo object to control physical servo object
+        self.servo = AngularServo(self.pin, min_angle=self.min_angle, max_angle=self.max_angle, pin_factory=factory)
         self.set_angle(starting_angle)  # properly set the starting angle of the joint
 
     def set_angle(self, angle: float):
