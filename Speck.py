@@ -67,7 +67,7 @@ LOWER_LEG_LENGTH = 125
 AvailablePins = np.ones(40)
 
 # __________Environment Setup__________
-Device.pin_factory = PiGPIOFactory  # update the default pin factory for more accurate servo control
+Device.pin_factory = PiGPIOFactory()  # update the default pin factory for more accurate servo control
 
 
 # __________Class Definitions__________
