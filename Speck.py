@@ -25,6 +25,7 @@ References:
     https://stackoverflow.com/questions/66054625/pyinstaller-error-running-script-with-pyzmq-dependency
     https://git-scm.com/docs/git-pull
     https://docs.python.org/3/library/math.html
+    https://github.com/lifeparticle/Markdown-Cheatsheet
 """
 # __________Import Statements__________
 import numpy as np
