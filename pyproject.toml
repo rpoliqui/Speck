@@ -3,7 +3,7 @@ requires = ["hatchling","numpy","gpiozero","GitPython"]
 build-backend = "hatchling.build"
 [project]
 name = "Speck"
-version = "0.0.1"
+version = "0.0.0"
 authors = [
   { name="Ryan Poliquin", email="rpoliquin01@gmail.com" },
 ]

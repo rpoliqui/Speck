@@ -8,7 +8,7 @@ Classes:
     Speck: The object representing Speck as a whole. All commands should be sent to this object and handled by the
            corresponding objects
     Joint: A single servo joint. Defined by the minimum and maximum the angles can move to and the starting angle of the joint
-    Leg: A combination of several joints that form a leg
+    Leg: A combination of three joints that form a leg
     ObjectDetector: A single infrared avoidance sensor used to get information about Speck's surroundings
 Global Variables:
     AvailablePins: a boolean array used to keep track of what pins are available. True = available, False = unavailable
@@ -24,12 +24,14 @@ References:
     https://projects.raspberrypi.org/en/projects/getting-started-with-git/0
     https://stackoverflow.com/questions/66054625/pyinstaller-error-running-script-with-pyzmq-dependency
     https://git-scm.com/docs/git-pull
+    https://docs.python.org/3/library/math.html
 """
 # __________Import Statements__________
 import numpy as np
 from gpiozero import AngularServo
 import subprocess
 import os
+import math
 from gpiozero.pins.native import NativeFactory
 from gpiozero.pins.pigpio import PiGPIOFactory
 from gpiozero import Device
@@ -53,7 +55,12 @@ PIN_RB_KNEE = 12
 
 # Object Sensor Pins
 
-# Limit Switch Pins
+# Limit Switch
+
+# __________System Constants__________
+HIP_LENGTH = 10
+UPPER_LEG_LENGTH = 117
+LOWER_LEG_LENGTH = 125
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
@@ -160,7 +167,7 @@ class Leg:
             AvailablePins[knee_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(knee_pin) + " is not available for the knee joint")
-        self.current_position = self.calc_position()
+        self.current_position = [0, 0, 0]  # assume robot starts at origin until the position of the joints is set.
 
     def set_position(self, x: int, y: int, z: int):
         """
@@ -173,32 +180,29 @@ class Leg:
         :return: None
         """
         self.current_position = {x, y, z}  # update the parameter storing the current position
-
-
-
+        # calculate all three joint angles using inverse kinematics
+        lat_hip_angle = math.atan(z / y) + math.atan(math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2) / HIP_LENGTH)
+        knee_angle = math.acos(
+            (z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) / (
+                        -2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
+        long_hip_angle = math.atan(x / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2))) + math.asin(
+            (LOWER_LEG_LENGTH * math.sin(knee_angle)) / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2)))
+        # set all three servos to the calculated angles
+        self.hip_lat.set_angle(math.degrees(lat_hip_angle))
+        self.hip_long.set_angle(math.degrees(long_hip_angle))
+        self.knee.set_angle(math.degrees(knee_angle))
         return None
 
-    def calc_position(self):
-        """
-        A function used to get the current position of the foot of the leg based on the joint angles.
-
-        :return: an array containing the current location of the foot in the form {x, y, z} based on the current angles of the servo
-        """
-        # :TODO perform trig calculations to determine leg position based on joint angles
-        x = 0
-        y = 0
-        z = 0
-        return {x, y, z}
-
-    def move(self, x, y, z):
+    def move(self, dx, dy, dz):
         """
         A function to change, or move, the position of the foot. The given position is relative to the current position.
 
-        :param x:
-        :param y:
-        :param z:
+        :argument dx:type int: the distance in millimeters to change the x position by
+        :argument dy:type int: the distance in millimeters to change the y position by
+        :argument dz:type int:  the distance in millimeters to change the z position by
         :return: None
         """
+        self.set_position(self.current_position[0] + dx, self.current_position[1] + dy, self.current_position[2] + dz)
         return None
 
     pass
@@ -230,10 +234,11 @@ class Speck:
         """
         Constructor for the Speck Class. Used to initialize Speck
         """
-        self.rf_leg = Leg(1, 2, 3)
-        self.lf_leg = Leg(4, 5, 6)
-        self.rb_leg = Leg(7, 8, 9)
-        self.lb_leg = Leg(10, 11, 12)
+        #
+        self.rf_leg = Leg(PIN_RF_HIP_LAT, PIN_RF_HIP_LONG, PIN_RF_KNEE)
+        self.lf_leg = Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE)
+        self.rb_leg = Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE)
+        self.lb_leg = Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE)
         self.ObjectSensors = {ObjectDetector(13), ObjectDetector(14), ObjectDetector(15)}
 
     def step(self):
@@ -243,16 +248,16 @@ class Speck:
         """
         Function used to set Speck
         """
-        self.lf_leg.set_position()
-        self.rf_leg.set_position()
-        self.lb_leg.set_position()
-        self.rb_leg.set_position()
+        self.lf_leg.set_position(0, 100, 0)
+        self.rf_leg.set_position(0, 100, 0)
+        self.lb_leg.set_position(0, 100, 0)
+        self.rb_leg.set_position(0, 100, 0)
 
     def sit(self):
-        self.lf_leg.set_position()
-        self.rf_leg.set_position()
-        self.lb_leg.set_position()
-        self.rb_leg.set_position()
+        self.lf_leg.set_position(0, 0, 0)
+        self.rf_leg.set_position(0, 0, 0)
+        self.lb_leg.set_position(0, 0, 0)
+        self.rb_leg.set_position(0, 0, 0)
 
     def update(self, scope="ESSENTIAL"):
         successful = False
