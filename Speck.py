@@ -32,7 +32,7 @@ from gpiozero import AngularServo
 import subprocess
 import os
 import math
-from gpiozero.pins.rpigpio import RPiGPIOFactory
+from gpiozero.pins.pigpio import PiGPIOFactory
 from gpiozero import Device
 
 # __________Pin Definition__________
@@ -67,7 +67,7 @@ LOWER_LEG_LENGTH = 125
 AvailablePins = np.ones(40)
 
 # __________Environment Setup__________
-Device.pin_factory = RPiGPIOFactory  # update the default pin factory for more accurate servo control
+Device.pin_factory = PiGPIOFactory  # update the default pin factory for more accurate servo control
 
 
 # __________Class Definitions__________
