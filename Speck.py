@@ -290,7 +290,10 @@ class Speck:
                 print("Updating Raspberry Pi and All python packages\n")
                 subprocess.run(['sudo', 'apt', '-y', 'update'])  # Update the package list
                 subprocess.run(['sudo', 'apt', '-y', 'upgrade'])  # Update the packages
-                subprocess.run(['sudo', 'apt', '-y', 'autoremove'])  # remove any unnecessary packages from the pi
+                subprocess.run(['sudo', 'apt', '-y', 'autoremove'])  # Remove any unnecessary packages from the pi
+                subprocess.run(['sudo', 'apt', 'install', 'pigpio'])  # Install pigpio for improved pin control
+                subprocess.run(['sudo', 'systemctl', 'enable', 'pigpiod'])  # Enable the daemon to run at time of boot
+                subprocess.run(['sudo', 'systemctl', 'start', 'pigpiod'])  # Start the daemon now to prevent rebooting
                 subprocess.run(['pip', 'install',
                                 'pyzmq==21.0.0'])  # Update pyzmq for messages, was throwing error of outdated version
                 subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # Update pip

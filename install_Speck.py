@@ -2,7 +2,9 @@ import os
 import subprocess
 
 subprocess.run(['sudo', 'apt', 'install', '-y', 'git'])  # install git on the pi
-target_dir = os.getcwd()+"/Speck"  # define the directory where the repository will be stored
+target_dir = os.getcwd()  # define the directory where the repository will be stored, assume this will be the current directory
+if os.path.isdir(os.path.join(target_dir, 'Speck')):  # if the directory already has a Speck sub folder
+    target_dir = target_dir + "/Speck"  # set this subfolder as the target directory
 wifi_ip = subprocess.check_output(['hostname', '-I'])  # get IP address of pi
 if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
     # Check if the repository already exists in the target directory
@@ -18,7 +20,10 @@ if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
     print("Updating Raspberry Pi and All python packages\n")
     subprocess.run(['sudo', 'apt', '-y', 'update'])  # Update the package list
     subprocess.run(['sudo', 'apt', '-y', 'upgrade'])  # Update the packages
-    subprocess.run(['sudo', 'apt', '-y', 'autoremove'])  # remove any unnecessary packages from the pi
+    subprocess.run(['sudo', 'apt', '-y', 'autoremove'])  # Remove any unnecessary packages from the pi
+    subprocess.run(['sudo', 'apt', 'install', 'pigpio'])  # Install pigpio for improved pin control
+    subprocess.run(['sudo', 'systemctl', 'enable', 'pigpiod'])  # Enable the daemon to run at time of boot
+    subprocess.run(['sudo', 'systemctl', 'start', 'pigpiod'])  # Start the daemon now to prevent rebooting
     subprocess.run(['pip', 'install', 'pyzmq==21.0.0'])  # Update pyzmq for messages, was throwing error of outdated version
     subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # Update pip
     subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # Update gpiozero
