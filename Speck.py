@@ -33,22 +33,21 @@ import subprocess
 import os
 import math
 from gpiozero.pins.pigpio import PiGPIOFactory
-from gpiozero import Device
 
 # __________Pin Definition__________
 # Joint Pins
-PIN_LF_HIP_LAT = 1
-PIN_RF_HIP_LAT = 2
-PIN_LB_HIP_LAT = 3
-PIN_RB_HIP_LAT = 4
-PIN_LF_HIP_LONG = 5
-PIN_RF_HIP_LONG = 6
-PIN_LB_HIP_LONG = 7
-PIN_RB_HIP_LONG = 8
-PIN_LF_KNEE = 9
-PIN_RF_KNEE = 10
-PIN_LB_KNEE = 11
-PIN_RB_KNEE = 12
+PIN_LF_HIP_LAT = 10
+PIN_RF_HIP_LAT = 17
+PIN_LB_HIP_LAT = 25
+PIN_RB_HIP_LAT = 18
+PIN_LF_HIP_LONG = 9
+PIN_RF_HIP_LONG = 27
+PIN_LB_HIP_LONG = 8
+PIN_RB_HIP_LONG = 23
+PIN_LF_KNEE = 11
+PIN_RF_KNEE = 22
+PIN_LB_KNEE = 7
+PIN_RB_KNEE = 16
 
 # Motor Driver Pins
 
