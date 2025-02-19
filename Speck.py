@@ -29,7 +29,7 @@ References:
 """
 # __________Import Statements__________
 import numpy as np
-from gpiozero import AngularServo
+from gpiozero import AngularServo, Motor
 import subprocess
 import os
 import math
@@ -51,10 +51,21 @@ PIN_LB_KNEE = 7
 PIN_RB_KNEE = 16
 
 # Motor Driver Pins
+PIN_IN1 = int
+PIN_IN2 = int
+PIN_IN3 = int
+PIN_IN4 = int
 
 # Object Sensor Pins
+PIN_FAR_LEFT_SENSOR = int
+PIN_LEFT_SENSOR = int
+PIN_CENTER_SENSOR = int
+PIN_RIGHT_SENSOR = int
+PIN_FAR_RIGHT_SENSOR = int
 
 # Limit Switch
+PIN_LEFT_SWITCH = int
+PIN_RIGHT_SWITCH = int
 
 # __________System Constants__________
 HIP_LENGTH = 10
@@ -63,7 +74,7 @@ LOWER_LEG_LENGTH = 125
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
-# True = available; False = unavailable
+# 1 = available; 0 = unavailable
 AvailablePins = np.ones(40)
 
 # __________Environment Setup__________
@@ -202,6 +213,7 @@ class Leg:
         :argument dz:type int:  the distance in millimeters to change the z position by
         :return: None
         """
+        # set the position of the leg to the current position plus the changes given as arguments
         self.set_position(self.current_position[0] + dx, self.current_position[1] + dy, self.current_position[2] + dz)
         return None
 
@@ -212,12 +224,60 @@ class ObjectDetector:
     """
     The ObjectDectecor class is used to represent a single infrared avoidance sensor.
 
-    :param pin: int: the GPIO pin that the sensor is connected to
+    :parameter pin:type int: the GPIO pin that the sensor is connected to
+    :parameter value:type int: the value of the sensor
     """
 
     def __init__(self, pin: int):
         self.pin = pin
         self.value = int
+
+
+class LimitSwitch:
+    """
+    The LimitSwitch class is used to represent a single switch used to detect a crate in the body.
+
+     :parameter pin:type int: the GPIO pin that the switch is connected to
+     :parameter value:type bool: the value of the limit switch. HIGH or True represents triggered and LOW or False
+     represents not triggered
+    """
+
+    def __init__(self, pin: int):
+        """
+        Constructor for the LimitSwitch class
+
+        :argument pin:type int: the GPIO pin that the switch is connected to
+        """
+        if AvailablePins[pin - 1] == 1:  # If the pin is available, set it up and mark it as used
+            self.pin = pin
+            AvailablePins[pin - 1] = 0
+        self.value = False  # initiate the switch as not pressed. This value will be updated when the switch is checked
+        self.check()  # check the status of the switch
+
+    def check(self):
+        """
+        A function used to check the current status of the switch
+
+        :return triggered:type bool: the value of the limit switch. True is pressed and False is not pressed
+        """
+        return self.value
+
+
+class Camera:
+    """
+    The Camera class is used to represent the pi camera module used for detecting the orientation of the crate
+    """
+
+    def __init__(self):
+        """
+        Constructor for the Camera class
+        """
+
+
+class CrateJaws:
+    def __init__(self):
+        self.LeftActuator = Motor(PIN_IN1, PIN_IN2)
+        self.RightActuator = Motor(PIN_IN3, PIN_IN4)
 
 
 class Speck:
@@ -239,7 +299,11 @@ class Speck:
         self.lf_leg = Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE)
         self.rb_leg = Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE)
         self.lb_leg = Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE)
-        self.ObjectSensors = {ObjectDetector(13), ObjectDetector(14), ObjectDetector(15)}
+        self.ObjectSensors = [ObjectDetector(PIN_FAR_LEFT_SENSOR), ObjectDetector(PIN_LEFT_SENSOR),
+                              ObjectDetector(PIN_CENTER_SENSOR), ObjectDetector(PIN_RIGHT_SENSOR),
+                              ObjectDetector(PIN_FAR_RIGHT_SENSOR)]
+        self.Switches = [LimitSwitch(PIN_LEFT_SWITCH), LimitSwitch(PIN_RIGHT_SWITCH)]
+        self.Camera = Camera
 
     def step(self):
         pass
