@@ -21,11 +21,13 @@ References:
     https://gpiozero.readthedocs.io/en/latest/
     https://gitpython.readthedocs.io/en/stable/tutorial.html
     https://packaging.python.org/en/latest/tutorials/packaging-projects/
+    https://projects.raspberrypi.org/en/projects/getting-started-with-git/0
+    https://stackoverflow.com/questions/66054625/pyinstaller-error-running-script-with-pyzmq-dependency
+    https://git-scm.com/docs/git-pull
 """
 # __________Import Statements__________
 import numpy as np
 from gpiozero import AngularServo
-from git import Repo
 import subprocess
 import os
 from gpiozero.pins.native import NativeFactory
@@ -33,23 +35,31 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 from gpiozero import Device
 
 # __________Pin Definition__________
+# Joint Pins
 PIN_LF_HIP_LAT = 1
 PIN_RF_HIP_LAT = 2
 PIN_LB_HIP_LAT = 3
 PIN_RB_HIP_LAT = 4
-PIN_LF_HIP_LONG = 1
-PIN_RF_HIP_LONG = 2
-PIN_LB_HIP_LONG = 3
-PIN_RB_HIP_LONG = 4
-PIN_LF_KNEE = 1
-PIN_RF_KNEE = 2
-PIN_LB_KNEE = 3
-PIN_RB_KNEE = 4
+PIN_LF_HIP_LONG = 5
+PIN_RF_HIP_LONG = 6
+PIN_LB_HIP_LONG = 7
+PIN_RB_HIP_LONG = 8
+PIN_LF_KNEE = 9
+PIN_RF_KNEE = 10
+PIN_LB_KNEE = 11
+PIN_RB_KNEE = 12
+
+# Motor Driver Pins
+
+# Object Sensor Pins
+
+# Limit Switch Pins
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
 # True = available; False = unavailable
 AvailablePins = np.ones(40)
+
 
 # __________Environment Setup__________
 # Device.pin_factory = PiGPIOFactory #update the default pin factory for more accurate servo control
@@ -59,20 +69,20 @@ class Joint:
     """
     The Joint class is used to represent a single joint in a leg assembly.
 
-    :param self.pin: int: the GPIO pin that the joint servo is connected to
+    :param self.pin:type int: the GPIO pin that the joint servo is connected to
     :param self.min_angle: int: the minimum angle that the joint can be set to
     :param self.max_angle: int: the maximum angle that the joint can be set to
     :param self.current_angle: int: the angle that the joint is currently at
     """
 
-    def __init__(self, pin: int, min_angle=0, max_angle=180, starting_angle=0):
+    def __init__(self, pin: int, min_angle=0.0, max_angle=180.0, starting_angle=0.0):
         """
         Constructor for the Joint class.
         
-        :param pin: int: the GPIO pin that the joint servo is connected to
-        :param min_angle: int: the minimum angle that the joint can be set to
-        :param max_angle: int: the maximum angle that the joint can be set to
-        :param starting_angle: int: the angle to set the joint to on startup
+        :argument pin:type int: the GPIO pin that the joint servo is connected to
+        :argument min_angle:type float: the minimum angle that the joint can be set to
+        :argument max_angle:type float: the maximum angle that the joint can be set to
+        :argument starting_angle:type float: the angle to set the joint to on startup
         """
         if AvailablePins[pin - 1] == 1:  # If the pin is available, set it up and mark it as used
             self.pin = pin
@@ -83,27 +93,27 @@ class Joint:
         self.servo = AngularServo(self.pin, min_angle=self.min_angle, max_angle=self.max_angle)
         self.set_angle(starting_angle)  # properly set the starting angle of the joint
 
-    def set_angle(self, angle: int):
+    def set_angle(self, angle: float):
         """
         A function used to set the angle of the joint.
 
-        :param angle: int: the angle to set the joint to
+        :argument angle:type float: the angle to set the joint to
         :return: None
         """
         # check to make sure the requested angle is within the range of the joint
-        if angle <= self.max_angle & angle >= self.min_angle:
+        if (angle <= self.max_angle) & (angle >= self.min_angle):
             self.current_angle = angle  # update the current angle of the joint to the required angle
-            self.servo.angle = angle  # set the angle of the servo
+            self.servo.angle = angle  # set the physical angle of the servo
         else:
             raise RuntimeError("The given angle was out of the joint's range " + str(self.min_angle))
             pass
         return None
 
-    def change_angle(self, change_in_angle: int):
+    def change_angle(self, change_in_angle: float):
         """
         A function used to change the angle of the joint.
 
-        :param change_in_angle: int: the amount to change the angle of the joint
+        :argument change_in_angle:type float: the amount to change the angle of the joint
         :return: None
         """
         # set the angle of the joint to the current angle plus the change
@@ -113,53 +123,66 @@ class Joint:
 
 class Leg:
     """
-    The Leg class is used to represent a single leg of Speck.
+    The Leg class is used to represent a single leg of Speck. A leg is made of three Joints to control the tilt of the
+    leg in all three directions to create a walking motion.
 
-    :param self.hip_lat: Joint: a Joint object representing the tilt of the leg from the body
-    :param self.hip_long: Joint: a Joint object representing the main hip joint
-    :param self.knee: Joint: a Joint object representing the knee joint
+    :parameter self.hip_lat:type Joint: a Joint object representing the tilt of the leg from the body, known as the lateral
+    hip joint
+    :parameter self.hip_long:type Joint: a Joint object representing the main hip joint, known as the longitudinal hip joint
+    :parameter self.knee:type Joint: a Joint object representing the knee joint
+    :parameter self.current_position:type {int, int, int}: an array with the current position of the foot in the form
+    {x, y, z} in millimeters.
     """
 
     def __init__(self, hip_lat_pin: int, hip_long_pin: int, knee_pin: int):
         """
         Constructor for the Leg class.
+
+        :argument hip_lat_pin:type int: The pin that the lateral hip joint servo is connected to
+        :argument hip_long_pin:type int: The pin that the longitudinal hip joint servo is connected to
+        :argument knee_pin:type int: The pin that the knee joint is connected to
         """
         # check to make sure all given pins are available. Raise an error if the pin is unavailable. Set the pins to taken
-        if AvailablePins[hip_lat_pin-1] == 1:
+        if AvailablePins[hip_lat_pin - 1] == 1:
             self.hip_lat = Joint(hip_lat_pin, starting_angle=0)
-            AvailablePins[hip_lat_pin-1] = 0
+            AvailablePins[hip_lat_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
 
-        if AvailablePins[hip_long_pin-1] == 1:
+        if AvailablePins[hip_long_pin - 1] == 1:
             self.hip_long = Joint(hip_long_pin, starting_angle=0)
-            AvailablePins[hip_long_pin-1] = 0
+            AvailablePins[hip_long_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_long_pin) + " is not available to use for the longitudinal hip joint.")
 
-        if AvailablePins[knee_pin-1] == 1:
+        if AvailablePins[knee_pin - 1] == 1:
             self.knee = Joint(knee_pin, starting_angle=0)
-            AvailablePins[knee_pin-1] = 0
+            AvailablePins[knee_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(knee_pin) + " is not available for the knee joint")
-        self.current_position = {0, 0, 0}
+        self.current_position = self.calc_position()
 
-    def set_position(self, x, y, z):
+    def set_position(self, x: int, y: int, z: int):
         """
-        A function used to set the position of the foot. The position is relative to ___.
+        A function used to set the position of the foot. The position is relative to the point where the longitudinal
+        hip joint and upper leg meet.
 
-        :param x:
-        :param y:
-        :param z:
+        :argument x:type int: The position of the foot in the forward - backward direction in millimeters
+        :argument y:type int: The position of the foot in the up - down direction in millimeters
+        :argument z:type int: The position of the foot in the in - out direction in millimeters
         :return: None
         """
+        self.current_position = {x, y, z}  # update the parameter storing the current position
+
+
+
         return None
 
-    def get_position(self):
+    def calc_position(self):
         """
         A function used to get the current position of the foot of the leg based on the joint angles.
 
-        :return: an array containing the current location of the foot in the form {x, y, z}
+        :return: an array containing the current location of the foot in the form {x, y, z} based on the current angles of the servo
         """
         # :TODO perform trig calculations to determine leg position based on joint angles
         x = 0
