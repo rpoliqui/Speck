@@ -29,10 +29,11 @@ References:
 """
 # __________Import Statements__________
 import numpy as np
-from gpiozero import AngularServo, Motor
 import subprocess
 import os
 import math
+from threading import Thread, Timer
+from gpiozero import AngularServo, Motor
 from gpiozero.pins.pigpio import PiGPIOFactory
 
 # __________Pin Definition__________
@@ -48,29 +49,31 @@ PIN_RB_HIP_LONG = 23
 PIN_LF_KNEE = 11
 PIN_RF_KNEE = 22
 PIN_LB_KNEE = 7
-PIN_RB_KNEE = 16
+PIN_RB_KNEE = 24
 
 # Motor Driver Pins
-PIN_IN1 = int
-PIN_IN2 = int
-PIN_IN3 = int
-PIN_IN4 = int
+PIN_IN1 = 14
+PIN_IN2 = 15
+PIN_IN3 = 5
+PIN_IN4 = 12
 
 # Object Sensor Pins
-PIN_FAR_LEFT_SENSOR = int
-PIN_LEFT_SENSOR = int
-PIN_CENTER_SENSOR = int
-PIN_RIGHT_SENSOR = int
-PIN_FAR_RIGHT_SENSOR = int
+PIN_FAR_LEFT_SENSOR = 21
+PIN_LEFT_SENSOR = 26
+PIN_CENTER_SENSOR = 20
+PIN_RIGHT_SENSOR = 19
+PIN_FAR_RIGHT_SENSOR = 16
 
 # Limit Switch
-PIN_LEFT_SWITCH = int
-PIN_RIGHT_SWITCH = int
+PIN_LEFT_SWITCH = 13
+PIN_RIGHT_SWITCH = 6
 
 # __________System Constants__________
 HIP_LENGTH = 10
 UPPER_LEG_LENGTH = 117
 LOWER_LEG_LENGTH = 125
+JAW_OPEN_TIME = 10
+JAW_CLOSE_TIME = 10
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
@@ -79,6 +82,8 @@ AvailablePins = np.ones(40)
 
 # __________Environment Setup__________
 factory = PiGPIOFactory()  # define pin factory to use servos for more accurate servo control
+background = Thread()  # create a background Thread to allow processes to run in the background
+background.start()  # start the background Thread
 
 
 # __________Class Definitions__________
@@ -275,9 +280,65 @@ class Camera:
 
 
 class CrateJaws:
+    """
+    The CrateJaws class is used to control the jaws that hold the crate within the body of Speck. This system is made of
+    two linear actuators that can both move either forwards or backwards.
+
+    :parameter FrontActuator:type Motor: the actuator in the front of Speck
+    :parameter BackActuator:type Motor: the actuator in the back of Speck
+    """
+
     def __init__(self):
-        self.LeftActuator = Motor(PIN_IN1, PIN_IN2)
-        self.RightActuator = Motor(PIN_IN3, PIN_IN4)
+        """
+        Constructor for the Crate Jaws class
+        """
+        # create objects to control the two linear actuators that make up the Crate Jaws. Each linear actuator is a
+        # motor connected to two pins on the motor driver
+        self.FrontActuator = Motor(PIN_IN1, PIN_IN2)
+        self.BackActuator = Motor(PIN_IN3, PIN_IN4)
+        # make sure both actuators are stopped when initialized
+        self.FrontActuator.stop()
+        self.BackActuator.stop()
+
+    def open(self):
+        """
+        Function used to open the jaws
+
+        :return: None
+        """
+        # start moving both linear actuators backwards
+        self.FrontActuator.backward()
+        self.BackActuator.backward()
+        # create timer object to allow a pause to happen in the background
+        timer = Timer(JAW_OPEN_TIME, self.stop)
+        # start the timer so that the linear actuators stop after the given amount of time
+        timer.start()
+        return None
+
+    def close(self):
+        """
+        Function used to close the jaws
+
+        :return: None
+        """
+        # start moving both linear actuators forwards
+        self.FrontActuator.forward()
+        self.BackActuator.forward()
+        # create timer object to allow a pause to happen in the background
+        timer = Timer(JAW_OPEN_TIME, self.stop)
+        # start the timer so that the linear actuators stop after the given amount of time
+        timer.start()
+        return None
+
+    def stop(self):
+        """
+        Function used to stop both linear actuators
+
+        :return: None
+        """
+        self.BackActuator.stop()
+        self.FrontActuator.stop()
+        return None
 
 
 class Speck:
@@ -303,7 +364,8 @@ class Speck:
                               ObjectDetector(PIN_CENTER_SENSOR), ObjectDetector(PIN_RIGHT_SENSOR),
                               ObjectDetector(PIN_FAR_RIGHT_SENSOR)]
         self.Switches = [LimitSwitch(PIN_LEFT_SWITCH), LimitSwitch(PIN_RIGHT_SWITCH)]
-        self.Camera = Camera
+        self.Camera = Camera()
+        self.CrateJaws = CrateJaws()
 
     def step(self):
         pass
