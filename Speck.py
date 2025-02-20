@@ -10,6 +10,8 @@ Classes:
     Joint: A single servo joint. Defined by the minimum and maximum the angles can move to and the starting angle of the joint
     Leg: A combination of three joints that form a leg
     ObjectDetector: A single infrared avoidance sensor used to get information about Speck's surroundings
+    Camera: An object that controls a Raspberry Pi Camera module and performs all operations to detect the crate
+    CrateJaws: An object used to control the crate holding jaws that are used to pick up a specially designed crate
 Global Variables:
     AvailablePins: a boolean array used to keep track of what pins are available. True = available, False = unavailable
 _______________________________________________________________________________________________________________________
@@ -26,6 +28,8 @@ References:
     https://git-scm.com/docs/git-pull
     https://docs.python.org/3/library/math.html
     https://github.com/lifeparticle/Markdown-Cheatsheet
+    https://docs.python.org/3/library/threading.html#timer-objects
+    https://docs.python.org/3/library/threading.html#thread-objects
 """
 # __________Import Statements__________
 import numpy as np
@@ -33,7 +37,7 @@ import subprocess
 import os
 import math
 from threading import Thread, Timer
-from gpiozero import AngularServo, Motor
+from gpiozero import AngularServo, Motor, Button
 from gpiozero.pins.pigpio import PiGPIOFactory
 
 # __________Pin Definition__________
@@ -238,36 +242,6 @@ class ObjectDetector:
         self.value = int
 
 
-class LimitSwitch:
-    """
-    The LimitSwitch class is used to represent a single switch used to detect a crate in the body.
-
-     :parameter pin:type int: the GPIO pin that the switch is connected to
-     :parameter value:type bool: the value of the limit switch. HIGH or True represents triggered and LOW or False
-     represents not triggered
-    """
-
-    def __init__(self, pin: int):
-        """
-        Constructor for the LimitSwitch class
-
-        :argument pin:type int: the GPIO pin that the switch is connected to
-        """
-        if AvailablePins[pin - 1] == 1:  # If the pin is available, set it up and mark it as used
-            self.pin = pin
-            AvailablePins[pin - 1] = 0
-        self.value = False  # initiate the switch as not pressed. This value will be updated when the switch is checked
-        self.check()  # check the status of the switch
-
-    def check(self):
-        """
-        A function used to check the current status of the switch
-
-        :return triggered:type bool: the value of the limit switch. True is pressed and False is not pressed
-        """
-        return self.value
-
-
 class Camera:
     """
     The Camera class is used to represent the pi camera module used for detecting the orientation of the crate
@@ -345,27 +319,36 @@ class Speck:
     """
     The Speck class is used to control the primary functions of Speck including motion, object detection, and crate grabbing.
 
-    :param self.rf_leg: Leg: a Leg object representing the right front leg of Speck
-    :param self.lf_leg: Leg:a Leg object representing the left front leg of Speck
-    :param self.rb_leg: Leg: a Leg object representing the right back leg of Speck
-    :param self.lb_leg: Leg: a Leg object representing the left back leg of Speck
+    :parameter self.rf_leg:type Leg: a Leg object representing the right front leg of Speck
+    :parameter self.lf_leg:type Leg:a Leg object representing the left front leg of Speck
+    :parameter self.rb_leg:type Leg: a Leg object representing the right back leg of Speck
+    :parameter self.lb_leg:type Leg: a Leg object representing the left back leg of Speck
+    :parameter self.ObjectSensors:type Array: An array of 5 ObjectDetector objects to create a 175 degree envelope of
+    object detection in front of Speck
+    :parameter self.LimitSwitches:type Array: An array of 2 Button objects that represent the limit switches used to
+    detect a crate within the body of Speck
     """
 
     def __init__(self):
         """
         Constructor for the Speck Class. Used to initialize Speck
         """
-        #
+        # create all leg objects
         self.rf_leg = Leg(PIN_RF_HIP_LAT, PIN_RF_HIP_LONG, PIN_RF_KNEE)
         self.lf_leg = Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE)
         self.rb_leg = Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE)
         self.lb_leg = Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE)
+        # create an array of 5 object detection sensors
         self.ObjectSensors = [ObjectDetector(PIN_FAR_LEFT_SENSOR), ObjectDetector(PIN_LEFT_SENSOR),
                               ObjectDetector(PIN_CENTER_SENSOR), ObjectDetector(PIN_RIGHT_SENSOR),
                               ObjectDetector(PIN_FAR_RIGHT_SENSOR)]
-        self.Switches = [LimitSwitch(PIN_LEFT_SWITCH), LimitSwitch(PIN_RIGHT_SWITCH)]
-        self.Camera = Camera()
+        # create an array of buttons to control the limit switches
+        self.LimitSwitches = [Button(PIN_LEFT_SWITCH), Button(PIN_RIGHT_SWITCH)]
+        # create the Crate Jaws object used for holding onto the crate
         self.CrateJaws = CrateJaws()
+        self.CrateJaws.open()  # make sure the crate jaws start open
+        # create the camera object used for detecting the crate
+        self.Camera = Camera()
 
     def step(self):
         pass
