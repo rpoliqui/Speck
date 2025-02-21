@@ -30,12 +30,16 @@ References:
     https://github.com/lifeparticle/Markdown-Cheatsheet
     https://docs.python.org/3/library/threading.html#timer-objects
     https://docs.python.org/3/library/threading.html#thread-objects
+    https://picamera.readthedocs.io/en/release-1.13/index.html
+    https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html
 """
 # __________Import Statements__________
 import numpy as np
 import subprocess
 import os
 import math
+import cv2 as cv
+from picamera import PiCamera
 from threading import Thread, Timer
 from gpiozero import AngularServo, Motor, Button
 from gpiozero.pins.pigpio import PiGPIOFactory
@@ -73,9 +77,9 @@ PIN_LEFT_SWITCH = 13
 PIN_RIGHT_SWITCH = 6
 
 # __________System Constants__________
-HIP_LENGTH = 10
-UPPER_LEG_LENGTH = 117
-LOWER_LEG_LENGTH = 125
+HIP_LENGTH = 34
+UPPER_LEG_LENGTH = 123.75
+LOWER_LEG_LENGTH = 110
 JAW_OPEN_TIME = 10
 JAW_CLOSE_TIME = 10
 
@@ -251,6 +255,7 @@ class Camera:
         """
         Constructor for the Camera class
         """
+
 
 
 class CrateJaws:

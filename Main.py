@@ -1,13 +1,13 @@
 from Speck import Speck
 
 
-def setup(speck:Speck):
+def setup(speck: Speck):
     speck.lb_leg.set_position(0, 0, 0)
     return None
 
 
-def loop():
-    cont = False
+def loop(speck: Speck):
+    cont = True  # by default, the loop will continue unless this variable is set to False
     return cont
 
 
