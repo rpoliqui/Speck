@@ -1,3 +1,9 @@
+"""
+Ryan Poliquin, started on 2/12/2025
+This code is used to set up a Raspberry Pi to run Speck. It will install all necessary packages and properly configure
+the Pi for ease of use.
+"""
+
 import os
 import subprocess
 
