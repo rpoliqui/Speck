@@ -38,8 +38,8 @@ import numpy as np
 import subprocess
 import os
 import math
-import cv2 as cv
-from picamera import PiCamera
+# import cv2 as cv
+# from picamera import PiCamera
 from threading import Thread, Timer
 from gpiozero import AngularServo, Motor, Button
 from gpiozero.pins.pigpio import PiGPIOFactory
