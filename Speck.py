@@ -154,7 +154,8 @@ class Joint:
         self.max_angle = max_angle  # define max angle
         self.current_angle = starting_angle  # set the starting angle
         # create servo object to control physical servo object
-        self.servo = AngularServo(self.pin, min_angle=self.min_angle, max_angle=self.max_angle, pin_factory=factory)
+        self.servo = AngularServo(self.pin, min_angle=0, max_angle=180, initial_angle=0, min_pulse_width=0.0006,
+                                  max_pulse_width=0.0025, pin_factory=factory)
         self.set_angle(starting_angle)  # properly set the starting angle of the joint
 
     def set_angle(self, angle: float):
@@ -411,7 +412,7 @@ class Speck:
         # {Step n: {Leg, dx, dy, dz},
         # {Step n+1: {Leg, dx, dy, dz}}
         gait = WALK_GAIT  # load in the specified gait
-        for step in range(0, len(gait) - 1, 1): # loop through all steps for once cyle
+        for step in range(0, len(gait) - 1, 1):  # loop through all steps for once cyle
             if gait[step][0] == 4:  # move all legs
                 for leg in self.Legs:
                     leg.move(gait[step][1], gait[step][2], gait[step][3])

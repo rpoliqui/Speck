@@ -43,3 +43,5 @@ can be purchased from other sources. The reference link is there to provide an i
 | X728 (Max 5.1V 6A) UPS & Power Management Board                            | 1        |                 |
 | M2.5 Shoulder Screws, 3mm shoulder, 4mm shoulder length, 5mm thread length | 4        |                 |
 | 683ZZ Ball Bearing 3mm x 7mm x 3mm                                         | 4        |                 |
+| M3 x 5 machine screw                                                       | 5        |                 |
+|                                                                            |          |                 |
