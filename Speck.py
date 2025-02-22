@@ -32,12 +32,15 @@ References:
     https://docs.python.org/3/library/threading.html#thread-objects
     https://picamera.readthedocs.io/en/release-1.13/index.html
     https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html
+    https://www.youtube.com/watch?v=40tZQPd3z8g
+    https://www.hackster.io/rbnsmathew/simple-quadruped-robot-ebe1fd
 """
 # __________Import Statements__________
 import numpy as np
 import subprocess
 import os
 import math
+import time
 # import cv2 as cv
 # from picamera import PiCamera
 from threading import Thread, Timer
@@ -87,6 +90,36 @@ JAW_CLOSE_TIME = 10
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
 # 1 = available; 0 = unavailable
 AvailablePins = np.ones(40)
+
+# array storing changes in x, y and z positions for each leg to enable Speck to walk. Layout:
+# {Step n: { RF: {x, y, z}, LF: {x, y, z}, RB: {x, y, z}, LB: {x, y, z}},
+#  Step n+1: { RF: {x, y, z}, LF: {x, y, z}, RB: {x, y, z}, LB: {x, y, z}}}
+# WALK_GAIT = {{{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}},
+#              {{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}},
+#              {{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}},
+#              {{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}},
+#              {{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}},
+#              {{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}}}
+
+# array storing changes in x, y and z positions for each leg to enable Speck to walk. Layout:
+# {Step n: {Leg, dx, dy, dz},
+# {Step n+1: {Leg, dx, dy, dz}}
+# LEGS: [RF, LF, RB, LB] 4 = ALL
+# DIRECTIONS: [X, Y, Z]
+WALK_GAIT = ((0, 0, 50, 0),
+             (0, 50, 0, 0),
+             (0, 0, -50, 0),
+             (3, 0, 50, 0),
+             (3, 50, 0, 0),
+             (3, 0, -50, 0),
+             (4, -50, 0, 0),
+             (1, 0, 50, 0),
+             (1, 50, 0, 0),
+             (1, 0, -50, 0),
+             (2, 0, 50, 0),
+             (2, 50, 0, 0),
+             (2, 0, -50, 0),
+             (4, -50, 0, 0))
 
 # __________Environment Setup__________
 factory = PiGPIOFactory()  # define pin factory to use servos for more accurate servo control
@@ -257,7 +290,6 @@ class Camera:
         """
 
 
-
 class CrateJaws:
     """
     The CrateJaws class is used to control the jaws that hold the crate within the body of Speck. This system is made of
@@ -338,11 +370,12 @@ class Speck:
         """
         Constructor for the Speck Class. Used to initialize Speck
         """
-        # create all leg objects
-        self.rf_leg = Leg(PIN_RF_HIP_LAT, PIN_RF_HIP_LONG, PIN_RF_KNEE)
-        self.lf_leg = Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE)
-        self.rb_leg = Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE)
-        self.lb_leg = Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE)
+        # create an array of four leg objects
+        # [RF, LF, RB, LB]
+        self.Legs = [Leg(PIN_RF_HIP_LAT, PIN_RF_HIP_LONG, PIN_RF_KNEE),
+                     Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE),
+                     Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE),
+                     Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE)]
         # create an array of 5 object detection sensors
         self.ObjectSensors = [ObjectDetector(PIN_FAR_LEFT_SENSOR), ObjectDetector(PIN_LEFT_SENSOR),
                               ObjectDetector(PIN_CENTER_SENSOR), ObjectDetector(PIN_RIGHT_SENSOR),
@@ -362,16 +395,34 @@ class Speck:
         """
         Function used to set Speck
         """
-        self.lf_leg.set_position(0, 100, 0)
-        self.rf_leg.set_position(0, 100, 0)
-        self.lb_leg.set_position(0, 100, 0)
-        self.rb_leg.set_position(0, 100, 0)
+        self.Legs[0].set_position(0, 100, 34)
+        self.Legs[1].set_position(0, 100, 34)
+        self.Legs[2].set_position(0, 100, 34)
+        self.Legs[3].set_position(0, 100, 34)
 
     def sit(self):
-        self.lf_leg.set_position(0, 0, 0)
-        self.rf_leg.set_position(0, 0, 0)
-        self.lb_leg.set_position(0, 0, 0)
-        self.rb_leg.set_position(0, 0, 0)
+        self.Legs[0].set_position(0, 100, 34)
+        self.Legs[1].set_position(0, 100, 34)
+        self.Legs[2].set_position(0, 100, 34)
+        self.Legs[3].set_position(0, 100, 34)
+
+    def gait(self):
+        # Gait Layout:
+        # {Step n: {Leg, dx, dy, dz},
+        # {Step n+1: {Leg, dx, dy, dz}}
+        gait = WALK_GAIT  # load in the specified gait
+        for step in range(0, len(gait) - 1, 1): # loop through all steps for once cyle
+            if gait[step][0] == 4:  # move all legs
+                for leg in self.Legs:
+                    leg.move(gait[step][1], gait[step][2], gait[step][3])
+            else:
+                self.Legs[gait[step][0]].move(gait[step][1], gait[step][2], gait[step][3])
+
+    def grab(self):
+        self.sit()  # have Speck sit onto the crate
+        Timer(5, self.CrateJaws.close)  # wait 5 seconds for Speck to sit, then close the jaws
+        if (self.LimitSwitches[0].is_active()) & (self.LimitSwitches[1].is_active()):
+            Timer(JAW_CLOSE_TIME + 5, self.stand)  # wait for the jaws to close plus a few seconds before standing
 
     def update(self, scope="ESSENTIAL"):
         """
