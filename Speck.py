@@ -44,7 +44,7 @@ import time
 # import cv2 as cv
 # from picamera import PiCamera
 from threading import Thread, Timer
-from gpiozero import AngularServo, Motor, Button
+from gpiozero import AngularServo, Motor, Button, Device
 from gpiozero.pins.pigpio import PiGPIOFactory
 
 # __________Pin Definition__________
@@ -123,6 +123,7 @@ WALK_GAIT = ((0, 0, 50, 0),
 
 # __________Environment Setup__________
 factory = PiGPIOFactory()  # define pin factory to use servos for more accurate servo control
+Device.pin_factory = factory
 background = Thread()  # create a background Thread to allow processes to run in the background
 background.start()  # start the background Thread
 
@@ -402,10 +403,10 @@ class Speck:
         self.Legs[3].set_position(0, 100, 34)
 
     def sit(self):
-        self.Legs[0].set_position(0, 100, 34)
-        self.Legs[1].set_position(0, 100, 34)
-        self.Legs[2].set_position(0, 100, 34)
-        self.Legs[3].set_position(0, 100, 34)
+        self.Legs[0].set_position(0, 50, 34)
+        self.Legs[1].set_position(0, 50, 34)
+        self.Legs[2].set_position(0, 50, 34)
+        self.Legs[3].set_position(0, 50, 34)
 
     def gait(self):
         # Gait Layout:
