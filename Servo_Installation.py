@@ -2,7 +2,7 @@
 Ryan Poliquin, Started 2/25/2025
 This code is used to set the angles of all leg servos so legs can be properly installed
 """
-from ..Speck import Speck
+from Speck import Speck
 
 speck = Speck()
 for leg in speck.Legs:
