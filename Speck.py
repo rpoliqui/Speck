@@ -7,7 +7,8 @@ ________________________________________________________________________________
 Classes:
     Speck: The object representing Speck as a whole. All commands should be sent to this object and handled by the
            corresponding objects
-    Joint: A single servo joint. Defined by the minimum and maximum the angles can move to and the starting angle of the joint
+    Joint: A single servo joint. Defined by the minimum and maximum the angles can move to and the starting angle of the
+    joint
     Leg: A combination of three joints that form a leg
     ObjectDetector: A single infrared avoidance sensor used to get information about Speck's surroundings
     Camera: An object that controls a Raspberry Pi Camera module and performs all operations to detect the crate
@@ -17,7 +18,8 @@ Global Variables:
 _______________________________________________________________________________________________________________________
 References:
     Python. (2025, January 8). Python 3.13.1 documentation. Retrieved from Python: https://docs.python.org/3/
-    Geeks for Geeks. (2024, August 2). Python Docstrings. Retrieved from Geeks for Geeks: https://www.geeksforgeeks.org/python-docstrings/
+    Geeks for Geeks. (2024, August 2). Python Docstrings. Retrieved from Geeks for Geeks:
+    https://www.geeksforgeeks.org/python-docstrings/
     https://forums.raspberrypi.com/viewtopic.php?t=173157
     https://stackoverflow.com/questions/8247605/configuring-so-that-pip-install-can-work-from-github
     https://gpiozero.readthedocs.io/en/latest/
@@ -34,6 +36,7 @@ References:
     https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html
     https://www.youtube.com/watch?v=40tZQPd3z8g
     https://www.hackster.io/rbnsmathew/simple-quadruped-robot-ebe1fd
+    https://www.geeksforgeeks.org/print-objects-of-a-class-in-python/
 """
 # __________Import Statements__________
 import numpy as np
@@ -139,7 +142,7 @@ class Joint:
     :param self.current_angle: int: the angle that the joint is currently at
     """
 
-    def __init__(self, pin: int, min_angle=0.0, max_angle=180.0, starting_angle=0.0):
+    def __init__(self, pin: int, min_angle=0.0, max_angle=180.0, starting_angle=0.0, flipped=False):
         """
         Constructor for the Joint class.
         
@@ -151,12 +154,19 @@ class Joint:
         if AvailablePins[pin - 1] == 1:  # If the pin is available, set it up and mark it as used
             self.pin = pin
             AvailablePins[pin - 1] = 0
+        self.flipped = flipped  # keep track of if all angles need to be flipped
         self.min_angle = min_angle  # define min angle
         self.max_angle = max_angle  # define max angle
         self.current_angle = starting_angle  # set the starting angle
         # create servo object to control physical servo object
-        self.servo = AngularServo(self.pin, min_angle=0, max_angle=180, initial_angle=0, min_pulse_width=0.0006,
-                                  max_pulse_width=0.0025, pin_factory=factory)
+        if flipped:  # flip the min and max angles
+            self.servo = AngularServo(self.pin, min_angle=self.max_angle, max_angle=self.min_angle,
+                                      initial_angle=starting_angle, min_pulse_width=0.0006,
+                                      max_pulse_width=0.0025, pin_factory=factory)
+        else:
+            self.servo = AngularServo(self.pin, min_angle=self.min_angle, max_angle=self.max_angle,
+                                      initial_angle=starting_angle, min_pulse_width=0.0006,
+                                      max_pulse_width=0.0025, pin_factory=factory)
         self.set_angle(starting_angle)  # properly set the starting angle of the joint
 
     def set_angle(self, angle: float):
@@ -192,15 +202,17 @@ class Leg:
     The Leg class is used to represent a single leg of Speck. A leg is made of three Joints to control the tilt of the
     leg in all three directions to create a walking motion.
 
-    :parameter self.hip_lat:type Joint: a Joint object representing the tilt of the leg from the body, known as the lateral
-    hip joint
-    :parameter self.hip_long:type Joint: a Joint object representing the main hip joint, known as the longitudinal hip joint
+    :parameter self.hip_lat:type Joint: a Joint object representing the tilt of the leg from the body, known as the
+    lateral hip joint
+    :parameter self.hip_long:type Joint: a Joint object representing the main hip joint, known as the longitudinal hip
+    joint
     :parameter self.knee:type Joint: a Joint object representing the knee joint
     :parameter self.current_position:type {int, int, int}: an array with the current position of the foot in the form
     {x, y, z} in millimeters.
+    :parameter self.flipped:type bool: Flag to flip and angles of the leg joints
     """
 
-    def __init__(self, hip_lat_pin: int, hip_long_pin: int, knee_pin: int):
+    def __init__(self, hip_lat_pin: int, hip_long_pin: int, knee_pin: int, flipped=False):
         """
         Constructor for the Leg class.
 
@@ -208,25 +220,31 @@ class Leg:
         :argument hip_long_pin:type int: The pin that the longitudinal hip joint servo is connected to
         :argument knee_pin:type int: The pin that the knee joint is connected to
         """
-        # check to make sure all given pins are available. Raise an error if the pin is unavailable. Set the pins to taken
+        # check to make sure all given pins are available. Raise an error if the pin is unavailable.
+        # Set the pins to taken
         if AvailablePins[hip_lat_pin - 1] == 1:
-            self.hip_lat = Joint(hip_lat_pin, starting_angle=0)
+            self.hip_lat = Joint(hip_lat_pin, min_angle=-90, max_angle=90, starting_angle=0, flipped=flipped)
             AvailablePins[hip_lat_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
 
         if AvailablePins[hip_long_pin - 1] == 1:
-            self.hip_long = Joint(hip_long_pin, starting_angle=0)
+            self.hip_long = Joint(hip_long_pin, min_angle=-90, max_angle=90, starting_angle=-90, flipped=flipped)
             AvailablePins[hip_long_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_long_pin) + " is not available to use for the longitudinal hip joint.")
 
         if AvailablePins[knee_pin - 1] == 1:
-            self.knee = Joint(knee_pin, starting_angle=0)
+            self.knee = Joint(knee_pin, starting_angle=0, flipped=flipped)
             AvailablePins[knee_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(knee_pin) + " is not available for the knee joint")
+        self.flipped = flipped  # specify whether all angles need to be flipped or not
         self.current_position = [0, 0, 0]  # assume robot starts at origin until the position of the joints is set.
+
+    def __repr__(self):
+        return "Hip_Lat Pin: %s , Hip_Long Pin: %s , Knee Pin: %s , Flipped: %s" % (
+            self.hip_lat, self.hip_long, self.knee, self.flipped)
 
     def set_position(self, x: int, y: int, z: int):
         """
@@ -240,11 +258,11 @@ class Leg:
         """
         self.current_position = {x, y, z}  # update the parameter storing the current position
         # calculate all three joint angles using inverse kinematics
-        lat_hip_angle = math.atan(z / y) + math.atan(math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2) / HIP_LENGTH)
-        knee_angle = math.acos(
+        lat_hip_angle = 90 - math.atan(z / y) + math.atan(math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2) / HIP_LENGTH)
+        knee_angle = 180 - math.acos(
             (z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) / (
                     -2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
-        long_hip_angle = math.atan(x / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2))) + math.asin(
+        long_hip_angle = -1 * math.atan(x / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2))) + math.asin(
             (LOWER_LEG_LENGTH * math.sin(knee_angle)) / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2)))
         # set all three servos to the calculated angles
         self.hip_lat.set_angle(math.degrees(lat_hip_angle))
@@ -375,9 +393,9 @@ class Speck:
         # create an array of four leg objects
         # [RF, LF, RB, LB]
         self.Legs = [Leg(PIN_RF_HIP_LAT, PIN_RF_HIP_LONG, PIN_RF_KNEE),
-                     Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE),
+                     Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE, flipped=True),
                      Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE),
-                     Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE)]
+                     Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE, flipped=True)]
         # create an array of 5 object detection sensors
         self.ObjectSensors = [ObjectDetector(PIN_FAR_LEFT_SENSOR), ObjectDetector(PIN_LEFT_SENSOR),
                               ObjectDetector(PIN_CENTER_SENSOR), ObjectDetector(PIN_RIGHT_SENSOR),
@@ -395,7 +413,7 @@ class Speck:
 
     def stand(self):
         """
-        Function used to set Speck
+        Function used to make Speck stand. Sets the position of all feet accordingly
         """
         self.Legs[0].set_position(0, 100, 34)
         self.Legs[1].set_position(0, 100, 34)
@@ -403,16 +421,18 @@ class Speck:
         self.Legs[3].set_position(0, 100, 34)
 
     def sit(self):
+        """
+        Function used to make Speck sit. Sets the position of all feet accordingly
+        """
         self.Legs[0].set_position(0, 50, 34)
         self.Legs[1].set_position(0, 50, 34)
         self.Legs[2].set_position(0, 50, 34)
         self.Legs[3].set_position(0, 50, 34)
 
-    def gait(self):
+    def gait(self, gait):
         # Gait Layout:
         # {Step n: {Leg, dx, dy, dz},
         # {Step n+1: {Leg, dx, dy, dz}}
-        gait = WALK_GAIT  # load in the specified gait
         for step in range(0, len(gait) - 1, 1):  # loop through all steps for once cyle
             if gait[step][0] == 4:  # move all legs
                 for leg in self.Legs:
@@ -444,7 +464,7 @@ class Speck:
             # Check if the repository already exists in the target directory
             if (scope == "ESSENTIAL") | (scope == "ALL"):
                 print(
-                    "\n\n_____________________________________________________________________________________________________")
+                    "\n\n_____________________________________________________________________________________________")
                 print("Installing Speck from GitHub\n")
                 if os.path.isdir(os.path.join(target_dir, '.git')):
                     # Pull the latest changes from GitHub and merge changes
@@ -452,9 +472,9 @@ class Speck:
                 else:
                     # If the repository doesn't exist, clone the repository from GitHub
                     subprocess.run(['git', 'clone', 'https://github.com/rpoliqui/Speck/', target_dir])
-            if (scope == "ALL"):
+            if scope == "ALL":
                 print(
-                    "\n\n_____________________________________________________________________________________________________")
+                    "\n\n_____________________________________________________________________________________________")
                 print("Updating Raspberry Pi and All python packages\n")
                 subprocess.run(['sudo', 'apt', '-y', 'update'])  # Update the package list
                 subprocess.run(['sudo', 'apt', '-y', 'upgrade'])  # Update the packages
