@@ -87,7 +87,7 @@ for leg in speck.Legs:
     # test z direction movement
     print("__________Testing Z Direction Movement__________")
     leg.set_position(0, 100, 34)  # set to starting position
-    time.sleep(1)
+    time.sleep(0.5)
     print("Forward")
     leg.move(0, 0, 50)  # move forward
     time.sleep(1)
@@ -96,3 +96,40 @@ for leg in speck.Legs:
     print("Backward")
     leg.move(0, 0, -50)  # move backward
     time.sleep(1)
+
+    # test multi-axis movement
+    print("__________Test Multi-Axis Movement__________")
+    leg.set_position(0, 100, 34)  # set to starting position
+    time.sleep(0.5)
+    print("X, Y Movement")
+    leg.move(50, 50, 0)
+    time.sleep(1)
+    leg.move(-50, -50, 0)
+    time.sleep(1)
+    print("X, Z Movement")
+    leg.move(50, 0, 50)
+    time.sleep(1)
+    leg.move(-50, 0, -50)
+    time.sleep(1)
+    print("Y, Z Movement")
+    leg.move(0, 50, 50)
+    time.sleep(1)
+    leg.move(0, -50, -50)
+    time.sleep(1)
+    print("X, Y, Z Movement")
+    leg.move(50, 50, 50)
+    time.sleep(1)
+    leg.move(-50, -50, -50)
+    time.sleep(1)
+
+print("\nFinished Legs\n")
+# test preset positions and gaits
+print("__________Testing Preset Positions and Movements__________")
+print("Sitting")
+speck.sit()
+time.sleep(2)
+print("Standing")
+speck.stand()
+time.sleep(2)
+print("Walking")
+speck.gait(speck.Gaits[0])

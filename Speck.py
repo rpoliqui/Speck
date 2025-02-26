@@ -283,15 +283,13 @@ class Leg:
         self.set_position(self.current_position[0] + dx, self.current_position[1] + dy, self.current_position[2] + dz)
         return None
 
-    pass
-
 
 class ObjectDetector:
     """
     The ObjectDectecor class is used to represent a single infrared avoidance sensor.
 
-    :parameter pin:type int: the GPIO pin that the sensor is connected to
-    :parameter value:type int: the value of the sensor
+    :parameter self.pin:type int: the GPIO pin that the sensor is connected to
+    :parameter self.value:type int: the value of the sensor
     """
 
     def __init__(self, pin: int):
@@ -315,8 +313,8 @@ class CrateJaws:
     The CrateJaws class is used to control the jaws that hold the crate within the body of Speck. This system is made of
     two linear actuators that can both move either forwards or backwards.
 
-    :parameter FrontActuator:type Motor: the actuator in the front of Speck
-    :parameter BackActuator:type Motor: the actuator in the back of Speck
+    :parameter self.FrontActuator:type Motor: the actuator in the front of Speck
+    :parameter self.BackActuator:type Motor: the actuator in the back of Speck
     """
 
     def __init__(self):
@@ -374,7 +372,8 @@ class CrateJaws:
 
 class Speck:
     """
-    The Speck class is used to control the primary functions of Speck including motion, object detection, and crate grabbing.
+    The Speck class is used to control the primary functions of Speck including motion, object detection, and crate
+    grabbing.
 
     :parameter self.rf_leg:type Leg: a Leg object representing the right front leg of Speck
     :parameter self.lf_leg:type Leg:a Leg object representing the left front leg of Speck
@@ -407,6 +406,8 @@ class Speck:
         self.CrateJaws.open()  # make sure the crate jaws start open
         # create the camera object used for detecting the crate
         self.Camera = Camera()
+        # create an array of the available gaits
+        self.Gaits = [WALK_GAIT]
 
     def step(self):
         pass
@@ -491,3 +492,13 @@ class Speck:
         else:  # Wi-Fi is not connected, Speck cannot be updated
             print("Speck cannot be updated without a wifi connection.")
         return successful
+
+    def __repr__(self):
+        return "RF Leg Position: %i, %i, %i" \
+               "LF Leg Position: %i, %i, %i" \
+               "RB Leg Position: %i, %i, %i" \
+               "LB Leg Position: %i, %i, %i" % \
+            (self.Legs[0].current_position[0], self.Legs[0].current_position[1], self.Legs[0].current_position[2],
+             self.Legs[1].current_position[0], self.Legs[1].current_position[1], self.Legs[1].current_position[2],
+             self.Legs[2].current_position[0], self.Legs[2].current_position[1], self.Legs[2].current_position[2],
+             self.Legs[3].current_position[0], self.Legs[3].current_position[1], self.Legs[3].current_position[2],)
