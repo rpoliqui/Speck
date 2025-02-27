@@ -229,7 +229,7 @@ class Leg:
             raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
 
         if AvailablePins[hip_long_pin - 1] == 1:
-            self.hip_long = Joint(hip_long_pin, min_angle=0, max_angle=180, starting_angle=-90, flipped=flipped)
+            self.hip_long = Joint(hip_long_pin, min_angle=0, max_angle=180, starting_angle=0, flipped=flipped)
             AvailablePins[hip_long_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_long_pin) + " is not available to use for the longitudinal hip joint.")
