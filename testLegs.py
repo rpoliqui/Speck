@@ -60,7 +60,7 @@ for leg in speck.Legs:
 
     # test x direction movement
     print("__________Testing X Direction Movement__________")
-    leg.set_position(0, 100, 34)  # set to starting position
+    leg.set_position(0, 150, 34)  # set to starting position
     time.sleep(0.5)
     print("Forward")
     leg.move(100, 0, 0)  # move forward
@@ -73,7 +73,7 @@ for leg in speck.Legs:
 
     # test y direction movement
     print("__________Testing Y Direction Movement__________")
-    leg.set_position(0, 100, 34)  # set to starting position
+    leg.set_position(0, 150, 34)  # set to starting position
     time.sleep(0.5)
     print("Forward")
     leg.move(0, 100, 0)  # move forward
@@ -86,7 +86,7 @@ for leg in speck.Legs:
 
     # test z direction movement
     print("__________Testing Z Direction Movement__________")
-    leg.set_position(0, 100, 34)  # set to starting position
+    leg.set_position(0, 150, 34)  # set to starting position
     time.sleep(0.5)
     print("Forward")
     leg.move(0, 0, 50)  # move forward
@@ -99,7 +99,7 @@ for leg in speck.Legs:
 
     # test multi-axis movement
     print("__________Test Multi-Axis Movement__________")
-    leg.set_position(0, 100, 34)  # set to starting position
+    leg.set_position(0, 150, 34)  # set to starting position
     time.sleep(0.5)
     print("X, Y Movement")
     leg.move(50, 50, 0)
