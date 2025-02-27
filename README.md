@@ -1,5 +1,7 @@
 # Speck - The Mini Cargo Quadruped Robot Designed with Raspberry Pi
-Speck is a mini quadruped robot that has been designed to pick up and carry a specially designed crate.
+Speck is a mini quadruped robot that has been designed to pick up and carry a specially designed crate. It uses common
+, inexpensive hardware and 3D printable structural components for a cheap and easily manufactured design. The software 
+utilizes Python as the primary programming language. 
 
 ## Getting Started
 These instructions assume that you have basic knowledge of how to connect to a Raspberry Pi via SSH and that your Raspberry Pi is connected to the internet. If your Raspberry Pi is not connected to the internet, then you will not be able to install the necessary code from this GitHub repository
@@ -14,11 +16,11 @@ Next, clone the GitHub repository into the current directory.
 
 `git clone https://github.com/rpoliqui/Speck/`
 
-Once the repository has been cloned, navigate into the Speck directory using `cd Speck`. Next, you will run the `install_Speck.py`
+Once the repository has been cloned, navigate into the Speck directory using `cd Speck`. Next, you will run the `installSpeck.py`
 script to install all necessary packages, pull the newest code from the GitHub repository, and
 make sure your Pi is set up to run Speck. To do this, run the following command:
 
-`python3 install_Speck.py`
+`python3 installSpeck.py`
 
 - Note: this script can be run at any time to update the system. This script can also be run instead of running 
 `sudo apt install git` and `git clone https://github.com/rpoliqui/Speck/` to install git and clone the repository into
@@ -43,5 +45,5 @@ can be purchased from other sources. The reference link is there to provide an i
 | X728 (Max 5.1V 6A) UPS & Power Management Board                            | 1        |                 |
 | M2.5 Shoulder Screws, 3mm shoulder, 4mm shoulder length, 5mm thread length | 4        |                 |
 | 683ZZ Ball Bearing 3mm x 7mm x 3mm                                         | 4        |                 |
-| M3 x 5 machine screw                                                       | 5        |                 |
+|                                                                            | 5        |                 |
 |                                                                            |          |                 |
