@@ -257,7 +257,7 @@ class Leg:
         :argument z:type int: The position of the foot in the in - out direction in millimeters
         :return: None
         """
-        self.current_position = {x, y, z}  # update the parameter storing the current position
+        self.current_position = [x, y, z]  # update the parameter storing the current position
         # calculate all three joint angles using inverse kinematics
         lat_hip_angle = math.atan(z / y) + math.atan(math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2) / HIP_LENGTH)
         knee_angle = math.acos(
