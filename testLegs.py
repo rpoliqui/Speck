@@ -26,36 +26,36 @@ for leg in speck.Legs:
 
     # test hip longitudinal mobility
     print("__________Testing Hip Longitudinal Mobility__________")
-    leg.hip_lat.set_angle(0)  # set to starting angle
+    leg.hip_long.set_angle(0)  # set to starting angle
     time.sleep(0.5)
     print("Upper Range:")
     for angle in range(0, 90, 1):  # sweep through upper range
-        leg.hip_lat.set_angle(angle)
+        leg.hip_long.set_angle(angle)
         print(angle)
         time.sleep(0.5)
     print("Lower Range:")
     for angle in range(0, -90, -1):  # sweep through lower range
-        leg.hip_lat.set_angle(angle)
+        leg.hip_long.set_angle(angle)
         print(angle)
         time.sleep(0.5)
-    leg.hip_lat.set_angle(0)  # reset to starting angle
+    leg.hip_long.set_angle(0)  # reset to starting angle
     time.sleep(0.5)
 
     # test knee mobility
     print("__________Testing Knee Mobility__________")
-    leg.hip_lat.set_angle(90)  # set to starting angle
+    leg.knee.set_angle(90)  # set to starting angle
     time.sleep(0.5)
     print("Upper Range:")
     for angle in range(90, 180, 1):  # sweep through upper range
-        leg.hip_lat.set_angle(angle)
+        leg.knee.set_angle(angle)
         print(angle)
         time.sleep(0.5)
     print("Lower Range:")
     for angle in range(90, 0, -1):  # sweep through lower range
-        leg.hip_lat.set_angle(angle)
+        leg.knee.set_angle(angle)
         print(angle)
         time.sleep(0.5)
-    leg.hip_lat.set_angle(90)  # reset to starting angle
+    leg.knee.set_angle(90)  # reset to starting angle
     time.sleep(0.5)
 
     # test x direction movement
