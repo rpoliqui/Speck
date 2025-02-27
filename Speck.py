@@ -224,7 +224,7 @@ class Leg:
         # Set the pins to taken
         if AvailablePins[hip_lat_pin - 1] == 1:
             # for correct functioning, the lateral hip joints needs to be flipped by default
-            self.hip_lat = Joint(hip_lat_pin, min_angle=-90, max_angle=90, starting_angle=0, flipped=flipped & True)
+            self.hip_lat = Joint(hip_lat_pin, min_angle=-90, max_angle=90, starting_angle=0, flipped=not flipped)
             AvailablePins[hip_lat_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
@@ -266,7 +266,7 @@ class Leg:
         long_hip_angle = math.atan(x / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2))) + math.asin(
             (LOWER_LEG_LENGTH * math.sin(knee_angle)) / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2)))
         # set all three servos to the calculated angles
-        self.hip_lat.set_angle(-1*(90-math.degrees(lat_hip_angle)))
+        self.hip_lat.set_angle(90-math.degrees(lat_hip_angle))
         self.hip_long.set_angle(math.degrees(long_hip_angle))
         self.knee.set_angle(180-math.degrees(knee_angle))
         return None
