@@ -230,13 +230,13 @@ class Leg:
             raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
 
         if AvailablePins[hip_long_pin - 1] == 1:
-            self.hip_long = Joint(hip_long_pin, min_angle=-90, max_angle=90, starting_angle=0, flipped=flipped)
+            self.hip_long = Joint(hip_long_pin, min_angle=-90, max_angle=90, starting_angle=-90, flipped=flipped)
             AvailablePins[hip_long_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_long_pin) + " is not available to use for the longitudinal hip joint.")
 
         if AvailablePins[knee_pin - 1] == 1:
-            self.knee = Joint(knee_pin, min_angle=0, max_angle=180, starting_angle=0, flipped=flipped)
+            self.knee = Joint(knee_pin, min_angle=0, max_angle=180, starting_angle=180, flipped=flipped)
             AvailablePins[knee_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(knee_pin) + " is not available for the knee joint")
@@ -259,12 +259,12 @@ class Leg:
         """
         self.current_position = [x, y, z]  # update the parameter storing the current position
         # calculate all three joint angles using inverse kinematics
-        lat_hip_angle = math.atan(z / y) + math.atan(math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2) / HIP_LENGTH)
+        lat_hip_angle = math.atan(z / y) + math.atan(math.sqrt((z ** 2) + (y ** 2) - (HIP_LENGTH ** 2)) / HIP_LENGTH)
         knee_angle = math.acos(
-            (z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) / (
+            ((z ** 2) + (y ** 2) - (HIP_LENGTH ** 2) + (x ** 2) - (UPPER_LEG_LENGTH ** 2) - (LOWER_LEG_LENGTH ** 2)) / (
                     -2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
-        long_hip_angle = math.atan(x / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2))) + math.asin(
-            (LOWER_LEG_LENGTH * math.sin(knee_angle)) / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2)))
+        long_hip_angle = math.atan(x / (math.sqrt((z ** 2) + (y ** 2) - (HIP_LENGTH ** 2)))) + math.asin(
+            (LOWER_LEG_LENGTH * math.sin(knee_angle)) / (math.sqrt((z ** 2) + (y ** 2) - (HIP_LENGTH ** 2) + (x ** 2))))
         # set all three servos to the calculated angles
         self.hip_lat.set_angle(90-math.degrees(lat_hip_angle))
         self.hip_long.set_angle(-1*(90-math.degrees(long_hip_angle)))
