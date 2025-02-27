@@ -11,6 +11,6 @@ for leg in speck.Legs:
     print(legs[legNum])
     print(leg)
     leg.knee.set_angle(0)
-    leg.hip_long.set_angle(90)
-    leg.hip_lat.set_angle(90)
+    leg.hip_long.set_angle(0)
+    leg.hip_lat.set_angle(0)
     legNum += 1

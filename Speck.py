@@ -223,13 +223,13 @@ class Leg:
         # check to make sure all given pins are available. Raise an error if the pin is unavailable.
         # Set the pins to taken
         if AvailablePins[hip_lat_pin - 1] == 1:
-            self.hip_lat = Joint(hip_lat_pin, min_angle=0, max_angle=180, starting_angle=0, flipped=flipped)
+            self.hip_lat = Joint(hip_lat_pin, min_angle=-90, max_angle=90, starting_angle=0, flipped=flipped)
             AvailablePins[hip_lat_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
 
         if AvailablePins[hip_long_pin - 1] == 1:
-            self.hip_long = Joint(hip_long_pin, min_angle=0, max_angle=180, starting_angle=0, flipped=flipped)
+            self.hip_long = Joint(hip_long_pin, min_angle=-90, max_angle=90, starting_angle=0, flipped=flipped)
             AvailablePins[hip_long_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_long_pin) + " is not available to use for the longitudinal hip joint.")
@@ -265,8 +265,8 @@ class Leg:
         long_hip_angle = math.atan(x / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2))) + math.asin(
             (LOWER_LEG_LENGTH * math.sin(knee_angle)) / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2)))
         # set all three servos to the calculated angles
-        self.hip_lat.set_angle(180-math.degrees(lat_hip_angle))
-        self.hip_long.set_angle(90-math.degrees(long_hip_angle))
+        self.hip_lat.set_angle(90-math.degrees(lat_hip_angle))
+        self.hip_long.set_angle(math.degrees(long_hip_angle))
         self.knee.set_angle(180-math.degrees(knee_angle))
         return None
 
@@ -416,10 +416,10 @@ class Speck:
         """
         Function used to make Speck stand. Sets the position of all feet accordingly
         """
-        self.Legs[0].set_position(0, 100, 34)
-        self.Legs[1].set_position(0, 100, 34)
-        self.Legs[2].set_position(0, 100, 34)
-        self.Legs[3].set_position(0, 100, 34)
+        self.Legs[0].set_position(0, 200, 34)
+        self.Legs[1].set_position(0, 200, 34)
+        self.Legs[2].set_position(0, 200, 34)
+        self.Legs[3].set_position(0, 200, 34)
 
     def sit(self):
         """
