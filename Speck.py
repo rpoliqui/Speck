@@ -15,6 +15,7 @@ Classes:
     CrateJaws: An object used to control the crate holding jaws that are used to pick up a specially designed crate
 Global Variables:
     AvailablePins: a boolean array used to keep track of what pins are available. True = available, False = unavailable
+    WALK_GAIT: an array of leg movements that allow Speck to walk
 _______________________________________________________________________________________________________________________
 References:
     Python. (2025, January 8). Python 3.13.1 documentation. Retrieved from Python: https://docs.python.org/3/
@@ -37,6 +38,8 @@ References:
     https://www.youtube.com/watch?v=40tZQPd3z8g
     https://www.hackster.io/rbnsmathew/simple-quadruped-robot-ebe1fd
     https://www.geeksforgeeks.org/print-objects-of-a-class-in-python/
+    https://docs.github.com/en/repositories/releasing-projects-on-github/viewing-your-repositorys-releases-and-tags
+    https://git-scm.com/docs/git-describe
 """
 # __________Import Statements__________
 import numpy as np
@@ -371,6 +374,7 @@ class CrateJaws:
         return None
 
 
+# __________Main Speck Object__________
 class Speck:
     """
     The Speck class is used to control the primary functions of Speck including motion, object detection, and crate
@@ -417,25 +421,25 @@ class Speck:
         """
         Function used to make Speck stand. Sets the position of all feet accordingly
         """
-        self.Legs[0].set_position(0, 200, 34)
-        self.Legs[1].set_position(0, 200, 34)
-        self.Legs[2].set_position(0, 200, 34)
-        self.Legs[3].set_position(0, 200, 34)
+        self.Legs[0].set_position(0, 200, HIP_LENGTH)
+        self.Legs[1].set_position(0, 200, HIP_LENGTH)
+        self.Legs[2].set_position(0, 200, HIP_LENGTH)
+        self.Legs[3].set_position(0, 200, HIP_LENGTH)
 
     def sit(self):
         """
         Function used to make Speck sit. Sets the position of all feet accordingly
         """
-        self.Legs[0].set_position(0, 50, 34)
-        self.Legs[1].set_position(0, 50, 34)
-        self.Legs[2].set_position(0, 50, 34)
-        self.Legs[3].set_position(0, 50, 34)
+        self.Legs[0].set_position(0, 50, HIP_LENGTH)
+        self.Legs[1].set_position(0, 50, HIP_LENGTH)
+        self.Legs[2].set_position(0, 50, HIP_LENGTH)
+        self.Legs[3].set_position(0, 50, HIP_LENGTH)
 
     def gait(self, gait):
         # Gait Layout:
         # {Step n: {Leg, dx, dy, dz},
         # {Step n+1: {Leg, dx, dy, dz}}
-        for step in range(0, len(gait) - 1, 1):  # loop through all steps for once cyle
+        for step in range(0, len(gait) - 1, 1):  # loop through all steps for once cyCle
             if gait[step][0] == 4:  # move all legs
                 for leg in self.Legs:
                     leg.move(gait[step][1], gait[step][2], gait[step][3])
