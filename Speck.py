@@ -258,16 +258,16 @@ class Leg:
         """
         self.current_position = {x, y, z}  # update the parameter storing the current position
         # calculate all three joint angles using inverse kinematics
-        lat_hip_angle = 180 - math.atan(z / y) + math.atan(math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2) / HIP_LENGTH)
-        knee_angle = 180 - math.acos(
+        lat_hip_angle = math.atan(z / y) + math.atan(math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2) / HIP_LENGTH)
+        knee_angle = math.acos(
             (z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) / (
                     -2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
-        long_hip_angle = 90 - math.atan(x / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2))) + math.asin(
+        long_hip_angle = math.atan(x / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2))) + math.asin(
             (LOWER_LEG_LENGTH * math.sin(knee_angle)) / (math.sqrt(z ** 2 + y ** 2 - HIP_LENGTH ** 2 + x ** 2)))
         # set all three servos to the calculated angles
-        self.hip_lat.set_angle(math.degrees(lat_hip_angle))
-        self.hip_long.set_angle(math.degrees(long_hip_angle))
-        self.knee.set_angle(math.degrees(knee_angle))
+        self.hip_lat.set_angle(180-math.degrees(lat_hip_angle))
+        self.hip_long.set_angle(90-math.degrees(long_hip_angle))
+        self.knee.set_angle(180-math.degrees(knee_angle))
         return None
 
     def move(self, dx, dy, dz):
