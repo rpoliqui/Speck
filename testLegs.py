@@ -29,12 +29,12 @@ for leg in speck.Legs:
     leg.hip_long.set_angle(0)  # set to starting angle
     time.sleep(0.5)
     print("Upper Range:")
-    for angle in range(0, 90, 1):  # sweep through upper range
+    for angle in range(0, 90, 5):  # sweep through upper range
         leg.hip_long.set_angle(angle)
         print(angle)
         time.sleep(0.5)
     print("Lower Range:")
-    for angle in range(0, -90, -1):  # sweep through lower range
+    for angle in range(0, -90, -5):  # sweep through lower range
         leg.hip_long.set_angle(angle)
         print(angle)
         time.sleep(0.5)
@@ -46,12 +46,12 @@ for leg in speck.Legs:
     leg.knee.set_angle(90)  # set to starting angle
     time.sleep(0.5)
     print("Upper Range:")
-    for angle in range(90, 180, 1):  # sweep through upper range
+    for angle in range(90, 180, 5):  # sweep through upper range
         leg.knee.set_angle(angle)
         print(angle)
         time.sleep(0.5)
     print("Lower Range:")
-    for angle in range(90, 0, -1):  # sweep through lower range
+    for angle in range(90, 0, -5):  # sweep through lower range
         leg.knee.set_angle(angle)
         print(angle)
         time.sleep(0.5)
