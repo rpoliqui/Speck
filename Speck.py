@@ -46,6 +46,7 @@ import numpy as np
 import subprocess
 import os
 import math
+from math import tan, atan, sin, asin, cos, acos, sqrt
 import time
 # import cv2 as cv
 # from picamera import PiCamera
@@ -86,8 +87,8 @@ PIN_LEFT_SWITCH = 13
 PIN_RIGHT_SWITCH = 6
 
 # __________System Constants__________
-HIP_LENGTH = 68
-UPPER_LEG_LENGTH = 123.75
+HIP_LENGTH = 61.5
+UPPER_LEG_LENGTH = 125
 LOWER_LEG_LENGTH = 110
 JAW_OPEN_TIME = 10
 JAW_CLOSE_TIME = 10
@@ -184,7 +185,8 @@ class Joint:
             self.current_angle = angle  # update the current angle of the joint to the required angle
             self.servo.angle = angle  # set the physical angle of the servo
         else:
-            raise RuntimeError("The given angle was out of the joint's range " + str(self.min_angle))
+            raise RuntimeError("The given angle %f was out of the joint's range %f - %f" % (angle, self.min_angle,
+                                                                                            self.max_angle))
             pass
         return None
 
@@ -227,7 +229,7 @@ class Leg:
         # Set the pins to taken
         if AvailablePins[hip_lat_pin - 1] == 1:
             # for correct functioning, the lateral hip joints needs to be flipped by default
-            self.hip_lat = Joint(hip_lat_pin, min_angle=-90, max_angle=90, starting_angle=0, flipped=not flipped)
+            self.hip_lat = Joint(hip_lat_pin, min_angle=-90, max_angle=90, starting_angle=0, flipped=flipped)
             AvailablePins[hip_lat_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
@@ -261,17 +263,20 @@ class Leg:
         :return: None
         """
         self.current_position = [x, y, z]  # update the parameter storing the current position
+        # calculate geometry used in angle calculations
+        d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
+        g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
         # calculate all three joint angles using inverse kinematics
-        lat_hip_angle = math.atan(z / y) + math.atan(math.sqrt((z ** 2) + (y ** 2) - (HIP_LENGTH ** 2)) / HIP_LENGTH)
-        knee_angle = math.acos(
-            ((z ** 2) + (y ** 2) - (HIP_LENGTH ** 2) + (x ** 2) - (UPPER_LEG_LENGTH ** 2) - (LOWER_LEG_LENGTH ** 2)) / (
-                    -2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
-        long_hip_angle = math.atan(x / (math.sqrt((z ** 2) + (y ** 2) - (HIP_LENGTH ** 2)))) + math.asin(
-            (LOWER_LEG_LENGTH * math.sin(knee_angle)) / (math.sqrt((z ** 2) + (y ** 2) - (HIP_LENGTH ** 2) + (x ** 2))))
+        lat_hip_angle = atan(z / y) + atan(d / HIP_LENGTH)
+
+        knee_angle = acos((g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) /
+                          (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
+
+        long_hip_angle = atan(x / d) + asin(LOWER_LEG_LENGTH * sin(knee_angle) / g)
         # set all three servos to the calculated angles
-        self.hip_lat.set_angle(90-math.degrees(lat_hip_angle))
-        self.hip_long.set_angle(-1*(90-math.degrees(long_hip_angle)))
-        self.knee.set_angle(180-math.degrees(knee_angle))
+        self.hip_lat.set_angle(-1 * (90 - math.degrees(lat_hip_angle)))
+        self.hip_long.set_angle(-1 * (90 - math.degrees(long_hip_angle)))
+        self.knee.set_angle(180 - math.degrees(knee_angle))
         return None
 
     def move(self, dx, dy, dz):
@@ -413,6 +418,8 @@ class Speck:
         self.Camera = Camera()
         # create an array of the available gaits
         self.Gaits = [WALK_GAIT]
+        # Store the version of code
+        self.Version = "0.0.1"
 
     def step(self):
         pass
@@ -482,6 +489,7 @@ class Speck:
                 print(
                     "\n\n_____________________________________________________________________________________________")
                 print("Updating Raspberry Pi and All python packages\n")
+                version = subprocess.run([], capture_output=True, text=True)
                 subprocess.run(['sudo', 'apt', '-y', 'update'])  # Update the package list
                 subprocess.run(['sudo', 'apt', '-y', 'upgrade'])  # Update the packages
                 subprocess.run(['sudo', 'apt', '-y', 'autoremove'])  # Remove any unnecessary packages from the pi
