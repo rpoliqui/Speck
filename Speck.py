@@ -264,6 +264,7 @@ class Leg:
         :return: None
         """
         self.current_position = [x, y, z]  # update the parameter storing the current position
+        x = y - 150  # perform adjustment on x position based on experiments
         # calculate geometry used in angle calculations
         d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
         d = math.sqrt(d**2 + HIP_OFFSET**2)
