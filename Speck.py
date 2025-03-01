@@ -87,9 +87,10 @@ PIN_LEFT_SWITCH = 13
 PIN_RIGHT_SWITCH = 6
 
 # __________System Constants__________
-HIP_LENGTH = 61.5
+HIP_LENGTH = 62
 UPPER_LEG_LENGTH = 125
 LOWER_LEG_LENGTH = 110
+HIP_OFFSET = 10
 JAW_OPEN_TIME = 10
 JAW_CLOSE_TIME = 10
 
@@ -265,9 +266,10 @@ class Leg:
         self.current_position = [x, y, z]  # update the parameter storing the current position
         # calculate geometry used in angle calculations
         d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
+        d = math.sqrt(d**2 + HIP_OFFSET**2)
         g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
         # calculate all three joint angles using inverse kinematics
-        lat_hip_angle = atan2(z, y) + atan2(d, HIP_LENGTH)
+        lat_hip_angle = atan2(z, y) - atan2(HIP_OFFSET, d)
 
         knee_angle = acos((g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) /
                           (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
