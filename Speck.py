@@ -266,7 +266,7 @@ class Leg:
         HIP_OFFSET = 0
         # calculate geometry used in angle calculations
         d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
-        g = sqrt(y ** 2 + x ** 2)  # distance from hip long joint to the foot
+        g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
         print("G: %f" % g)
         # calculate all three joint angles using inverse kinematics
         lat_hip_angle = atan2(z, y) + math.atan2(d, HIP_LENGTH)
@@ -274,7 +274,7 @@ class Leg:
         knee_angle = acos((g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) /
                           (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
         print("Knee: %f deg" % math.degrees(knee_angle))
-        long_hip_angle = atan2(x, y) + asin((LOWER_LEG_LENGTH * sin(knee_angle)) / g)
+        long_hip_angle = atan2(x, d) + asin((LOWER_LEG_LENGTH * sin(knee_angle)) / g)
         print("Hip: %f deg" % math.degrees(long_hip_angle))
         # set all three servos to the calculated angles
         self.hip_lat.set_angle(-1 * (90 - math.degrees(lat_hip_angle)))
