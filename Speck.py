@@ -263,7 +263,7 @@ class Leg:
         :return: None
         """
         # define offset for hip geometry
-        HIP_OFFSET = 100
+        HIP_OFFSET = 0
         # calculate geometry used in angle calculations
         d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
         g = sqrt((d + HIP_OFFSET) ** 2 + x ** 2)  # distance from hip long joint to the foot
