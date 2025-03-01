@@ -269,7 +269,7 @@ class Leg:
         d = math.sqrt(d**2 + HIP_OFFSET**2)
         g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
         # calculate all three joint angles using inverse kinematics
-        lat_hip_angle = atan2(z, y) + atan2(d, HIP_LENGTH)
+        lat_hip_angle = atan2(z, y) + atan2(HIP_OFFSET, d)
 
         knee_angle = acos((g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) /
                           (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
