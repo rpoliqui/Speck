@@ -112,21 +112,21 @@ AvailablePins = np.ones(40)
 # {Step n: {Leg, dx, dy, dz},
 # {Step n+1: {Leg, dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
-# DIRECTIONS: [X, Y, Z]
-WALK_GAIT = ((0, 0, 50, 0),
-             (0, 50, 0, 0),
-             (0, 0, -50, 0),
-             (3, 0, 50, 0),
-             (3, 50, 0, 0),
+# DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
+WALK_GAIT = ((0, 0, -50, 0),
+             (0, -50, 0, 0),
+             (0, 0, 50, 0),
              (3, 0, -50, 0),
-             (4, -50, 0, 0),
-             (1, 0, 50, 0),
-             (1, 50, 0, 0),
+             (3, -50, 0, 0),
+             (3, 0, 50, 0),
+             (4, 50, 0, 0),
              (1, 0, -50, 0),
-             (2, 0, 50, 0),
-             (2, 50, 0, 0),
+             (1, -50, 0, 0),
+             (1, 0, 50, 0),
              (2, 0, -50, 0),
-             (4, -50, 0, 0))
+             (2, -50, 0, 0),
+             (2, 0, 50, 0),
+             (4, 50, 0, 0))
 
 # __________Environment Setup__________
 factory = PiGPIOFactory()  # define pin factory to use servos for more accurate servo control
@@ -428,19 +428,19 @@ class Speck:
         """
         Function used to make Speck stand. Sets the position of all feet accordingly
         """
-        self.Legs[0].set_position(0, 200, HIP_LENGTH)
-        self.Legs[1].set_position(0, 200, HIP_LENGTH)
-        self.Legs[2].set_position(0, 200, HIP_LENGTH)
-        self.Legs[3].set_position(0, 200, HIP_LENGTH)
+        self.Legs[0].set_position(0, 175, HIP_LENGTH)
+        self.Legs[1].set_position(0, 175, HIP_LENGTH)
+        self.Legs[2].set_position(0, 175, HIP_LENGTH)
+        self.Legs[3].set_position(0, 175, HIP_LENGTH)
 
     def sit(self):
         """
         Function used to make Speck sit. Sets the position of all feet accordingly
         """
-        self.Legs[0].set_position(0, 50, HIP_LENGTH)
-        self.Legs[1].set_position(0, 50, HIP_LENGTH)
-        self.Legs[2].set_position(0, 50, HIP_LENGTH)
-        self.Legs[3].set_position(0, 50, HIP_LENGTH)
+        self.Legs[0].set_position(19, 30, HIP_LENGTH)
+        self.Legs[1].set_position(19, 30, HIP_LENGTH)
+        self.Legs[2].set_position(19, 30, HIP_LENGTH)
+        self.Legs[3].set_position(19, 30, HIP_LENGTH)
 
     def gait(self, gait):
         # Gait Layout:
@@ -452,6 +452,7 @@ class Speck:
                     leg.move(gait[step][1], gait[step][2], gait[step][3])
             else:
                 self.Legs[gait[step][0]].move(gait[step][1], gait[step][2], gait[step][3])
+            time.sleep(0.5)
 
     def grab(self):
         self.sit()  # have Speck sit onto the crate
