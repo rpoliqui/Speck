@@ -252,7 +252,7 @@ class Leg:
         return "Hip_Lat Pin: %s , Hip_Long Pin: %s , Knee Pin: %s , Flipped: %s" % (
             self.hip_lat.pin, self.hip_long.pin, self.knee.pin, self.flipped)
 
-    def set_position(self, x: int, y: int, z: int):
+    def set_position(self, x: float, y: float, z: float):
         """
         A function used to set the position of the foot. The position is relative to the point where the longitudinal
         hip joint and upper leg meet.
