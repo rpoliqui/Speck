@@ -46,7 +46,7 @@ import numpy as np
 import subprocess
 import os
 import math
-from math import tan, atan, sin, asin, cos, acos, sqrt
+from math import tan, atan2, sin, asin, cos, acos, sqrt
 import time
 # import cv2 as cv
 # from picamera import PiCamera
@@ -267,12 +267,12 @@ class Leg:
         d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
         g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
         # calculate all three joint angles using inverse kinematics
-        lat_hip_angle = atan(z / y) + atan(d / HIP_LENGTH)
+        lat_hip_angle = atan2(z, y) + atan2(d, HIP_LENGTH)
 
         knee_angle = acos((g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) /
                           (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
 
-        long_hip_angle = atan(x / d) + asin(LOWER_LEG_LENGTH * sin(knee_angle) / g)
+        long_hip_angle = atan2(x, d) + asin(LOWER_LEG_LENGTH * sin(knee_angle) / g)
         # set all three servos to the calculated angles
         self.hip_lat.set_angle(-1 * (90 - math.degrees(lat_hip_angle)))
         self.hip_long.set_angle(-1 * (90 - math.degrees(long_hip_angle)))
