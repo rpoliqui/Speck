@@ -274,7 +274,8 @@ class Leg:
         knee_angle = acos((g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) /
                           (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
         print("Knee: %f deg" % knee_angle)
-        long_hip_angle = atan2(x, y) + asin(LOWER_LEG_LENGTH * sin(knee_angle) / g)
+        long_hip_angle = atan2(x, y) + asin((LOWER_LEG_LENGTH * sin(knee_angle)) / g)
+        print("asin arg = %f" % ((LOWER_LEG_LENGTH * sin(knee_angle)) / g))
         print("Hip: %f deg" % long_hip_angle)
         # set all three servos to the calculated angles
         self.hip_lat.set_angle(-1 * (90 - math.degrees(lat_hip_angle)))
