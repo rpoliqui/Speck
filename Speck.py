@@ -263,8 +263,8 @@ class Leg:
         :return: None
         """
         # calculate geometry used in angle calculations
-        d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2) + 10  # distance from hip lat joint to the foot
-        g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
+        d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
+        g = sqrt(z ** 2 + x ** 2)  # distance from hip long joint to the foot
         # calculate all three joint angles using inverse kinematics
         lat_hip_angle = atan2(z, y) + math.atan2(d, HIP_LENGTH)
 
