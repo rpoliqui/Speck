@@ -262,22 +262,56 @@ class Leg:
         :argument z:type int: The position of the foot in the in - out direction in millimeters
         :return: None
         """
+        foot_proj_y = y - HIP_LENGTH  # Correcting for the offset of lateral hip joint
+
+        # Distance from lateral hip joint to foot projection in y-z plane
+        d_squared = (z ** 2 + foot_proj_y ** 2)
+        if d_squared < 0:
+            raise ValueError("Invalid position: Foot target is too close to the hip.")
+
+        d = math.sqrt(d_squared)
+
+        # Correct lateral hip joint angle
+        lat_hip_angle = math.atan2(z, foot_proj_y) + math.atan2(d, HIP_LENGTH)
+
+        # Compute the correct leg extension distance
+        g = math.sqrt(x ** 2 + d ** 2)
+
+        # Ensure knee angle calculation is within valid bounds
+        cos_knee = (g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) / (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH)
+        cos_knee = max(-1, min(1, cos_knee))  # Prevent math domain errors
+        knee_angle = math.acos(cos_knee)
+
+        # Compute the longitudinal hip angle with corrected projection
+        sin_term = (LOWER_LEG_LENGTH * math.sin(knee_angle)) / g
+        sin_term = max(-1, min(1, sin_term))  # Prevent math domain errors
+        long_hip_angle = math.atan2(x, d) - math.asin(sin_term)
+
+        # Convert to degrees and apply sign corrections
+        lat_hip_angle_deg = -1 * (90 - math.degrees(lat_hip_angle))
+        long_hip_angle_deg = -1 * (90 - math.degrees(long_hip_angle))
+        knee_angle_deg = 180 - math.degrees(knee_angle)
+
+        # Set all three servos to the calculated angles
+        self.hip_lat.set_angle(lat_hip_angle_deg)
+        self.hip_long.set_angle(long_hip_angle_deg)
+        self.knee.set_angle(knee_angle_deg)
         self.current_position = [x, y, z]  # update the parameter storing the current position
-        x += math.sqrt(y**2 - 175**2)  # perform adjustment on x position based on experiments
-        # calculate geometry used in angle calculations
-        d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
-        g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
-        # calculate all three joint angles using inverse kinematics
-        lat_hip_angle = atan2(z, y) + math.atan2(d, HIP_LENGTH)
 
-        knee_angle = acos((g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) /
-                          (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
-
-        long_hip_angle = atan2(x, d) + asin(LOWER_LEG_LENGTH * sin(knee_angle) / g)
-        # set all three servos to the calculated angles
-        self.hip_lat.set_angle(-1 * (90 - math.degrees(lat_hip_angle)))
-        self.hip_long.set_angle(-1 * (90 - math.degrees(long_hip_angle)))
-        self.knee.set_angle(180 - math.degrees(knee_angle))
+        # # calculate geometry used in angle calculations
+        # d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
+        # g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
+        # # calculate all three joint angles using inverse kinematics
+        # lat_hip_angle = atan2(z, y) + math.atan2(d, HIP_LENGTH)
+        #
+        # knee_angle = acos((g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) /
+        #                   (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
+        #
+        # long_hip_angle = atan2(x, d) + asin(LOWER_LEG_LENGTH * sin(knee_angle) / g)
+        # # set all three servos to the calculated angles
+        # self.hip_lat.set_angle(-1 * (90 - math.degrees(lat_hip_angle)))
+        # self.hip_long.set_angle(-1 * (90 - math.degrees(long_hip_angle)))
+        # self.knee.set_angle(180 - math.degrees(knee_angle))
         return None
 
     def move(self, dx, dy, dz):
