@@ -263,7 +263,7 @@ class Leg:
         :return: None
         """
         self.current_position = [x, y, z]
-        print("(%f, %f, %f)" % x, y, z)
+        print("(%f, %f, %f)" % (x, y, z))
         # calculate geometry used in angle calculations
         d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
         g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
