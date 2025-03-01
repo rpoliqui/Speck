@@ -278,7 +278,7 @@ class Leg:
         print("Hip: %f deg" % math.degrees(long_hip_angle))
         # set all three servos to the calculated angles
         self.hip_lat.set_angle(-1 * (90 - math.degrees(lat_hip_angle)))
-        self.hip_long.set_angle(-1 * (90 - math.degrees(long_hip_angle)))
+        self.hip_long.set_angle(-1 * (math.degrees(long_hip_angle)))
         self.knee.set_angle(180 - math.degrees(knee_angle))
         return None
 
