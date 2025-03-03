@@ -40,17 +40,19 @@ References:
     https://www.geeksforgeeks.org/print-objects-of-a-class-in-python/
     https://docs.github.com/en/repositories/releasing-projects-on-github/viewing-your-repositorys-releases-and-tags
     https://git-scm.com/docs/git-describe
+    https://realpython.com/intro-to-python-threading/
 """
 # __________Import Statements__________
 import numpy as np
 import subprocess
 import os
 import math
-from math import tan, atan2, sin, asin, cos, acos, sqrt
+from math import atan2, sin, asin, acos, sqrt
 import time
 # import cv2 as cv
 # from picamera import PiCamera
 from threading import Thread, Timer
+from queue import Queue
 from gpiozero import AngularServo, Motor, Button, Device
 from gpiozero.pins.pigpio import PiGPIOFactory
 
@@ -99,16 +101,6 @@ JAW_CLOSE_TIME = 10
 AvailablePins = np.ones(40)
 
 # array storing changes in x, y and z positions for each leg to enable Speck to walk. Layout:
-# {Step n: { RF: {x, y, z}, LF: {x, y, z}, RB: {x, y, z}, LB: {x, y, z}},
-#  Step n+1: { RF: {x, y, z}, LF: {x, y, z}, RB: {x, y, z}, LB: {x, y, z}}}
-# WALK_GAIT = {{{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}},
-#              {{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}},
-#              {{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}},
-#              {{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}},
-#              {{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}},
-#              {{x, y, z}, {x, y, x}, {x, y, z}, {x, y, z}}}
-
-# array storing changes in x, y and z positions for each leg to enable Speck to walk. Layout:
 # {Step n: {Leg, dx, dy, dz},
 # {Step n+1: {Leg, dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
@@ -128,11 +120,12 @@ WALK_GAIT = ((0, 0, -50, 0),
              (2, 0, 50, 0),
              (4, 50, 0, 0))
 
+STRAFE_GAIT = ((),
+               ())
+
 # __________Environment Setup__________
 factory = PiGPIOFactory()  # define pin factory to use servos for more accurate servo control
 Device.pin_factory = factory
-background = Thread()  # create a background Thread to allow processes to run in the background
-background.start()  # start the background Thread
 
 
 # __________Class Definitions__________
@@ -292,6 +285,26 @@ class Leg:
         self.set_position(self.current_position[0] + dx, self.current_position[1] + dy, self.current_position[2] + dz)
         return None
 
+    def smooth_move(self, dx, dy, dz):
+        """
+        A function to change, or move, the position of the foot smoothly to prevent choppy movements. The given position
+        is relative to the current position.
+
+        :argument dx:type int: the distance in millimeters to change the x position by
+        :argument dy:type int: the distance in millimeters to change the y position by
+        :argument dz:type int: the distance in millimeters to change the z position by
+        :return: None
+        """
+        # define the number of steps as half the largest size so that each step is about 2mm
+        step_size = max(dx, dy, dz) / 2
+        for step in range(0, step_size):
+            # set the position of the leg to the current position plus the changes given as arguments
+            self.set_position(self.current_position[0] + dx / step_size, self.current_position[1] + dy / step_size,
+                              self.current_position[2] + dz / step_size)
+            # short delay to smooth movement
+            time.sleep(0.25)
+        return None
+
 
 class ObjectDetector:
     """
@@ -418,8 +431,24 @@ class Speck:
         self.Camera = Camera()
         # create an array of the available gaits
         self.Gaits = [WALK_GAIT]
+        # create a queue of movements to perform. Start with an infinite size
+        self.move_queue = Queue(0)
+        # create movement thread to allow leg motion to be controlled in the background
+        background = Thread(target=self.movement_thread_function, daemon=True)
+        background.start()  # start the movement thread running in the background
         # Store the version of code
         self.Version = "0.0.1"
+
+    # __________Define Movement Thread Function_________
+    def movement_thread_function(self):
+        while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
+            if not self.move_queue.empty():
+                move = self.move_queue.get()
+                if move[0] == 4:  # move all legs
+                    for leg in self.Legs:
+                        leg.smooth_move(move[1], move[2], move[3])
+                else:
+                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
 
     def step(self):
         pass
@@ -443,6 +472,14 @@ class Speck:
         self.Legs[3].set_position(19, 30, HIP_LENGTH)
 
     def gait(self, gait):
+        """
+        function to run basic gait motions without smooth motion. Passed a sequence of movement arrays.
+
+        :param gait:type: int[[int, int, int, int]]: an array of movement arrays. One movement array in the form
+        [Leg, dx, dy, dz] where Leg is the leg to move (0 = RF, 1 = LF, 2 = RB, 3 = LB, 4 = ALL). dx dy and dz and
+        changes in the foot position in millimeters
+        :return: None
+        """
         # Gait Layout:
         # {Step n: {Leg, dx, dy, dz},
         # {Step n+1: {Leg, dx, dy, dz}}
@@ -459,6 +496,8 @@ class Speck:
         Timer(5, self.CrateJaws.close)  # wait 5 seconds for Speck to sit, then close the jaws
         if (self.LimitSwitches[0].is_active()) & (self.LimitSwitches[1].is_active()):
             Timer(JAW_CLOSE_TIME + 5, self.stand)  # wait for the jaws to close plus a few seconds before standing
+        else:
+            print("Limit Switches not engages, Crate not in correct location")
 
     def update(self, scope="ESSENTIAL"):
         """
@@ -490,7 +529,11 @@ class Speck:
                 print(
                     "\n\n_____________________________________________________________________________________________")
                 print("Updating Raspberry Pi and All python packages\n")
-                version = subprocess.run([], capture_output=True, text=True)
+                version = subprocess.run(['git', 'describe'], capture_output=True, text=True)
+                if version != self.Version:
+                    print("___________________________________________________________________________________________")
+                    print("Current Speck Version: %s. New Speck Version: %s." % (self.Version, version))
+                    print("___________________________________________________________________________________________")
                 subprocess.run(['sudo', 'apt', '-y', 'update'])  # Update the package list
                 subprocess.run(['sudo', 'apt', '-y', 'upgrade'])  # Update the packages
                 subprocess.run(['sudo', 'apt', '-y', 'autoremove'])  # Remove any unnecessary packages from the pi
