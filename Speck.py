@@ -47,7 +47,7 @@ import numpy as np
 import subprocess
 import os
 import math
-from math import atan2, sin, asin, acos, sqrt
+from math import atan2, sin, asin, acos, sqrt, fabs
 import time
 # import cv2 as cv
 # from picamera import PiCamera
@@ -295,8 +295,9 @@ class Leg:
         :argument dz:type float: the distance in millimeters to change the z position by
         :return: None
         """
-        # define the number of steps as half the largest size so that each step is about 2mm
-        step_size = int(max(dx, dy, dz) / 2)
+        # define the number of steps as half the largest size so that each step is about 2mm. Take absolute value to
+        # handle negatives
+        step_size = int(max(fabs(dx), fabs(dy), fabs(dz)) / 2)
         for step in range(0, step_size):
             # set the position of the leg to the current position plus the changes given as arguments
             self.set_position(self.current_position[0] + dx / step_size, self.current_position[1] + dy / step_size,
@@ -422,6 +423,8 @@ class Speck:
         # create movement thread to allow leg motion to be controlled in the background
         move_thread = Thread(target=self.movement_thread_function, daemon=True)
         move_thread.start()  # start the movement thread running in the background
+        # start Speck in a sitting position
+        self.set_sit()
         # Store the version of code
         self.Version = "0.0.1"
 
@@ -442,18 +445,26 @@ class Speck:
     def step(self):
         pass
 
-    def stand(self):
+    def set_stand(self):
         """
-        Function used to make Speck stand. Sets the position of all feet accordingly
+        Function used to make Speck quickly stand. Sets the position of all feet accordingly
         """
         self.Legs[0].set_position(0, 175, HIP_LENGTH)
         self.Legs[1].set_position(0, 175, HIP_LENGTH)
         self.Legs[2].set_position(0, 175, HIP_LENGTH)
         self.Legs[3].set_position(0, 175, HIP_LENGTH)
 
-    def sit(self):
+    def stand(self):
         """
-        Function used to make Speck sit. Sets the position of all feet accordingly
+        Function used to make Speck slowly stand. Sets the position of all feet accordingly
+        """
+        for i in range(0, 4, 1):
+            self.move_queue.put([i, self.Legs[i].current_position[0], self.Legs[i].current_position[1] - 175,
+                                 self.Legs[i].current_position[2] - HIP_LENGTH])
+
+    def set_sit(self):
+        """
+        Function used to make Speck quickly sit. Sets the position of all feet accordingly
         """
         self.Legs[0].set_position(19, 30, HIP_LENGTH)
         self.Legs[1].set_position(19, 30, HIP_LENGTH)
