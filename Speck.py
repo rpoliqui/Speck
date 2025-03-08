@@ -442,7 +442,6 @@ class Speck:
             if not self.move_queues[0].empty():  # if the queue is not empty
                 move = self.move_queues[0].get()  # get the next movement in the queue
                 if move[0] == 0:  # if command is target at this leg, move it
-                    print("RF")
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
@@ -452,7 +451,6 @@ class Speck:
             if not self.move_queues[1].empty():  # if the queue is not empty
                 move = self.move_queues[1].get()  # get the next movement in the queue
                 if move[0] == 1:  # if command is target at this leg, move it
-                    print("LF")
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
@@ -462,7 +460,6 @@ class Speck:
             if not self.move_queues[2].empty():  # if the queue is not empty
                 move = self.move_queues[2].get()  # get the next movement in the queue
                 if move[0] == 2:  # if command is target at this leg, move it
-                    print("RB")
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
@@ -472,7 +469,6 @@ class Speck:
             if not self.move_queues[3].empty():  # if the queue is not empty
                 move = self.move_queues[3].get()  # get the next movement in the queue
                 if move[0] == 3:  # if command is target at this leg, move it
-                    print("LB")
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
@@ -531,8 +527,9 @@ class Speck:
         # {Step n+1: {Leg, dx, dy, dz}}
         for step in range(0, len(gait) - 1, 1):  # loop through all steps for one cyCle
             if gait[step][0] == 4:  # move all legs
-                for leg in range(0, 4, 1):
-                    self.move_queues[leg].put(gait[step])  # add movement to all four move queues
+                for leg in range(4):
+                    # add movement to all four move queues
+                    self.move_queues[leg].put([leg, gait[step][1], gait[step][2], gait[step][3]])
             else:  # only add the movement to the necessary queue
                 self.move_queues[gait[step][0]].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
             time.sleep(0.5)
