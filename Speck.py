@@ -41,6 +41,7 @@ References:
     https://git-scm.com/docs/git-describe
     https://realpython.com/intro-to-python-threading/
     https://www.geeksforgeeks.org/queue-in-python/
+    https://stackoverflow.com/questions/510972/getting-the-class-name-of-an-instance
 """
 # __________Import Statements__________
 import numpy as np
@@ -256,7 +257,7 @@ class Leg:
         :return: None
         """
         self.current_position = [x, y, z]
-        print("(%f, %f, %f)" % (x, y, z))
+        print("%s (%f, %f, %f)" % (self.__class__.__name__, x, y, z))
         # calculate geometry used in angle calculations
         d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
         g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
@@ -302,7 +303,7 @@ class Leg:
             # set the position of the leg to the current position plus the changes given as arguments
             self.set_position(self.current_position[0] + dx / step_size, self.current_position[1] + dy / step_size,
                               self.current_position[2] + dz / step_size)
-            time.sleep(.1)
+            time.sleep(.01)
         return None
 
 
@@ -419,26 +420,53 @@ class Speck:
         self.Camera = Camera()
         # create an array of the available gaits
         self.Gaits = [WALK_GAIT]
-        # create a queue of movements to perform. Start with an infinite size
-        self.move_queue = Queue(0)
-        # create movement thread to allow leg motion to be controlled in the background
-        move_thread = Thread(target=self.movement_thread_function, daemon=True)
-        move_thread.start()  # start the movement thread running in the background
+        # create a queue of movements for each leg to perform. Start with an infinite size
+        #                  [RF_Queue, LF_Queue, RB_Queue, LB_Queue]
+        self.move_queues = [Queue(0), Queue(0), Queue(0), Queue(0)]
+        # create movement threads to allow motion of each leg to be controlled in the background
+        RF_move_thread = Thread(target=self.RF_thread_function, daemon=True)
+        LF_move_thread = Thread(target=self.LF_thread_function, daemon=True)
+        RB_move_thread = Thread(target=self.RB_thread_function, daemon=True)
+        LB_move_thread = Thread(target=self.LB_thread_function, daemon=True)
+        self.move_threads = [RF_move_thread, LF_move_thread, RB_move_thread, LB_move_thread]
+        # start all movement threads running in the background
+        for thread in self.move_threads:
+            thread.start()
         # start Speck in a sitting position
         self.set_sit()
         # Store the version of code
         self.Version = "0.0.1"
 
     # __________Define Movement Thread Function_________
-    def movement_thread_function(self):
+    def RF_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
-            if not self.move_queue.empty():  # if the queue is not empty
-                move = self.move_queue.get()  # get the next movement in the queue
-                if move[0] == 4:  # move all legs
-                    for leg in self.Legs:
-                        leg.smooth_move(move[1], move[2], move[3])
-                else:  # move single leg
+            if not self.move_queues[0].empty():  # if the queue is not empty
+                move = self.move_queues[0].get()  # get the next movement in the queue
+                if move[0] == 0:  # if command is target at this leg, move it
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+
+    def LF_thread_function(self):
+        while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
+            if not self.move_queues[1].empty():  # if the queue is not empty
+                move = self.move_queues[1].get()  # get the next movement in the queue
+                if move[0] == 1:  # if command is target at this leg, move it
+                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+
+    def RB_thread_function(self):
+        while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
+            if not self.move_queues[2].empty():  # if the queue is not empty
+                move = self.move_queues[2].get()  # get the next movement in the queue
+                if move[0] == 2:  # if command is target at this leg, move it
+                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+
+    def LB_thread_function(self):
+        while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
+            if not self.move_queues[3].empty():  # if the queue is not empty
+                move = self.move_queues[3].get()  # get the next movement in the queue
+                if move[0] == 3:  # if command is target at this leg, move it
+                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                else:  # command in wrong queue, move to correct queue
+                    self.move_queues[move[0]].put(move)
 
     def check_collision(self):
         pass
@@ -460,8 +488,8 @@ class Speck:
         Function used to make Speck slowly stand. Sets the position of all feet accordingly
         """
         for i in range(0, 4, 1):
-            self.move_queue.put([i, -self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
-                                 HIP_LENGTH - self.Legs[i].current_position[2]])
+            self.move_queues[i].put([i, -self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
+                                     HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def set_sit(self):
         """
@@ -477,8 +505,8 @@ class Speck:
         Function used to make Speck slowly sit. Sets the position of all feet accordingly
         """
         for i in range(0, 4, 1):
-            self.move_queue.put([i, 19 - self.Legs[i].current_position[0], 30 - self.Legs[i].current_position[1],
-                                 HIP_LENGTH - self.Legs[i].current_position[2]])
+            self.move_queues[i].put([i, 19 - self.Legs[i].current_position[0], 30 - self.Legs[i].current_position[1],
+                                     HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def gait(self, gait):
         """
@@ -492,12 +520,12 @@ class Speck:
         # Gait Layout:
         # {Step n: {Leg, dx, dy, dz},
         # {Step n+1: {Leg, dx, dy, dz}}
-        for step in range(0, len(gait) - 1, 1):  # loop through all steps for once cyCle
+        for step in range(0, len(gait) - 1, 1):  # loop through all steps for one cyCle
             if gait[step][0] == 4:  # move all legs
-                for leg in self.Legs:
-                    leg.move(gait[step][1], gait[step][2], gait[step][3])
-            else:
-                self.Legs[gait[step][0]].move(gait[step][1], gait[step][2], gait[step][3])
+                for leg in range(0, 4, 1):
+                    self.move_queues[leg].put(gait[step])  # add movement to all four move queues
+            else:  # only add the movement to the necessary queue
+                self.move_queues[gait[step][0]].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
             time.sleep(0.5)
 
     def grab(self):
