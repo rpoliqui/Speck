@@ -301,8 +301,6 @@ class Leg:
             # set the position of the leg to the current position plus the changes given as arguments
             self.set_position(self.current_position[0] + dx / step_size, self.current_position[1] + dy / step_size,
                               self.current_position[2] + dz / step_size)
-            # short delay to smooth movement
-            time.sleep(0.25)
         return None
 
 
