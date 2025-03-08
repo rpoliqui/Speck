@@ -272,31 +272,31 @@ class Leg:
         self.knee.set_angle(180 - math.degrees(knee_angle))
         return None
 
-    def move(self, dx, dy, dz):
+    def move(self, dx: float, dy: float, dz: float):
         """
         A function to change, or move, the position of the foot. The given position is relative to the current position.
 
-        :argument dx:type int: the distance in millimeters to change the x position by
-        :argument dy:type int: the distance in millimeters to change the y position by
-        :argument dz:type int:  the distance in millimeters to change the z position by
+        :argument dx:type float: the distance in millimeters to change the x position by
+        :argument dy:type float: the distance in millimeters to change the y position by
+        :argument dz:type float:  the distance in millimeters to change the z position by
         :return: None
         """
         # set the position of the leg to the current position plus the changes given as arguments
         self.set_position(self.current_position[0] + dx, self.current_position[1] + dy, self.current_position[2] + dz)
         return None
 
-    def smooth_move(self, dx, dy, dz):
+    def smooth_move(self, dx: float, dy: float, dz: float):
         """
         A function to change, or move, the position of the foot smoothly to prevent choppy movements. The given position
         is relative to the current position.
 
-        :argument dx:type int: the distance in millimeters to change the x position by
-        :argument dy:type int: the distance in millimeters to change the y position by
-        :argument dz:type int: the distance in millimeters to change the z position by
+        :argument dx:type float: the distance in millimeters to change the x position by
+        :argument dy:type float: the distance in millimeters to change the y position by
+        :argument dz:type float: the distance in millimeters to change the z position by
         :return: None
         """
         # define the number of steps as half the largest size so that each step is about 2mm
-        step_size = max(dx, dy, dz) / 2
+        step_size = int(max(dx, dy, dz) / 2)
         for step in range(0, step_size):
             # set the position of the leg to the current position plus the changes given as arguments
             self.set_position(self.current_position[0] + dx / step_size, self.current_position[1] + dy / step_size,
@@ -431,7 +431,7 @@ class Speck:
     def movement_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
             if not self.move_queue.empty():  # if the queue is not empty
-                move = self.move_queue.get()   # get the next movement in the queue
+                move = self.move_queue.get()  # get the next movement in the queue
                 if move[0] == 4:  # move all legs
                     for leg in self.Legs:
                         leg.smooth_move(move[1], move[2], move[3])
@@ -440,6 +440,7 @@ class Speck:
 
     def check_collision(self):
         pass
+
     def step(self):
         pass
 
