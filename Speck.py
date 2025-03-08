@@ -41,7 +41,6 @@ References:
     https://git-scm.com/docs/git-describe
     https://realpython.com/intro-to-python-threading/
     https://www.geeksforgeeks.org/queue-in-python/
-    https://stackoverflow.com/questions/510972/getting-the-class-name-of-an-instance
 """
 # __________Import Statements__________
 import numpy as np
@@ -443,27 +442,37 @@ class Speck:
             if not self.move_queues[0].empty():  # if the queue is not empty
                 move = self.move_queues[0].get()  # get the next movement in the queue
                 if move[0] == 0:  # if command is target at this leg, move it
+                    print("RF")
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                else:  # command in wrong queue, move to correct queue
+                    self.move_queues[move[0]].put(move)
 
     def LF_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
             if not self.move_queues[1].empty():  # if the queue is not empty
                 move = self.move_queues[1].get()  # get the next movement in the queue
                 if move[0] == 1:  # if command is target at this leg, move it
+                    print("LF")
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                else:  # command in wrong queue, move to correct queue
+                    self.move_queues[move[0]].put(move)
 
     def RB_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
             if not self.move_queues[2].empty():  # if the queue is not empty
                 move = self.move_queues[2].get()  # get the next movement in the queue
                 if move[0] == 2:  # if command is target at this leg, move it
+                    print("RB")
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                else:  # command in wrong queue, move to correct queue
+                    self.move_queues[move[0]].put(move)
 
     def LB_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
             if not self.move_queues[3].empty():  # if the queue is not empty
                 move = self.move_queues[3].get()  # get the next movement in the queue
                 if move[0] == 3:  # if command is target at this leg, move it
+                    print("LB")
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
