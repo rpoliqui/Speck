@@ -438,6 +438,7 @@ class Speck:
                         leg.smooth_move(move[1], move[2], move[3])
                 else:  # move single leg
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                time.sleep(1)
 
     def check_collision(self):
         pass
