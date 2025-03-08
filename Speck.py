@@ -10,7 +10,6 @@ Classes:
     Joint: A single servo joint. Defined by the minimum and maximum the angles can move to and the starting angle of the
     joint
     Leg: A combination of three joints that form a leg
-    ObjectDetector: A single infrared avoidance sensor used to get information about Speck's surroundings
     Camera: An object that controls a Raspberry Pi Camera module and performs all operations to detect the crate
     CrateJaws: An object used to control the crate holding jaws that are used to pick up a specially designed crate
 Global Variables:
@@ -41,6 +40,7 @@ References:
     https://docs.github.com/en/repositories/releasing-projects-on-github/viewing-your-repositorys-releases-and-tags
     https://git-scm.com/docs/git-describe
     https://realpython.com/intro-to-python-threading/
+    https://www.geeksforgeeks.org/queue-in-python/
 """
 # __________Import Statements__________
 import numpy as np
@@ -306,19 +306,6 @@ class Leg:
         return None
 
 
-class ObjectDetector:
-    """
-    The ObjectDectecor class is used to represent a single infrared avoidance sensor.
-
-    :parameter self.pin:type int: the GPIO pin that the sensor is connected to
-    :parameter self.value:type int: the value of the sensor
-    """
-
-    def __init__(self, pin: int):
-        self.pin = pin
-        self.value = int
-
-
 class Camera:
     """
     The Camera class is used to represent the pi camera module used for detecting the orientation of the crate
@@ -418,10 +405,11 @@ class Speck:
                      Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE, flipped=True),
                      Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE),
                      Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE, flipped=True)]
-        # create an array of 5 object detection sensors
-        self.ObjectSensors = [ObjectDetector(PIN_FAR_LEFT_SENSOR), ObjectDetector(PIN_LEFT_SENSOR),
-                              ObjectDetector(PIN_CENTER_SENSOR), ObjectDetector(PIN_RIGHT_SENSOR),
-                              ObjectDetector(PIN_FAR_RIGHT_SENSOR)]
+        # create an array of 5 button objects to represent the object detectors. don't use pullup resistor since
+        # triggered HIGH when activated
+        self.ObjectSensors = [Button(PIN_FAR_LEFT_SENSOR, pull_up=False), Button(PIN_LEFT_SENSOR, pull_up=False),
+                              Button(PIN_CENTER_SENSOR, pull_up=False), Button(PIN_RIGHT_SENSOR, pull_up=False),
+                              Button(PIN_FAR_RIGHT_SENSOR, pull_up=False)]
         # create an array of buttons to control the limit switches
         self.LimitSwitches = [Button(PIN_LEFT_SWITCH), Button(PIN_RIGHT_SWITCH)]
         # create the Crate Jaws object used for holding onto the crate
@@ -434,22 +422,24 @@ class Speck:
         # create a queue of movements to perform. Start with an infinite size
         self.move_queue = Queue(0)
         # create movement thread to allow leg motion to be controlled in the background
-        background = Thread(target=self.movement_thread_function, daemon=True)
-        background.start()  # start the movement thread running in the background
+        move_thread = Thread(target=self.movement_thread_function, daemon=True)
+        move_thread.start()  # start the movement thread running in the background
         # Store the version of code
         self.Version = "0.0.1"
 
     # __________Define Movement Thread Function_________
     def movement_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
-            if not self.move_queue.empty():
-                move = self.move_queue.get()
+            if not self.move_queue.empty():  # if the queue is not empty
+                move = self.move_queue.get()   # get the next movement in the queue
                 if move[0] == 4:  # move all legs
                     for leg in self.Legs:
                         leg.smooth_move(move[1], move[2], move[3])
-                else:
+                else:  # move single leg
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
 
+    def check_collision(self):
+        pass
     def step(self):
         pass
 

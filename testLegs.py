@@ -63,12 +63,12 @@ for leg in speck.Legs:
     leg.set_position(0, 150, 62)  # set to starting position
     time.sleep(2)
     print("Forward")
-    leg.move(-50, 0, 0)  # move forward
+    leg.smooth_move(-50, 0, 0)  # move forward
     time.sleep(1)
-    leg.move(50, 0, 0)  # move back to start
+    leg.smooth_move(50, 0, 0)  # move back to start
     time.sleep(1)
     print("Backward")
-    leg.move(50, 0, 0)  # move backward
+    leg.smooth_move(50, 0, 0)  # move backward
     time.sleep(1)
 
     # test y direction movement
@@ -76,12 +76,12 @@ for leg in speck.Legs:
     leg.set_position(0, 150, 62)  # set to starting position
     time.sleep(2)
     print("Forward")
-    leg.move(0, 50, 0)  # move forward
+    leg.smooth_move(0, 50, 0)  # move forward
     time.sleep(1)
-    leg.move(0, -50, 0)  # move back to start
+    leg.smooth_move(0, -50, 0)  # move back to start
     time.sleep(1)
     print("Backward")
-    leg.move(0, -50, 0)  # move backward
+    leg.smooth_move(0, -50, 0)  # move backward
     time.sleep(1)
 
     # test z direction movement
@@ -89,12 +89,12 @@ for leg in speck.Legs:
     leg.set_position(0, 150, 62)  # set to starting position
     time.sleep(2)
     print("Forward")
-    leg.move(0, 0, 20)  # move forward
+    leg.smooth_move(0, 0, 20)  # move forward
     time.sleep(1)
-    leg.move(0, 0, -20)  # move back to start
+    leg.smooth_move(0, 0, -20)  # move back to start
     time.sleep(1)
     print("Backward")
-    leg.move(0, 0, -20)  # move backward
+    leg.smooth_move(0, 0, -20)  # move backward
     time.sleep(1)
 
     # test multi-axis movement
@@ -102,24 +102,24 @@ for leg in speck.Legs:
     leg.set_position(0, 150, 62)  # set to starting position
     time.sleep(2)
     print("X, Y Movement")
-    leg.move(50, 50, 0)
+    leg.smooth_move(50, 50, 0)
     time.sleep(1)
-    leg.move(-50, -50, 0)
+    leg.smooth_move(-50, -50, 0)
     time.sleep(1)
     print("X, Z Movement")
-    leg.move(50, 0, 20)
+    leg.smooth_move(50, 0, 20)
     time.sleep(1)
-    leg.move(-50, 0, -20)
+    leg.smooth_move(-50, 0, -20)
     time.sleep(1)
     print("Y, Z Movement")
-    leg.move(0, 50, 20)
+    leg.smooth_move(0, 50, 20)
     time.sleep(1)
-    leg.move(0, -50, -20)
+    leg.smooth_move(0, -50, -20)
     time.sleep(1)
     print("X, Y, Z Movement")
-    leg.move(50, 50, 20)
+    leg.smooth_move(50, 50, 20)
     time.sleep(1)
-    leg.move(-50, -50, -20)
+    leg.smooth_move(-50, -50, -20)
     time.sleep(1)
 
 print("\nFinished Legs\n")
