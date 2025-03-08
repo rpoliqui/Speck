@@ -302,6 +302,7 @@ class Leg:
             # set the position of the leg to the current position plus the changes given as arguments
             self.set_position(self.current_position[0] + dx / step_size, self.current_position[1] + dy / step_size,
                               self.current_position[2] + dz / step_size)
+            time.sleep(.1)
         return None
 
 
@@ -438,7 +439,6 @@ class Speck:
                         leg.smooth_move(move[1], move[2], move[3])
                 else:  # move single leg
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
-                time.sleep(1)
 
     def check_collision(self):
         pass
