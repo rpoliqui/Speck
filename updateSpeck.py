@@ -20,9 +20,9 @@ if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
     else:
         # If the repository doesn't exist, clone the repository from GitHub
         subprocess.run(['git', 'clone', 'https://github.com/rpoliqui/Speck/', target_dir])
-    version = subprocess.run(['git', 'describe', '--tags'], capture_output=True, text=True)
+    result = subprocess.run(['git', 'describe', '--tags'], capture_output=True, text=True)
     print("___________________________________________________________________________________________")
-    print("Current Speck Version: %s." % version)
+    print("Current Speck Version: %s." % result.stdout)
     print("___________________________________________________________________________________________")
 else:  # Wi-Fi is not connected, Speck cannot be updated
     print("Speck cannot be updated without a wifi connection.")
