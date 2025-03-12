@@ -60,7 +60,7 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 # Joint Pins
 PIN_RF_HIP_LAT = 14
 PIN_RF_HIP_LONG = 15
-PIN_RF_KNEE = 16
+PIN_RF_KNEE = 18
 PIN_LF_HIP_LAT = 17
 PIN_LF_HIP_LONG = 27
 PIN_LF_KNEE = 22
