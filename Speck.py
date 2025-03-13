@@ -491,7 +491,7 @@ class Speck:
         """
         Function used to make Speck slowly stand. Sets the position of all feet accordingly
         """
-        for i in range(4, 0, -1):
+        for i in range(3, -1, -1):
             self.move_queues[i].put([i, 25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
