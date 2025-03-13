@@ -441,7 +441,7 @@ class Speck:
             if not self.move_queues[0].empty():  # if the queue is not empty
                 move = self.move_queues[0].get()  # get the next movement in the queue
                 if move[0] == 0:  # if command is target at this leg, move it
-                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                    self.Legs[move[0]].move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
 
@@ -450,7 +450,7 @@ class Speck:
             if not self.move_queues[1].empty():  # if the queue is not empty
                 move = self.move_queues[1].get()  # get the next movement in the queue
                 if move[0] == 1:  # if command is target at this leg, move it
-                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                    self.Legs[move[0]].move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
 
@@ -459,7 +459,7 @@ class Speck:
             if not self.move_queues[2].empty():  # if the queue is not empty
                 move = self.move_queues[2].get()  # get the next movement in the queue
                 if move[0] == 2:  # if command is target at this leg, move it
-                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                    self.Legs[move[0]].move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
 
@@ -468,7 +468,7 @@ class Speck:
             if not self.move_queues[3].empty():  # if the queue is not empty
                 move = self.move_queues[3].get()  # get the next movement in the queue
                 if move[0] == 3:  # if command is target at this leg, move it
-                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                    self.Legs[move[0]].move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
 
