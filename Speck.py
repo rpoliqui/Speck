@@ -482,16 +482,16 @@ class Speck:
         """
         Function used to make Speck quickly stand. Sets the position of all feet accordingly
         """
-        self.Legs[0].set_position(25, 175, HIP_LENGTH)
-        self.Legs[1].set_position(25, 175, HIP_LENGTH)
-        self.Legs[2].set_position(25, 175, HIP_LENGTH)
         self.Legs[3].set_position(25, 175, HIP_LENGTH)
+        self.Legs[2].set_position(25, 175, HIP_LENGTH)
+        self.Legs[1].set_position(25, 175, HIP_LENGTH)
+        self.Legs[0].set_position(25, 175, HIP_LENGTH)
 
     def stand(self):
         """
         Function used to make Speck slowly stand. Sets the position of all feet accordingly
         """
-        for i in range(0, 4, 1):
+        for i in range(4, 0, -1):
             self.move_queues[i].put([i, 25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
