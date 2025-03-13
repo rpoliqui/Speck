@@ -430,6 +430,8 @@ class Speck:
         # start all movement threads running in the background
         for thread in self.move_threads:
             thread.start()
+        # start Speck in sitting position
+        self.set_sit()
         # Store the version of code
         self.Version = "0.0.1"
 
