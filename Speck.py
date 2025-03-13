@@ -255,7 +255,6 @@ class Leg:
         :return: None
         """
         self.current_position = [x, y, z]
-        print("%s (%f, %f, %f)" % (self.__class__.__name__, x, y, z))
         # calculate geometry used in angle calculations
         d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
         g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
@@ -294,9 +293,9 @@ class Leg:
         :argument dz:type float: the distance in millimeters to change the z position by
         :return: None
         """
-        # define the number of steps as half the largest size so that each step is about 2mm. Take absolute value to
-        # handle negatives
-        step_size = int(max(fabs(dx), fabs(dy), fabs(dz)) / 2)
+        # define the number of steps as a quarter of the largest size so that each step is about 4mm. Take absolute
+        # value to handle negatives
+        step_size = int(max(fabs(dx), fabs(dy), fabs(dz)) / 4)
         for step in range(0, step_size):
             # set the position of the leg to the current position plus the changes given as arguments
             self.set_position(self.current_position[0] + dx / step_size, self.current_position[1] + dy / step_size,
@@ -441,7 +440,7 @@ class Speck:
             if not self.move_queues[0].empty():  # if the queue is not empty
                 move = self.move_queues[0].get()  # get the next movement in the queue
                 if move[0] == 0:  # if command is target at this leg, move it
-                    self.Legs[move[0]].move(move[1], move[2], move[3])
+                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
 
@@ -450,7 +449,7 @@ class Speck:
             if not self.move_queues[1].empty():  # if the queue is not empty
                 move = self.move_queues[1].get()  # get the next movement in the queue
                 if move[0] == 1:  # if command is target at this leg, move it
-                    self.Legs[move[0]].move(move[1], move[2], move[3])
+                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
 
@@ -459,7 +458,7 @@ class Speck:
             if not self.move_queues[2].empty():  # if the queue is not empty
                 move = self.move_queues[2].get()  # get the next movement in the queue
                 if move[0] == 2:  # if command is target at this leg, move it
-                    self.Legs[move[0]].move(move[1], move[2], move[3])
+                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
 
@@ -468,7 +467,7 @@ class Speck:
             if not self.move_queues[3].empty():  # if the queue is not empty
                 move = self.move_queues[3].get()  # get the next movement in the queue
                 if move[0] == 3:  # if command is target at this leg, move it
-                    self.Legs[move[0]].move(move[1], move[2], move[3])
+                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
 
