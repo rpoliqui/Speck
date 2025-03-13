@@ -89,8 +89,8 @@ PIN_LEFT_SWITCH = 13
 PIN_RIGHT_SWITCH = 6
 
 # __________System Constants__________
-HIP_LENGTH = 62
-UPPER_LEG_LENGTH = 125
+HIP_LENGTH = 74
+UPPER_LEG_LENGTH = 124.5
 LOWER_LEG_LENGTH = 110
 JAW_OPEN_TIME = 10
 JAW_CLOSE_TIME = 10
@@ -180,7 +180,6 @@ class Joint:
         else:
             raise RuntimeError("The given angle %f was out of the joint's range %f - %f" % (angle, self.min_angle,
                                                                                             self.max_angle))
-            pass
         return None
 
     def change_angle(self, change_in_angle: float):
@@ -431,8 +430,6 @@ class Speck:
         # start all movement threads running in the background
         for thread in self.move_threads:
             thread.start()
-        # start Speck in a sitting position
-        self.set_sit()
         # Store the version of code
         self.Version = "0.0.1"
 
@@ -483,17 +480,17 @@ class Speck:
         """
         Function used to make Speck quickly stand. Sets the position of all feet accordingly
         """
-        self.Legs[0].set_position(0, 175, HIP_LENGTH)
-        self.Legs[1].set_position(0, 175, HIP_LENGTH)
-        self.Legs[2].set_position(0, 175, HIP_LENGTH)
-        self.Legs[3].set_position(0, 175, HIP_LENGTH)
+        self.Legs[0].set_position(-25, 175, HIP_LENGTH)
+        self.Legs[1].set_position(-25, 175, HIP_LENGTH)
+        self.Legs[2].set_position(-25, 175, HIP_LENGTH)
+        self.Legs[3].set_position(-25, 175, HIP_LENGTH)
 
     def stand(self):
         """
         Function used to make Speck slowly stand. Sets the position of all feet accordingly
         """
         for i in range(0, 4, 1):
-            self.move_queues[i].put([i, -self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([i, -25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def set_sit(self):
