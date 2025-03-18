@@ -120,8 +120,55 @@ WALK_GAIT = ((0, 0, -50, 0),
              (2, 0, 50, 0),
              (4, 50, 0, 0))
 
-STRAFE_GAIT = ((),
-               ())
+STRAFE_STEP = 20
+STRAFE_GAIT = ((0, 0, -50, 0),
+               (0, 0, 0, -STRAFE_STEP),
+               (0, 0, 50, 0),
+               (3, 0, -50, 0),
+               (3, 0, 0, -STRAFE_STEP),
+               (3, 0, 50, 0),
+               (4, 0, 0, STRAFE_STEP),
+               (1, 0, -50, 0),
+               (1, 0, 0, -STRAFE_STEP),
+               (1, 0, 50, 0),
+               (2, 0, -50, 0),
+               (2, 0, 0, -STRAFE_STEP),
+               (2, 0, 50, 0))
+
+TURN_STEP = 20
+LEFT_TURN_GAIT = ((0, 0, -50, 0),
+                  (0, 0, 0, TURN_STEP),
+                  (0, 0, 50, 0),
+                  (3, 0, -50, 0),
+                  (3, 0, 0, -TURN_STEP),
+                  (3, 0, 50, 0),
+                  (1, 0, -50, 0),
+                  (1, 0, 0, TURN_STEP),
+                  (1, 0, 50, 0),
+                  (2, 0, -50, 0),
+                  (2, 0, 0, -TURN_STEP),
+                  (2, 0, 50, 0),
+                  (0, 0, 0, -TURN_STEP),
+                  (1, 0, 0, -TURN_STEP),
+                  (2, 0, 0, TURN_STEP),
+                  (3, 0, 0, TURN_STEP),)
+
+RIGHT_TURN_GAIT = ((0, 0, -50, 0),
+                   (0, 0, 0, -TURN_STEP),
+                   (0, 0, 50, 0),
+                   (3, 0, -50, 0),
+                   (3, 0, 0, TURN_STEP),
+                   (3, 0, 50, 0),
+                   (1, 0, -50, 0),
+                   (1, 0, 0, -TURN_STEP),
+                   (1, 0, 50, 0),
+                   (2, 0, -50, 0),
+                   (2, 0, 0, TURN_STEP),
+                   (2, 0, 50, 0),
+                   (0, 0, 0, TURN_STEP),
+                   (1, 0, 0, TURN_STEP),
+                   (2, 0, 0, -TURN_STEP),
+                   (3, 0, 0, -TURN_STEP),)
 
 # __________Environment Setup__________
 factory = PiGPIOFactory()  # define pin factory to use servos for more accurate servo control
@@ -209,7 +256,7 @@ class Leg:
     :parameter self.flipped:type bool: Flag to flip and angles of the leg joints
     """
 
-    def __init__(self, hip_lat_pin: int, hip_long_pin: int, knee_pin: int, flipped=False):
+    def __init__(self, hip_lat_pin: int, hip_long_pin: int, knee_pin: int, flipped=False, hip_flip=False):
         """
         Constructor for the Leg class.
 
@@ -221,7 +268,8 @@ class Leg:
         # Set the pins to taken
         if AvailablePins[hip_lat_pin - 1] == 1:
             # for correct functioning, the lateral hip joints needs to be flipped by default
-            self.hip_lat = Joint(hip_lat_pin, min_angle=-90, max_angle=90, starting_angle=0, flipped=flipped)
+            self.hip_lat = Joint(hip_lat_pin, min_angle=-90, max_angle=90, starting_angle=0,
+                                 flipped=flipped and hip_flip)
             AvailablePins[hip_lat_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
@@ -391,6 +439,10 @@ class Speck:
     object detection in front of Speck
     :parameter self.LimitSwitches:type Array: An array of 2 Button objects that represent the limit switches used to
     detect a crate within the body of Speck
+    :parameter self.CrateJaws:type CrateJaws: an object representing the jaws used to hold the crate within the body
+    of Speck
+    :parameter self.Gaits:type array: an array of possible gaits that Speck can perform. Each Gait is an array of leg
+    movements. The available Gaits are [0]: Walk, [1]: Strafe [2]:Left Turn, [3]:Right Turn.
     """
 
     def __init__(self):
@@ -399,8 +451,8 @@ class Speck:
         """
         # create an array of four leg objects
         # [RF, LF, RB, LB]
-        self.Legs = [Leg(PIN_RF_HIP_LAT, PIN_RF_HIP_LONG, PIN_RF_KNEE),
-                     Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE, flipped=True),
+        self.Legs = [Leg(PIN_RF_HIP_LAT, PIN_RF_HIP_LONG, PIN_RF_KNEE, hip_flip=True),
+                     Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE, flipped=True, hip_flip=True),
                      Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE),
                      Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE, flipped=True)]
         # create an array of 5 button objects to represent the object detectors. don't use pullup resistor since
@@ -416,7 +468,7 @@ class Speck:
         # create the camera object used for detecting the crate
         self.Camera = Camera()
         # create an array of the available gaits
-        self.Gaits = [WALK_GAIT]
+        self.Gaits = [WALK_GAIT, STRAFE_GAIT, LEFT_TURN_GAIT, RIGHT_TURN_GAIT]
         # create a queue of movements for each leg to perform. Start with an infinite size
         #                  [RF_Queue, LF_Queue, RB_Queue, LB_Queue]
         self.move_queues = [Queue(0), Queue(0), Queue(0), Queue(0)]
@@ -443,6 +495,9 @@ class Speck:
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
+            else:
+                # short delay to wait for next command
+                time.sleep(0.5)
 
     def LF_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
@@ -452,6 +507,9 @@ class Speck:
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
+            else:
+                # short delay to wait for next command
+                time.sleep(0.5)
 
     def RB_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
@@ -461,6 +519,9 @@ class Speck:
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
+            else:
+                # short delay to wait for next command
+                time.sleep(0.5)
 
     def LB_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
@@ -470,11 +531,11 @@ class Speck:
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
+            else:
+                # short delay to wait for next command
+                time.sleep(0.5)
 
     def check_collision(self):
-        pass
-
-    def step(self):
         pass
 
     def set_stand(self):
@@ -530,12 +591,11 @@ class Speck:
                     self.move_queues[leg].put([leg, gait[step][1], gait[step][2], gait[step][3]])
             else:  # only add the movement to the necessary queue
                 self.move_queues[gait[step][0]].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
-            time.sleep(0.5)
 
     def grab(self):
         self.sit()  # have Speck sit onto the crate
-        Timer(5, self.CrateJaws.close)  # wait 5 seconds for Speck to sit, then close the jaws
         if (self.LimitSwitches[0].is_active()) & (self.LimitSwitches[1].is_active()):
+            Timer(2, self.CrateJaws.close)  # wait 2 seconds for Speck to sit, then close the jaws
             Timer(JAW_CLOSE_TIME + 5, self.stand)  # wait for the jaws to close plus a few seconds before standing
         else:
             print("Limit Switches not engages, Crate not in correct location")
