@@ -536,7 +536,21 @@ class Speck:
                 time.sleep(0.5)
 
     def check_collision(self):
-        pass
+        """
+        Function used to check all object sensors for a possible collision
+
+        :return: collision:type boolean: flag to detect if any of the sensors are active. This indicates if a collision
+        is possible
+        :return: collision_array:type array[5]: an array of boolean values that indicate which sensors are active.
+        Sensors are in order from left to right from Speck's perspective
+        """
+        collision_array = np.zeros(5)  # create an array to store what sensors are triggering a collision
+        collision = False  # initialize collision flag to False
+        for i, sensor in enumerate(self.ObjectSensors):
+            collision_array[i] = sensor.is_active
+            if collision_array[i]: # if any sensor is active, flip the collision flag
+                collision = True
+        return collision, collision_array
 
     def set_stand(self):
         """
