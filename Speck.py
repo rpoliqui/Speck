@@ -392,8 +392,8 @@ class CrateJaws:
         :return: None
         """
         # start moving both linear actuators backwards
-        self.IN1.on()
-        self.IN2.off()
+        self.IN1.off()
+        self.IN2.on()
         self.IN3.on()
         self.IN4.off()
         # create timer object to allow a pause to happen in the background
@@ -409,8 +409,8 @@ class CrateJaws:
         :return: None
         """
         # start moving both linear actuators forwards
-        self.IN1.off()
-        self.IN2.on()
+        self.IN1.on()
+        self.IN2.off()
         self.IN3.off()
         self.IN4.on()
         # create timer object to allow a pause to happen in the background
