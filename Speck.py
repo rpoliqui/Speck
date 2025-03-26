@@ -42,6 +42,9 @@ References:
     https://realpython.com/intro-to-python-threading/
     https://www.geeksforgeeks.org/queue-in-python/
 """
+from idlelib.configdialog import HighPage
+
+import gpiozero
 # __________Import Statements__________
 import numpy as np
 import subprocess
@@ -53,7 +56,7 @@ import time
 # from picamera import PiCamera
 from threading import Thread, Timer
 from queue import Queue
-from gpiozero import AngularServo, Motor, Button, Device
+from gpiozero import AngularServo, Motor, Button, Device, OutputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
 
 # __________Pin Definition__________
@@ -376,13 +379,13 @@ class CrateJaws:
         """
         Constructor for the Crate Jaws class
         """
-        # create objects to control the two linear actuators that make up the Crate Jaws. Each linear actuator is a
-        # motor connected to two pins on the motor driver
-        self.FrontActuator = Motor(PIN_IN1, PIN_IN2)
-        self.BackActuator = Motor(PIN_IN3, PIN_IN4)
-        # make sure both actuators are stopped when initialized
-        self.FrontActuator.stop()
-        self.BackActuator.stop()
+        # create objects to control the two linear actuators that make up the Crate Jaws. Each linear actuator has two
+        # control pins. Front: IN1 and IN2, Back: IN3 and IN4
+        self.IN1 = OutputDevice(PIN_IN1, initial_value=False)
+        self.IN2 = OutputDevice(PIN_IN2, initial_value=False)
+        self.IN3 = OutputDevice(PIN_IN3, initial_value=False)
+        self.IN4 = OutputDevice(PIN_IN4, initial_value=False)
+
 
     def open(self):
         """
@@ -391,8 +394,10 @@ class CrateJaws:
         :return: None
         """
         # start moving both linear actuators backwards
-        self.FrontActuator.backward()
-        self.BackActuator.backward()
+        self.IN1.on()
+        self.IN2.off()
+        self.IN3.on()
+        self.IN4.off()
         # create timer object to allow a pause to happen in the background
         timer = Timer(JAW_OPEN_TIME, self.stop)
         # start the timer so that the linear actuators stop after the given amount of time
@@ -406,8 +411,10 @@ class CrateJaws:
         :return: None
         """
         # start moving both linear actuators forwards
-        self.FrontActuator.forward()
-        self.BackActuator.forward()
+        self.IN1.off()
+        self.IN2.on()
+        self.IN3.off()
+        self.IN4.on()
         # create timer object to allow a pause to happen in the background
         timer = Timer(JAW_OPEN_TIME, self.stop)
         # start the timer so that the linear actuators stop after the given amount of time
@@ -420,8 +427,10 @@ class CrateJaws:
 
         :return: None
         """
-        self.BackActuator.stop()
-        self.FrontActuator.stop()
+        self.IN1.off()
+        self.IN2.off()
+        self.IN3.off()
+        self.IN4.off()
         return None
 
 
@@ -548,7 +557,7 @@ class Speck:
         collision = False  # initialize collision flag to False
         for i, sensor in enumerate(self.ObjectSensors):
             collision_array[i] = sensor.is_active
-            if collision_array[i]: # if any sensor is active, flip the collision flag
+            if collision_array[i]:  # if any sensor is active, flip the collision flag
                 collision = True
         return collision, collision_array
 
