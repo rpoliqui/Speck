@@ -42,9 +42,7 @@ References:
     https://realpython.com/intro-to-python-threading/
     https://www.geeksforgeeks.org/queue-in-python/
 """
-from idlelib.configdialog import HighPage
 
-import gpiozero
 # __________Import Statements__________
 import numpy as np
 import subprocess
@@ -56,7 +54,7 @@ import time
 # from picamera import PiCamera
 from threading import Thread, Timer
 from queue import Queue
-from gpiozero import AngularServo, Motor, Button, Device, OutputDevice
+from gpiozero import AngularServo, Button, Device, OutputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
 
 # __________Pin Definition__________
