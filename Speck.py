@@ -394,8 +394,8 @@ class CrateJaws:
         # start moving both linear actuators backwards
         self.IN1.on()
         self.IN2.off()
-        self.IN3.on()
-        self.IN4.off()
+        self.IN3.off()
+        self.IN4.on()
         # create timer object to allow a pause to happen in the background
         timer = Timer(JAW_OPEN_TIME, self.stop)
         # start the timer so that the linear actuators stop after the given amount of time
@@ -411,8 +411,8 @@ class CrateJaws:
         # start moving both linear actuators forwards
         self.IN1.off()
         self.IN2.on()
-        self.IN3.off()
-        self.IN4.on()
+        self.IN3.on()
+        self.IN4.off()
         # create timer object to allow a pause to happen in the background
         timer = Timer(JAW_OPEN_TIME, self.stop)
         # start the timer so that the linear actuators stop after the given amount of time
