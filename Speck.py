@@ -513,7 +513,6 @@ class Speck:
                 if move[0] == 4:  # if command is target at this leg, move it
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 elif move[0] == leg_id:  # if command is target at this leg, move it
-                    self.thread_barrier.wait()
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
@@ -629,7 +628,7 @@ class Speck:
             if gait[step][0] == 4:  # move all legs
                 for leg in range(4):
                     # add movement to all four move queues
-                    self.move_queues[leg].put([leg, gait[step][1], gait[step][2], gait[step][3]])
+                    self.move_queues[leg].put([4, gait[step][1], gait[step][2], gait[step][3]])
             else:  # only add the movement to the necessary queue
                 self.move_queues[gait[step][0]].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
             #time.sleep(STEP_TIME)
