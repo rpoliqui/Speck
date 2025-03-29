@@ -517,6 +517,7 @@ class Speck:
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
+                time.sleep(STEP_TIME)
             else:
                 # short delay to wait for next command
                 time.sleep(STEP_TIME)
