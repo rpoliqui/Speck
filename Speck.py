@@ -510,9 +510,10 @@ class Speck:
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
             if not self.move_queues[leg_id].empty():  # if the queue is not empty
                 move = self.move_queues[leg_id].get()  # get the next movement in the queue
-                if move[0] == 4:  # if command is target at this leg, move it
-                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                if move[0] == 4:  # if command is for all legs, move this leg without waiting
+                    self.Legs[leg_id].smooth_move(move[1], move[2], move[3])
                 elif move[0] == leg_id:  # if command is target at this leg, move it
+                    self.thread_barrier.wait()
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
