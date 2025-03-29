@@ -55,7 +55,6 @@ from threading import Thread, Timer
 from queue import Queue
 from gpiozero import AngularServo, Button, Device, OutputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
-from signal import pause
 
 # __________Pin Definition__________
 # Joint Pins
@@ -469,8 +468,8 @@ class Speck:
         self.LimitSwitches = [Button(PIN_LEFT_SWITCH), Button(PIN_RIGHT_SWITCH)]
         # set function for switches to perform when pressed
         for button in self.LimitSwitches:
+            button.hold_time = 0.5
             button.when_held = lambda: self.grab() if self.LimitSwitches[0].is_active and self.LimitSwitches[1].is_active else None
-
         # create the Crate Jaws object used for holding onto the crate
         self.CrateJaws = CrateJaws()
         self.CrateJaws.open()  # make sure the crate jaws start open
