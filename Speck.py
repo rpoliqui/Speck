@@ -94,6 +94,7 @@ UPPER_LEG_LENGTH = 124.5
 LOWER_LEG_LENGTH = 110
 JAW_OPEN_TIME = 4.5
 JAW_CLOSE_TIME = 4.5
+STEP_TIME = 0.5
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
@@ -120,7 +121,7 @@ WALK_GAIT = ((0, 0, -50, 0),
              (2, 0, 50, 0),
              (4, 50, 0, 0))
 
-STRAFE_STEP = 20
+STRAFE_STEP = 30
 STRAFE_GAIT = ((0, 0, -50, 0),
                (0, 0, 0, -STRAFE_STEP),
                (0, 0, 50, 0),
@@ -135,7 +136,7 @@ STRAFE_GAIT = ((0, 0, -50, 0),
                (2, 0, 0, -STRAFE_STEP),
                (2, 0, 50, 0))
 
-TURN_STEP = 20
+TURN_STEP = 30
 LEFT_TURN_GAIT = ((0, 0, -50, 0),
                   (0, 0, 0, TURN_STEP),
                   (0, 0, 50, 0),
@@ -503,9 +504,9 @@ class Speck:
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
-            else:
-                # short delay to wait for next command
-                time.sleep(0.5)
+            # else:
+            #     # short delay to wait for next command
+            #     time.sleep(0.5)
 
     def LF_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
@@ -515,9 +516,9 @@ class Speck:
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
-            else:
-                # short delay to wait for next command
-                time.sleep(0.5)
+            # else:
+            #     # short delay to wait for next command
+            #     time.sleep(0.5)
 
     def RB_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
@@ -527,9 +528,9 @@ class Speck:
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
-            else:
-                # short delay to wait for next command
-                time.sleep(0.5)
+            # else:
+            #     # short delay to wait for next command
+            #     time.sleep(0.5)
 
     def LB_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
@@ -539,9 +540,9 @@ class Speck:
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
-            else:
-                # short delay to wait for next command
-                time.sleep(0.5)
+            # else:
+            #     # short delay to wait for next command
+            #     time.sleep(0.5)
 
     #__________Define Speck's Functions__________
     def check_collision(self):
@@ -614,6 +615,7 @@ class Speck:
                     self.move_queues[leg].put([leg, gait[step][1], gait[step][2], gait[step][3]])
             else:  # only add the movement to the necessary queue
                 self.move_queues[gait[step][0]].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
+            time.sleep(STEP_TIME)
 
     def drop(self):
         print("Dropping")
