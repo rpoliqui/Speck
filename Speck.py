@@ -469,7 +469,7 @@ class Speck:
         # set function for switches to perform when pressed
         for button in self.LimitSwitches:
             button.hold_time = 0.5
-            button.when_held = lambda: self.grab() if self.LimitSwitches[0].is_active and self.LimitSwitches[1].is_active else print("Switch Held")
+            button.when_held = lambda: self.CrateJaws.close() if self.LimitSwitches[0].is_active and self.LimitSwitches[1].is_active else print("Switch Held")
         # create the Crate Jaws object used for holding onto the crate
         self.CrateJaws = CrateJaws()
         self.CrateJaws.open()  # make sure the crate jaws start open
@@ -615,11 +615,10 @@ class Speck:
             else:  # only add the movement to the necessary queue
                 self.move_queues[gait[step][0]].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
 
-    def grab(self):
-        print("Grabbing")
+    def drop(self):
+        print("Dropping")
         if self.LimitSwitches[0].is_active & self.LimitSwitches[1].is_active:
-            Timer(2, self.CrateJaws.close)  # wait 2 seconds for Speck to sit, then close the jaws
-            Timer(JAW_CLOSE_TIME + 5, self.stand)  # wait for the jaws to close plus a few seconds before standing
+            self.CrateJaws.open()  # if both switches engaged, open jaws
         else:
             print("Both Limit Switches not engages, Crate not in correct location")
 
