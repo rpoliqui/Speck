@@ -51,7 +51,7 @@ from math import atan2, sin, asin, acos, sqrt, fabs
 import time
 # import cv2 as cv
 # from picamera import PiCamera
-from threading import Thread, Timer
+from threading import Thread, Timer, Barrier
 from queue import Queue
 from gpiozero import AngularServo, Button, Device, OutputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
@@ -491,32 +491,35 @@ class Speck:
         #                  [RF_Queue, LF_Queue, RB_Queue, LB_Queue]
         self.move_queues = [Queue(0), Queue(0), Queue(0), Queue(0)]
         # create movement threads to allow motion of each leg to be controlled in the background
-        RF_move_thread = Thread(target=self.RF_thread_function, daemon=True)
-        LF_move_thread = Thread(target=self.LF_thread_function, daemon=True)
-        RB_move_thread = Thread(target=self.RB_thread_function, daemon=True)
-        LB_move_thread = Thread(target=self.LB_thread_function, daemon=True)
+        RF_move_thread = Thread(target=self.leg_thread_function, daemon=True, args=(0,))
+        LF_move_thread = Thread(target=self.leg_thread_function, daemon=True, args=(1,))
+        RB_move_thread = Thread(target=self.leg_thread_function, daemon=True, args=(2,))
+        LB_move_thread = Thread(target=self.leg_thread_function, daemon=True, args=(3,))
         self.move_threads = [RF_move_thread, LF_move_thread, RB_move_thread, LB_move_thread]
         # start all movement threads running in the background
         for thread in self.move_threads:
             thread.start()
+        self.thread_barrier = Barrier(4)  # Ensures 4 threads synchronize
         # start Speck in sitting position
         self.set_sit()
         # Store the version of code
         self.Version = "0.0.1"
 
     # __________Define Movement Thread Function_________
-    def RF_thread_function(self):
+    def leg_thread_function(self, leg_id):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
-            if not self.move_queues[0].empty():  # if the queue is not empty
-                move = self.move_queues[0].get()  # get the next movement in the queue
-                if move[0] == 0:  # if command is target at this leg, move it
+            if not self.move_queues[leg_id].empty():  # if the queue is not empty
+                move = self.move_queues[leg_id].get()  # get the next movement in the queue
+                if move[0] == 4:  # if command is target at this leg, move it
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
-                    time.sleep(STEP_TIME)
+                elif move[0] == leg_id:  # if command is target at this leg, move it
+                    self.thread_barrier.wait()
+                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
             else:
                 # short delay to wait for next command
-                time.sleep(0.05)
+                time.sleep(STEP_TIME)
 
     def LF_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
