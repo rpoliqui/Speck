@@ -619,7 +619,7 @@ class Speck:
         # Gait Layout:
         # {Step n: {Leg, dx, dy, dz},
         # {Step n+1: {Leg, dx, dy, dz}}
-        for step in range(0, len(gait) - 1, 1):  # loop through all steps for one cyCle
+        for step in range(0, len(gait), 1):  # loop through all steps for one cyCle
             if gait[step][0] == 4:  # move all legs
                 for leg in range(4):
                     # add movement to all four move queues
