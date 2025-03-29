@@ -92,8 +92,8 @@ PIN_RIGHT_SWITCH = 6
 HIP_LENGTH = 74
 UPPER_LEG_LENGTH = 124.5
 LOWER_LEG_LENGTH = 110
-JAW_OPEN_TIME = 6
-JAW_CLOSE_TIME = 6
+JAW_OPEN_TIME = 5
+JAW_CLOSE_TIME = 5
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
