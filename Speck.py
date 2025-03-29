@@ -497,9 +497,9 @@ class Speck:
         LB_move_thread = Thread(target=self.leg_thread_function, daemon=True, args=(3,))
         self.move_threads = [RF_move_thread, LF_move_thread, RB_move_thread, LB_move_thread]
         # start all movement threads running in the background
+        self.thread_barrier = Barrier(4)  # Ensures 4 threads synchronize
         for thread in self.move_threads:
             thread.start()
-        self.thread_barrier = Barrier(4)  # Ensures 4 threads synchronize
         # start Speck in sitting position
         self.set_sit()
         # Store the version of code
