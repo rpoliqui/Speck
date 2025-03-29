@@ -134,7 +134,8 @@ STRAFE_GAIT = ((0, 0, -50, 0),
                (1, 0, 50, 0),
                (2, 0, -50, 0),
                (2, 0, 0, -STRAFE_STEP),
-               (2, 0, 50, 0))
+               (2, 0, 50, 0),
+               (3, 0, -50, 0))
 
 TURN_STEP = 30
 LEFT_TURN_GAIT = ((0, 0, -50, 0),
@@ -152,7 +153,7 @@ LEFT_TURN_GAIT = ((0, 0, -50, 0),
                   (0, 0, 0, -TURN_STEP),
                   (1, 0, 0, -TURN_STEP),
                   (2, 0, 0, TURN_STEP),
-                  (3, 0, 0, TURN_STEP),)
+                  (3, 0, 0, TURN_STEP))
 
 RIGHT_TURN_GAIT = ((0, 0, -50, 0),
                    (0, 0, 0, -TURN_STEP),
@@ -225,9 +226,12 @@ class Joint:
         if (angle <= self.max_angle) & (angle >= self.min_angle):
             self.current_angle = angle  # update the current angle of the joint to the required angle
             self.servo.angle = angle  # set the physical angle of the servo
-        else:
-            raise RuntimeError("The given angle %f was out of the joint's range %f - %f" % (angle, self.min_angle,
-                                                                                            self.max_angle))
+        elif angle > self.max_angle:
+            self.current_angle = self.max_angle
+            self.servo.angle = self.max_angle
+        elif angle < self.min_angle:
+            self.current_angle = self.min_angle
+            self.servo.angle = self.min_angle
         return None
 
     def change_angle(self, change_in_angle: float):
@@ -312,7 +316,10 @@ class Leg:
 
         knee_angle = acos((g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) /
                           (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
-        long_hip_angle = atan2(x, d) + asin((LOWER_LEG_LENGTH * sin(knee_angle)) / g)
+        try:
+            long_hip_angle = atan2(x, d) + asin((LOWER_LEG_LENGTH * sin(knee_angle)) / g)
+        except ZeroDivisionError:
+            long_hip_angle = 0
         # set all three servos to the calculated angles
         self.hip_lat.set_angle(-1 * (90 - math.degrees(lat_hip_angle)))
         self.hip_long.set_angle(-math.degrees(long_hip_angle))
