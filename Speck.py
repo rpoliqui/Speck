@@ -94,7 +94,7 @@ UPPER_LEG_LENGTH = 124.5
 LOWER_LEG_LENGTH = 110
 JAW_OPEN_TIME = 4.5
 JAW_CLOSE_TIME = 4.5
-STEP_TIME = 0
+STEP_TIME = 1
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
