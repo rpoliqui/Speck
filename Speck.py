@@ -509,11 +509,12 @@ class Speck:
                 move = self.move_queues[0].get()  # get the next movement in the queue
                 if move[0] == 0:  # if command is target at this leg, move it
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                    time.sleep(STEP_TIME)
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
-            # else:
-            #     # short delay to wait for next command
-            #     time.sleep(0.5)
+            else:
+                # short delay to wait for next command
+                time.sleep(0.05)
 
     def LF_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
@@ -521,11 +522,12 @@ class Speck:
                 move = self.move_queues[1].get()  # get the next movement in the queue
                 if move[0] == 1:  # if command is target at this leg, move it
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                    time.sleep(STEP_TIME)
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
-            # else:
-            #     # short delay to wait for next command
-            #     time.sleep(0.5)
+            else:
+                # short delay to wait for next command
+                time.sleep(0.05)
 
     def RB_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
@@ -533,11 +535,12 @@ class Speck:
                 move = self.move_queues[2].get()  # get the next movement in the queue
                 if move[0] == 2:  # if command is target at this leg, move it
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                    time.sleep(STEP_TIME)
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
-            # else:
-            #     # short delay to wait for next command
-            #     time.sleep(0.5)
+            else:
+                # short delay to wait for next command
+                time.sleep(0.05)
 
     def LB_thread_function(self):
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
@@ -545,11 +548,12 @@ class Speck:
                 move = self.move_queues[3].get()  # get the next movement in the queue
                 if move[0] == 3:  # if command is target at this leg, move it
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
+                    time.sleep(STEP_TIME)
                 else:  # command in wrong queue, move to correct queue
                     self.move_queues[move[0]].put(move)
-            # else:
-            #     # short delay to wait for next command
-            #     time.sleep(0.5)
+            else:
+                # short delay to wait for next command
+                time.sleep(0.05)
 
     #__________Define Speck's Functions__________
     def check_collision(self):
@@ -622,7 +626,7 @@ class Speck:
                     self.move_queues[leg].put([leg, gait[step][1], gait[step][2], gait[step][3]])
             else:  # only add the movement to the necessary queue
                 self.move_queues[gait[step][0]].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
-            time.sleep(STEP_TIME)
+            #time.sleep(STEP_TIME)
 
     def drop(self):
         print("Dropping")
