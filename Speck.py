@@ -153,6 +153,7 @@ LEFT_TURN_GAIT = ((0, 0, -50, 0),
                   (0, 0, 0, -TURN_STEP),
                   (1, 0, 0, -TURN_STEP),
                   (2, 0, 0, TURN_STEP),
+                  (3, 0, 0, TURN_STEP),
                   (3, 0, 0, TURN_STEP))
 
 RIGHT_TURN_GAIT = ((0, 0, -50, 0),
@@ -170,7 +171,8 @@ RIGHT_TURN_GAIT = ((0, 0, -50, 0),
                    (0, 0, 0, TURN_STEP),
                    (1, 0, 0, TURN_STEP),
                    (2, 0, 0, -TURN_STEP),
-                   (3, 0, 0, -TURN_STEP),)
+                   (3, 0, 0, -TURN_STEP),
+                   (3, 0, 0, -TURN_STEP))
 
 # __________Environment Setup__________
 factory = PiGPIOFactory()  # define pin factory to use servos for more accurate servo control
@@ -619,7 +621,7 @@ class Speck:
         # Gait Layout:
         # {Step n: {Leg, dx, dy, dz},
         # {Step n+1: {Leg, dx, dy, dz}}
-        for step in range(0, len(gait), 1):  # loop through all steps for one cyCle
+        for step in range(0, len(gait)-1, 1):  # loop through all steps for one cyCle
             if gait[step][0] == 4:  # move all legs
                 for leg in range(4):
                     # add movement to all four move queues
