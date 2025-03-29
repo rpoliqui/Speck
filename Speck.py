@@ -42,7 +42,6 @@ References:
     https://realpython.com/intro-to-python-threading/
     https://www.geeksforgeeks.org/queue-in-python/
 """
-
 # __________Import Statements__________
 import numpy as np
 import subprocess
@@ -56,6 +55,7 @@ from threading import Thread, Timer
 from queue import Queue
 from gpiozero import AngularServo, Button, Device, OutputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
+from signal import pause
 
 # __________Pin Definition__________
 # Joint Pins
@@ -93,8 +93,8 @@ PIN_RIGHT_SWITCH = 6
 HIP_LENGTH = 74
 UPPER_LEG_LENGTH = 124.5
 LOWER_LEG_LENGTH = 110
-JAW_OPEN_TIME = 6
-JAW_CLOSE_TIME = 6
+JAW_OPEN_TIME = 5
+JAW_CLOSE_TIME = 5
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
@@ -462,13 +462,14 @@ class Speck:
                      Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE, flipped=True, hip_flip=True),
                      Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE),
                      Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE, flipped=True)]
-        # create an array of 5 button objects to represent the object detectors. don't use pullup resistor since
-        # triggered HIGH when activated
-        self.ObjectSensors = [Button(PIN_FAR_LEFT_SENSOR, pull_up=False), Button(PIN_LEFT_SENSOR, pull_up=False),
-                              Button(PIN_CENTER_SENSOR, pull_up=False), Button(PIN_RIGHT_SENSOR, pull_up=False),
-                              Button(PIN_FAR_RIGHT_SENSOR, pull_up=False)]
+        # create an array of 5 button objects to represent the object detectors.
+        self.ObjectSensors = [Button(PIN_FAR_LEFT_SENSOR), Button(PIN_LEFT_SENSOR),Button(PIN_CENTER_SENSOR), Button(PIN_RIGHT_SENSOR),
+                              Button(PIN_FAR_RIGHT_SENSOR)]
         # create an array of buttons to control the limit switches
         self.LimitSwitches = [Button(PIN_LEFT_SWITCH), Button(PIN_RIGHT_SWITCH)]
+        # set function for switches to perform when pressed
+        for button in self.LimitSwitches:
+            button.when_pressed = lambda :self.grab()
         # create the Crate Jaws object used for holding onto the crate
         self.CrateJaws = CrateJaws()
         self.CrateJaws.open()  # make sure the crate jaws start open
@@ -492,6 +493,7 @@ class Speck:
         self.set_sit()
         # Store the version of code
         self.Version = "0.0.1"
+        pause()
 
     # __________Define Movement Thread Function_________
     def RF_thread_function(self):
@@ -542,6 +544,7 @@ class Speck:
                 # short delay to wait for next command
                 time.sleep(0.5)
 
+    #__________Define Speck's Functions__________
     def check_collision(self):
         """
         Function used to check all object sensors for a possible collision
@@ -614,12 +617,11 @@ class Speck:
                 self.move_queues[gait[step][0]].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
 
     def grab(self):
-        self.sit()  # have Speck sit onto the crate
-        if (self.LimitSwitches[0].is_active()) & (self.LimitSwitches[1].is_active()):
+        if self.LimitSwitches[0].is_active & self.LimitSwitches[1].is_active:
             Timer(2, self.CrateJaws.close)  # wait 2 seconds for Speck to sit, then close the jaws
             Timer(JAW_CLOSE_TIME + 5, self.stand)  # wait for the jaws to close plus a few seconds before standing
         else:
-            print("Limit Switches not engages, Crate not in correct location")
+            print("Both Limit Switches not engages, Crate not in correct location")
 
     def update(self, scope="ESSENTIAL"):
         """
