@@ -469,7 +469,8 @@ class Speck:
         self.LimitSwitches = [Button(PIN_LEFT_SWITCH), Button(PIN_RIGHT_SWITCH)]
         # set function for switches to perform when pressed
         for button in self.LimitSwitches:
-            button.when_pressed = lambda :self.grab()
+            button.when_held = lambda: self.grab() if self.LimitSwitches[0].is_active and self.LimitSwitches[1].is_active else None
+
         # create the Crate Jaws object used for holding onto the crate
         self.CrateJaws = CrateJaws()
         self.CrateJaws.open()  # make sure the crate jaws start open
