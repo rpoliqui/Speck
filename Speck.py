@@ -493,7 +493,6 @@ class Speck:
         self.set_sit()
         # Store the version of code
         self.Version = "0.0.1"
-        pause()
 
     # __________Define Movement Thread Function_________
     def RF_thread_function(self):
