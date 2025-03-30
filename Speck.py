@@ -636,7 +636,7 @@ class Speck:
         else:
             for leg in range(4): # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
-                self.move_queues[leg].put([4, 0, 0, distance])
+                self.move_queues[leg].put([4, 0, 0,  ((-1) ** (leg % 2)) * distance])
 
     def twist(self, cw:bool, theta:int):
         theta_rad = math.radians(theta)
