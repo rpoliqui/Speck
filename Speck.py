@@ -56,7 +56,6 @@ from threading import Thread, Timer, Barrier, Lock
 from queue import Queue
 from gpiozero import AngularServo, Button, Device, OutputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
-from prompt_toolkit.key_binding.bindings.named_commands import forward_word
 
 # __________Pin Definition__________
 # Joint Pins
