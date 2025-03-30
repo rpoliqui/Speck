@@ -97,6 +97,8 @@ LOWER_LEG_LENGTH = 110
 JAW_OPEN_TIME = 4.5
 JAW_CLOSE_TIME = 4.5
 STEP_TIME = .1
+SPECK_LENGTH = 181.3 # distance from center of longitudinal hip joints
+SPECK_WIDTH = 276.7 # distance from outside of both legs
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
@@ -636,16 +638,22 @@ class Speck:
                 # if the command is not meant for one leg, nothing will happen
                 self.move_queues[leg].put([4, 0, 0, distance])
 
-    def twist(self, cw:bool, distance:int):
+    def twist(self, cw:bool, theta:int):
+        theta_rad = math.radians(theta)
         if cw:
-            for leg in range(4): # add movement to all four move queues,
-                # if the command is not meant for one leg, nothing will happen
-                self.move_queues[leg].put([4, 0, distance, 0])
+            for leg in range(4):
+                x_cur = self.Legs[leg].current_position[0]
+                z_cur = self.Legs[leg].current_position[2]
+                x = SPECK_LENGTH/2 * math.cos(theta_rad) - SPECK_WIDTH/2 * math.sin(theta_rad)
+                z = SPECK_LENGTH/2 * math.sin(theta_rad) + SPECK_WIDTH/2 * math.cos(theta_rad)
+                self.move_queues[leg].put([leg, x - x_cur, 0, z - z_cur])
         else:
-            for leg in range(4): # add movement to all four move queues,
-                # if the command is not meant for one leg, nothing will happen
-                self.move_queues[leg].put([4, 0, 0, distance])
-
+            for leg in range(4):
+                x_cur = self.Legs[leg].current_position[0]
+                z_cur = self.Legs[leg].current_position[2]
+                x = SPECK_LENGTH / 2 * math.cos(theta_rad) - SPECK_WIDTH / 2 * math.sin(theta_rad)
+                z = SPECK_LENGTH / 2 * math.sin(theta_rad) + SPECK_WIDTH / 2 * math.cos(theta_rad)
+                self.move_queues[leg].put([leg, x + x_cur, 0, z + z_cur])
 
     def grab(self):
         print("Grabbing")
