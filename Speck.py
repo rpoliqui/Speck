@@ -604,32 +604,33 @@ class Speck:
             #time.sleep(STEP_TIME)
 
     def walk(self, steps):
-        if not self.is_standing:
+        if not self.is_standing: # if Speck isn't standing
             self.stand()
         for step in range(steps):
             self.gait(self.Gaits[0])
+        self.thread_barrier.wait() # wait for all threads to finish before standing
         self.stand()
 
     def strafe_left(self):
-        if not self.is_standing:
+        if not self.is_standing: # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[3])
         self.stand()
 
     def strafe_right(self):
-        if not self.is_standing:
+        if not self.is_standing: # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[4])
         self.stand()
 
     def turn_right(self):
-        if not self.is_standing:
+        if not self.is_standing: # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[2])
         self.stand()
 
     def turn_left(self):
-        if not self.is_standing:
+        if not self.is_standing: # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[3])
         self.stand()
