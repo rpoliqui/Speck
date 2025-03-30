@@ -553,7 +553,7 @@ class Speck:
         Function used to make Speck slowly stand. Sets the position of all feet accordingly
         """
         for i in range(3, -1, -1):
-            self.move_queues[i].put([i, 25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, 25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def set_sit(self):
@@ -570,7 +570,7 @@ class Speck:
         Function used to make Speck slowly sit. Sets the position of all feet accordingly
         """
         for i in range(0, 4, 1):
-            self.move_queues[i].put([i, 20 - self.Legs[i].current_position[0], 50 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 50 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def gait(self, gait):
@@ -594,12 +594,29 @@ class Speck:
                 self.move_queues[gait[step][0]].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
             #time.sleep(STEP_TIME)
 
+    def walk(self, steps):
+        for step in range(steps):
+            self.gait(self.Gaits[0])
+
+    def strafe_left(self):
+        self.gait(self.Gaits[3])
+
+    def strafe_right(self):
+        self.gait(self.Gaits[4])
+
+    def turn_right(self):
+        self.gait(self.Gaits[2])
+
+    def turn_left(self):
+        self.gait(self.Gaits[3])
+
+    def grab(self):
+        print("Grabbing")
+        self.CrateJaws.close()
+
     def drop(self):
         print("Dropping")
-        if self.LimitSwitches[0].is_active & self.LimitSwitches[1].is_active:
-            self.CrateJaws.open()  # if both switches engaged, open jaws
-        else:
-            print("Both Limit Switches not engages, Crate not in correct location")
+        self.CrateJaws.open()  # open jaws
 
     def update(self, scope="ESSENTIAL"):
         """
