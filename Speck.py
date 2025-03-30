@@ -280,7 +280,7 @@ class Leg:
         if AvailablePins[hip_lat_pin - 1] == 1:
             # for correct functioning, the lateral hip joints needs to be flipped by default
             self.hip_lat = Joint(hip_lat_pin, min_angle=-90, max_angle=90, starting_angle=0,
-                                 flipped=flipped and hip_flip)
+                                 flipped=(flipped and hip_flip))
             AvailablePins[hip_lat_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
