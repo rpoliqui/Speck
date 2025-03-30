@@ -663,57 +663,6 @@ class Speck:
         print("Dropping")
         self.CrateJaws.open()  # open jaws
 
-    def update(self, scope="ESSENTIAL"):
-        """
-        A function used to pull the most updated Speck code from the GitHub repository and ensure the pi is up-to-date
-        and ready to function
-
-        :param scope:type String: Specify the scope of the upgrade. Default value is "ESSENTIAL" which only pulls from
-        the GitHub repository. If scope = "ALL", then the raspberry pi is updated, all python packages are updated, and
-        all code is pulled from the GitHub repository
-        :return:
-        """
-        successful = False
-        subprocess.run(['sudo', 'apt', 'install', '-y', 'git'])  # install git on the pi
-        target_dir = os.getcwd()  # define the directory where the repository will be stored
-        wifi_ip = subprocess.check_output(['hostname', '-I'])  # get IP address of pi
-        if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
-            # Check if the repository already exists in the target directory
-            if (scope == "ESSENTIAL") | (scope == "ALL"):
-                print(
-                    "\n\n_____________________________________________________________________________________________")
-                print("Installing Speck from GitHub\n")
-                if os.path.isdir(os.path.join(target_dir, '.git')):
-                    # Pull the latest changes from GitHub and merge changes
-                    subprocess.run(['git', '-C', target_dir, 'pull', 'origin', 'main', '--ff-only'])
-                else:
-                    # If the repository doesn't exist, clone the repository from GitHub
-                    subprocess.run(['git', 'clone', 'https://github.com/rpoliqui/Speck/', target_dir])
-            if scope == "ALL":
-                print(
-                    "\n\n_____________________________________________________________________________________________")
-                print("Updating Raspberry Pi and All python packages\n")
-                version = subprocess.run(['git', 'describe'], capture_output=True, text=True)
-                if version != self.Version:
-                    print("___________________________________________________________________________________________")
-                    print("Current Speck Version: %s. New Speck Version: %s." % (self.Version, version))
-                    print("___________________________________________________________________________________________")
-                subprocess.run(['sudo', 'apt', '-y', 'update'])  # Update the package list
-                subprocess.run(['sudo', 'apt', '-y', 'upgrade'])  # Update the packages
-                subprocess.run(['sudo', 'apt', '-y', 'autoremove'])  # Remove any unnecessary packages from the pi
-                subprocess.run(['sudo', 'apt', 'install', 'pigpio'])  # Install pigpio for improved pin control
-                subprocess.run(['sudo', 'systemctl', 'enable', 'pigpiod'])  # Enable the daemon to run at time of boot
-                subprocess.run(['sudo', 'systemctl', 'start', 'pigpiod'])  # Start the daemon now to prevent rebooting
-                subprocess.run(['pip', 'install',
-                                'pyzmq==21.0.0'])  # Update pyzmq for messages, was throwing error of outdated version
-                subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # Update pip
-                subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # Update gpiozero
-                subprocess.run(['pip', 'install', '--upgrade', 'numpy'])  # Update numpy
-            successful = True
-        else:  # Wi-Fi is not connected, Speck cannot be updated
-            print("Speck cannot be updated without a wifi connection.")
-        return successful
-
     def __repr__(self):
         return "RF Leg Position: %i, %i, %i" \
                "LF Leg Position: %i, %i, %i" \
