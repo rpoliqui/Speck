@@ -520,7 +520,7 @@ class Speck:
                 self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
             elif move[0] == leg_id:  # if command is target at this leg
                 with self.lock: # lock all other threads and release after movement
-                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3]) # move the leg
+                    self.Legs[leg_id].smooth_move(move[1], move[2], move[3]) # move the leg
                     time.sleep(STEP_TIME)
             else: # not for this leg, do nothing
                 pass
@@ -604,7 +604,6 @@ class Speck:
             self.stand()
         for step in range(steps):
             self.gait(self.Gaits[0])
-        self.thread_barrier.wait() # wait for all threads to finish before standing
         self.stand()
 
     def strafe_left(self):
