@@ -56,6 +56,7 @@ from threading import Thread, Timer, Barrier, Lock
 from queue import Queue
 from gpiozero import AngularServo, Button, Device, OutputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
+from prompt_toolkit.key_binding.bindings.named_commands import forward_word
 
 # __________Pin Definition__________
 # Joint Pins
@@ -624,6 +625,27 @@ class Speck:
         if not self.is_standing: # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[3])
+
+    def shift(self, forward:bool, distance:int):
+        if forward:
+            for leg in range(4): # add movement to all four move queues,
+                # if the command is not meant for one leg, nothing will happen
+                self.move_queues[leg].put([4, 0, distance, 0])
+        else:
+            for leg in range(4): # add movement to all four move queues,
+                # if the command is not meant for one leg, nothing will happen
+                self.move_queues[leg].put([4, 0, 0, distance])
+
+    def twist(self, cw:bool, distance:int):
+        if cw:
+            for leg in range(4): # add movement to all four move queues,
+                # if the command is not meant for one leg, nothing will happen
+                self.move_queues[leg].put([4, 0, distance, 0])
+        else:
+            for leg in range(4): # add movement to all four move queues,
+                # if the command is not meant for one leg, nothing will happen
+                self.move_queues[leg].put([4, 0, 0, distance])
+
 
     def grab(self):
         print("Grabbing")
