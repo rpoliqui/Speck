@@ -486,6 +486,8 @@ class Speck:
         self.CrateJaws.open()  # make sure the crate jaws start open
         # create the camera object used for detecting the crate
         self.Camera = Camera()
+        # create state flags
+        self.is_standing = False
         # create an array of the available gaits
         self.Gaits = [WALK_GAIT, STRAFE_GAIT, LEFT_TURN_GAIT, RIGHT_TURN_GAIT]
         # create a queue of movements for each leg to perform. Start with an infinite size
@@ -545,6 +547,7 @@ class Speck:
         """
         Function used to make Speck quickly stand. Sets the position of all feet accordingly
         """
+        self.is_standing = True
         self.Legs[1].set_position(25, 175, HIP_LENGTH)
         self.Legs[0].set_position(25, 175, HIP_LENGTH)
         self.Legs[3].set_position(25, 175, HIP_LENGTH)
@@ -554,6 +557,7 @@ class Speck:
         """
         Function used to make Speck slowly stand. Sets the position of all feet accordingly
         """
+        self.is_standing = False
         for i in range(3, -1, -1):
             self.move_queues[i].put([4, 25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
@@ -562,6 +566,7 @@ class Speck:
         """
         Function used to make Speck quickly sit. Sets the position of all feet accordingly
         """
+        self.is_standing = False
         self.Legs[0].set_position(20, 50, HIP_LENGTH)
         self.Legs[1].set_position(20, 50, HIP_LENGTH)
         self.Legs[2].set_position(20, 50, HIP_LENGTH)
@@ -571,6 +576,7 @@ class Speck:
         """
         Function used to make Speck slowly sit. Sets the position of all feet accordingly
         """
+        self.is_standing = False
         for i in range(0, 4, 1):
             self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 50 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
@@ -584,6 +590,7 @@ class Speck:
         changes in the foot position in millimeters
         :return: None
         """
+        self.is_standing = False
         # Gait Layout:
         # {Step n: {Leg, dx, dy, dz},
         # {Step n+1: {Leg, dx, dy, dz}}
@@ -597,20 +604,35 @@ class Speck:
             #time.sleep(STEP_TIME)
 
     def walk(self, steps):
+        if not self.is_standing:
+            self.stand()
         for step in range(steps):
             self.gait(self.Gaits[0])
+        self.stand()
 
     def strafe_left(self):
+        if not self.is_standing:
+            self.stand()
         self.gait(self.Gaits[3])
+        self.stand()
 
     def strafe_right(self):
+        if not self.is_standing:
+            self.stand()
         self.gait(self.Gaits[4])
+        self.stand()
 
     def turn_right(self):
+        if not self.is_standing:
+            self.stand()
         self.gait(self.Gaits[2])
+        self.stand()
 
     def turn_left(self):
+        if not self.is_standing:
+            self.stand()
         self.gait(self.Gaits[3])
+        self.stand()
 
     def grab(self):
         print("Grabbing")
