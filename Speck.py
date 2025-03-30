@@ -604,31 +604,26 @@ class Speck:
             self.stand()
         for step in range(steps):
             self.gait(self.Gaits[0])
-        self.stand()
 
     def strafe_left(self):
         if not self.is_standing: # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[3])
-        self.stand()
 
     def strafe_right(self):
         if not self.is_standing: # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[4])
-        self.stand()
 
     def turn_right(self):
         if not self.is_standing: # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[2])
-        self.stand()
 
     def turn_left(self):
         if not self.is_standing: # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[3])
-        self.stand()
 
     def grab(self):
         print("Grabbing")
