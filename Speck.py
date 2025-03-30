@@ -567,10 +567,10 @@ class Speck:
         Function used to make Speck quickly sit. Sets the position of all feet accordingly
         """
         self.is_standing = False
-        self.Legs[0].set_position(20, 50, HIP_LENGTH)
-        self.Legs[1].set_position(20, 50, HIP_LENGTH)
-        self.Legs[2].set_position(20, 50, HIP_LENGTH)
-        self.Legs[3].set_position(20, 50, HIP_LENGTH)
+        self.Legs[0].set_position(20, 40, HIP_LENGTH)
+        self.Legs[1].set_position(20, 40, HIP_LENGTH)
+        self.Legs[2].set_position(20, 40, HIP_LENGTH)
+        self.Legs[3].set_position(20, 40, HIP_LENGTH)
 
     def sit(self):
         """
@@ -578,7 +578,7 @@ class Speck:
         """
         self.is_standing = False
         for i in range(0, 4, 1):
-            self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 50 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 40 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def gait(self, gait):
