@@ -522,8 +522,8 @@ class Speck:
                 with self.lock: # lock all other threads and release after movement
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3]) # move the leg
                     time.sleep(STEP_TIME)
-            else:  # command in wrong queue, move to correct queue
-                self.move_queues[move[0]].put(move)
+            else: # not for this leg, do nothing
+                pass
 
     #__________Define Speck's Functions__________
     def check_collision(self):
@@ -594,14 +594,10 @@ class Speck:
         # Gait Layout:
         # {Step n: {Leg, dx, dy, dz},
         # {Step n+1: {Leg, dx, dy, dz}}
-        for step in range(0, len(gait)-1, 1):  # loop through all steps for one cyCle
-            if gait[step][0] == 4:  # move all legs
-                for leg in range(4):
-                    # add movement to all four move queues
-                    self.move_queues[leg].put([4, gait[step][1], gait[step][2], gait[step][3]])
-            else:  # only add the movement to the necessary queue
-                self.move_queues[gait[step][0]].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
-            #time.sleep(STEP_TIME)
+        for step in range(0, len(gait)-1, 1):  # loop through all steps for one cycle
+            for leg in range(4): # add movement to all four move queues,
+                # if the command is not meant for one leg, nothing will happen
+                self.move_queues[leg].put([4, gait[step][1], gait[step][2], gait[step][3]])
 
     def walk(self, steps):
         if not self.is_standing: # if Speck isn't standing
