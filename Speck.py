@@ -280,7 +280,7 @@ class Leg:
         if AvailablePins[hip_lat_pin - 1] == 1:
             # for correct functioning, the lateral hip joints needs to be flipped by default
             self.hip_lat = Joint(hip_lat_pin, min_angle=-90, max_angle=90, starting_angle=0,
-                                 flipped=(flipped and hip_flip))
+                                 flipped=(flipped + hip_flip))
             AvailablePins[hip_lat_pin - 1] = 0
         else:
             raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
@@ -473,7 +473,7 @@ class Speck:
         # [RF, LF, RB, LB]
         self.Legs = [Leg(PIN_RF_HIP_LAT, PIN_RF_HIP_LONG, PIN_RF_KNEE, hip_flip=True),
                      Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE, flipped=True, hip_flip=True),
-                     Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE, flipped=True),
+                     Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE, hip_flip=True),
                      Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE, flipped=True)]
         # create an array of 5 button objects to represent the object detectors.
         self.ObjectSensors = [Button(PIN_FAR_LEFT_SENSOR), Button(PIN_LEFT_SENSOR),Button(PIN_CENTER_SENSOR), Button(PIN_RIGHT_SENSOR),
