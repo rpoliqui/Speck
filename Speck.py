@@ -632,7 +632,7 @@ class Speck:
         if forward:
             for leg in range(4): # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
-                self.move_queues[leg].put([4, 0, distance, 0])
+                self.move_queues[leg].put([4, distance, 0, 0])
         else:
             for leg in range(4): # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
