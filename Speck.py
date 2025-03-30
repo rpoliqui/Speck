@@ -95,7 +95,7 @@ UPPER_LEG_LENGTH = 124.5
 LOWER_LEG_LENGTH = 110
 JAW_OPEN_TIME = 4.5
 JAW_CLOSE_TIME = 4.5
-STEP_TIME = 1
+STEP_TIME = .1
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
@@ -517,47 +517,9 @@ class Speck:
             elif move[0] == leg_id:  # if command is target at this leg
                 with self.lock: # lock all other threads and release after movement
                     self.Legs[move[0]].smooth_move(move[1], move[2], move[3]) # move the leg
+                    time.sleep(STEP_TIME)
             else:  # command in wrong queue, move to correct queue
                 self.move_queues[move[0]].put(move)
-
-    def LF_thread_function(self):
-        while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
-            if not self.move_queues[1].empty():  # if the queue is not empty
-                move = self.move_queues[1].get()  # get the next movement in the queue
-                if move[0] == 1:  # if command is target at this leg, move it
-                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
-                    time.sleep(STEP_TIME)
-                else:  # command in wrong queue, move to correct queue
-                    self.move_queues[move[0]].put(move)
-            else:
-                # short delay to wait for next command
-                time.sleep(0.05)
-
-    def RB_thread_function(self):
-        while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
-            if not self.move_queues[2].empty():  # if the queue is not empty
-                move = self.move_queues[2].get()  # get the next movement in the queue
-                if move[0] == 2:  # if command is target at this leg, move it
-                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
-                    time.sleep(STEP_TIME)
-                else:  # command in wrong queue, move to correct queue
-                    self.move_queues[move[0]].put(move)
-            else:
-                # short delay to wait for next command
-                time.sleep(0.05)
-
-    def LB_thread_function(self):
-        while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
-            if not self.move_queues[3].empty():  # if the queue is not empty
-                move = self.move_queues[3].get()  # get the next movement in the queue
-                if move[0] == 3:  # if command is target at this leg, move it
-                    self.Legs[move[0]].smooth_move(move[1], move[2], move[3])
-                    time.sleep(STEP_TIME)
-                else:  # command in wrong queue, move to correct queue
-                    self.move_queues[move[0]].put(move)
-            else:
-                # short delay to wait for next command
-                time.sleep(0.05)
 
     #__________Define Speck's Functions__________
     def check_collision(self):
