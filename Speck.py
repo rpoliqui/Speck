@@ -42,11 +42,17 @@ References:
     https://realpython.com/intro-to-python-threading/
     https://www.geeksforgeeks.org/queue-in-python/
     https://robotics.stackexchange.com/questions/16252/servo-motor-power-consumption-issue
+    https://learnopencv.com/contour-detection-using-opencv-python-c/
+    https://www.geeksforgeeks.org/python-opencv-cheat-sheet/
+    https://www.tutorialspoint.com/how-to-change-the-contrast-and-brightness-of-an-image-using-opencv-in-python
+    https://stackoverflow.com/questions/58632469/how-to-find-the-orientation-of-an-object-shape-python-opencv
+    https://forum.opencv.org/t/remove-unwanted-contours-with-irregular-shapes/6854
+    https://handmap.github.io/measuring-size-and-distance-opencv/
+    https://stackoverflow.com/questions/40460873/how-to-draw-a-rectangle-by-specifying-its-4-corners
+    https://gist.github.com/jdhao/1cb4c8f6561fbdb87859ac28a84b0201
 """
 # __________Import Statements__________
 import numpy as np
-import subprocess
-import os
 import math
 from math import atan2, sin, asin, acos, sqrt, fabs
 import time
@@ -96,8 +102,8 @@ LOWER_LEG_LENGTH = 110
 JAW_OPEN_TIME = 4.5
 JAW_CLOSE_TIME = 4.5
 STEP_TIME = .1
-SPECK_LENGTH = 181.3 # distance from center of longitudinal hip joints
-SPECK_WIDTH = 276.7 # distance from outside of both legs
+SPECK_LENGTH = 181.3  # distance from center of longitudinal hip joints
+SPECK_WIDTH = 276.7  # distance from outside of both legs
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
@@ -396,7 +402,6 @@ class CrateJaws:
         self.IN3 = OutputDevice(PIN_IN3, initial_value=False)
         self.IN4 = OutputDevice(PIN_IN4, initial_value=False)
 
-
     def open(self):
         """
         Function used to open the jaws
@@ -475,14 +480,16 @@ class Speck:
                      Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE),
                      Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE, flipped=True)]
         # create an array of 5 button objects to represent the object detectors.
-        self.ObjectSensors = [Button(PIN_FAR_LEFT_SENSOR), Button(PIN_LEFT_SENSOR),Button(PIN_CENTER_SENSOR), Button(PIN_RIGHT_SENSOR),
+        self.ObjectSensors = [Button(PIN_FAR_LEFT_SENSOR), Button(PIN_LEFT_SENSOR), Button(PIN_CENTER_SENSOR),
+                              Button(PIN_RIGHT_SENSOR),
                               Button(PIN_FAR_RIGHT_SENSOR)]
         # create an array of buttons to control the limit switches
         self.LimitSwitches = [Button(PIN_LEFT_SWITCH), Button(PIN_RIGHT_SWITCH)]
         # set function for switches to perform when pressed
         for button in self.LimitSwitches:
             button.hold_time = 0.5
-            button.when_held = lambda: self.CrateJaws.close() if self.LimitSwitches[0].is_active and self.LimitSwitches[1].is_active else print("Switch Held")
+            button.when_held = lambda: self.CrateJaws.close() if self.LimitSwitches[0].is_active and self.LimitSwitches[
+                1].is_active else print("Switch Held")
         # create the Crate Jaws object used for holding onto the crate
         self.CrateJaws = CrateJaws()
         self.CrateJaws.open()  # make sure the crate jaws start open
@@ -521,13 +528,13 @@ class Speck:
                 self.thread_barrier.wait()  # wait for all threads to be ready
                 self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
             elif move[0] == leg_id:  # if command is target at this leg
-                with self.lock: # lock all other threads and release after movement
-                    self.Legs[leg_id].smooth_move(move[1], move[2], move[3]) # move the leg
+                with self.lock:  # lock all other threads and release after movement
+                    self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
                     time.sleep(STEP_TIME)
-            else: # not for this leg, do nothing
+            else:  # not for this leg, do nothing
                 pass
 
-    #__________Define Speck's Functions__________
+    # __________Define Speck's Functions__________
     def check_collision(self):
         """
         Function used to check all object sensors for a possible collision
@@ -596,55 +603,55 @@ class Speck:
         # Gait Layout:
         # {Step n: {Leg, dx, dy, dz},
         # {Step n+1: {Leg, dx, dy, dz}}
-        for step in range(0, len(gait)-1, 1):  # loop through all steps for one cycle
-            for leg in range(4): # add movement to all four move queues,
+        for step in range(0, len(gait) - 1, 1):  # loop through all steps for one cycle
+            for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
                 self.move_queues[leg].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
 
     def walk(self, steps):
-        if not self.is_standing: # if Speck isn't standing
+        if not self.is_standing:  # if Speck isn't standing
             self.stand()
         for step in range(steps):
             self.gait(self.Gaits[0])
 
     def strafe_left(self):
-        if not self.is_standing: # if Speck isn't standing
+        if not self.is_standing:  # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[3])
 
     def strafe_right(self):
-        if not self.is_standing: # if Speck isn't standing
+        if not self.is_standing:  # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[4])
 
     def turn_right(self):
-        if not self.is_standing: # if Speck isn't standing
+        if not self.is_standing:  # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[2])
 
     def turn_left(self):
-        if not self.is_standing: # if Speck isn't standing
+        if not self.is_standing:  # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[3])
 
-    def shift(self, forward:bool, distance:int):
+    def shift(self, forward: bool, distance: int):
         if forward:
-            for leg in range(4): # add movement to all four move queues,
+            for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
                 self.move_queues[leg].put([4, distance, 0, 0])
         else:
-            for leg in range(4): # add movement to all four move queues,
+            for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
-                self.move_queues[leg].put([4, 0, 0,  ((-1) ** (leg % 2)) * distance])
+                self.move_queues[leg].put([4, 0, 0, ((-1) ** (leg % 2)) * distance])
 
-    def twist(self, cw:bool, theta:int):
+    def twist(self, cw: bool, theta: int):
         theta_rad = math.radians(theta)
         if cw:
             for leg in range(4):
                 x_cur = self.Legs[leg].current_position[0]
                 z_cur = self.Legs[leg].current_position[2]
-                x = SPECK_LENGTH/2 * math.cos(theta_rad) - SPECK_WIDTH/2 * math.sin(theta_rad)
-                z = SPECK_LENGTH/2 * math.sin(theta_rad) + SPECK_WIDTH/2 * math.cos(theta_rad)
+                x = SPECK_LENGTH / 2 * math.cos(theta_rad) - SPECK_WIDTH / 2 * math.sin(theta_rad)
+                z = SPECK_LENGTH / 2 * math.sin(theta_rad) + SPECK_WIDTH / 2 * math.cos(theta_rad)
                 self.move_queues[leg].put([leg, x - x_cur, 0, z - z_cur])
         else:
             for leg in range(4):
