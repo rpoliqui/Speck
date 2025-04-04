@@ -32,11 +32,10 @@ if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
     subprocess.run(['sudo', 'systemctl', 'start', 'pigpiod'])  # Start the daemon now to prevent rebooting
     subprocess.run(['sudo', 'apt-get', 'install', 'python3-opencv'])  # Install opencv package for image processing
     subprocess.run(['sudo', 'apt-get', 'install', 'sklearn'])  # Install sklearn package for image processing
-    # subprocess.run(['sudo', 'apt-get', 'install', 'python-picamera', 'python3-picamera'])  # Install picamera package
     subprocess.run(['pip', 'install', 'pyzmq==21.0.0'])  # Update pyzmq for messages, was throwing error of outdated version
-    # subprocess.run(['pip', 'install', '--upgrade', 'picamera'])  # Update picamera
     subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # Update pip
     subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # Update gpiozero
+    subprocess.run(['pip', 'install', '--upgrade', 'picamzero'])  # Update pi camera package
     subprocess.run(['pip', 'install', '--upgrade', 'numpy'])  # Update numpy
 else:  # Wi-Fi is not connected, Speck cannot be updated
     print("Speck cannot be updated without a wifi connection.")

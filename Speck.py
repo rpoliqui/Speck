@@ -50,6 +50,7 @@ References:
     https://handmap.github.io/measuring-size-and-distance-opencv/
     https://stackoverflow.com/questions/40460873/how-to-draw-a-rectangle-by-specifying-its-4-corners
     https://gist.github.com/jdhao/1cb4c8f6561fbdb87859ac28a84b0201
+    https://docs.opencv.org/4.x/dd/d49/tutorial_py_contour_features.html
 """
 # __________Import Statements__________
 import numpy as np
