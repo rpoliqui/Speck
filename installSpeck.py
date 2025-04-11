@@ -32,8 +32,12 @@ if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
     subprocess.run(['sudo', 'systemctl', 'start', 'pigpiod'])  # Start the daemon now to prevent rebooting
     subprocess.run(['sudo', 'apt-get', 'install', 'python3-opencv'])  # Install opencv package for image processing
     subprocess.run(['sudo', 'apt-get', 'install', 'sklearn'])  # Install sklearn package for image processing
+    subprocess.run(['sudo', 'apt-get', 'install', 'bluetooth'])  # Install bluetooth package
+    subprocess.run(['sudo', 'apt-get', 'install', 'bluez'])  # Install bluetooth package
+    subprocess.run(['sudo', 'apt-get', 'install', 'python-bluez'])  # Install python package to use bluetooth
     subprocess.run(['pip', 'install', 'pyzmq==21.0.0'])  # Update pyzmq for messages, was throwing error of outdated version
     subprocess.run(['pip', 'install', '--upgrade', 'pip'])  # Update pip
+    subprocess.run(['pip', 'install', '--upgrade', 'pybluez'])  # Update bluetooth package
     subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # Update gpiozero
     subprocess.run(['pip', 'install', '--upgrade', 'picamzero'])  # Update pi camera package
     subprocess.run(['pip', 'install', '--upgrade', 'numpy'])  # Update numpy
