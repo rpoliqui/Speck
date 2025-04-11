@@ -3,7 +3,13 @@ import cv2
 import numpy as np
 
 
-def process_image(image, blur, sensitivity, loops = 0):
+def process_image(image, blur, sensitivity, loops=0):
+    if loops > 100:
+        print("!!Failed to Find Crate!!")
+        cv2.imshow('Processed image', image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        return
     print(blur, sensitivity)
     # resize the image
     image = cv2.resize(image, (600, 800))  # Resize to 800x600
@@ -16,7 +22,7 @@ def process_image(image, blur, sensitivity, loops = 0):
 
     # Convert image to grayscale for edge detection
     img_gray = cv2.cvtColor(blurred_image, cv2.COLOR_BGR2GRAY)
-    cv2.imshow('Gray Scale', img_gray)
+    # cv2.imshow('Gray Scale', img_gray)
 
     # Calculate limits for edge detection using the grayscale image
     median = np.mean(blurred_image)
@@ -45,8 +51,6 @@ def process_image(image, blur, sensitivity, loops = 0):
 
         # apply approximation algorithm to simplify contours
         epsilon = 0.1 * cv2.arcLength(c, True)
-        approx = cv2.approxPolyDP(c, epsilon, True)
-        hull = cv2.convexHull(c)
 
         # find bounding box around each contour
         rect = cv2.minAreaRect(c)
@@ -71,7 +75,10 @@ def process_image(image, blur, sensitivity, loops = 0):
             # Calculate centroid
             cX, cY = np.array(np.mean(box, axis=0), dtype='int')
             center_points.append([cX, cY])
+            # draw contours on original image
+            cv2.drawContours(image, c, -1, (0, 255, 255), 1)
             # draw the bounding box, center point, and corner circles
+            cv2.drawContours(image_copy, [box], -1, (255, 0, 0), 2)
             cv2.drawContours(image_copy, [box], -1, (255, 0, 0), 2)
             cv2.circle(image_copy, (cX, cY), 2, (0, 0, 255), 3)
             for (x, y) in list(box):
@@ -91,67 +98,51 @@ def process_image(image, blur, sensitivity, loops = 0):
     center_points = np.array(center_points)
 
     # determine orientation of box based on number of squares detected
-    if len(squares) == 0:  # didn't find any squares
-        print('Crate not found')
+    if len(squares) < 3:  # didn't find any squares
+        print('Found %i sqaures(s)' %len(squares))
         if 9 >= blur > 1:  # reprocess image with less blur
-            process_image(image, blur - 2, sensitivity)
+            process_image(image, blur - 2, sensitivity, loops+1)
         elif blur == 1 and sensitivity < 1:  # reprocess image with more sensitivity
-            process_image(image, 9, sensitivity + 0.05)
+            process_image(image, 9, sensitivity + 0.05, loops+1)
         elif sensitivity >= 1:
-            process_image(image, 9, sensitivity - .05)
+            process_image(image, 9, sensitivity - .05, loops+1)
         return None
-
-    elif len(squares) == 1:  # found one square, assume bounding box around whole crate
-        print('One Square Found')
-        # reprocess image with less blur
-        if blur == 1:  # reached bottom of blur range
-            process_image(image, 9, sensitivity)
-            return None
-        else:  # reprocess image
-            process_image(image, blur-2, sensitivity)
-            return None
-    elif len(squares) == 2:  # found 2 squares, assume two corners found
-        print('Two Square Found')
-        # determine in squares are in line or diagonal
-        diff_vector = [center_points[0][0] - center_points[1][0], center_points[0][1] - center_points[1][1]]
-        vector_angle = math.atan(diff_vector[1] / diff_vector[0]) * 180 / math.pi % 90
-        rect_angle = ((squares[0][-1] + squares[1][-1]) / 2) % 90
-        angle_diff = (abs(rect_angle) - abs(vector_angle))
-        print(rect_angle, vector_angle, angle_diff)
-        if abs(angle_diff) <= 10:  # assume stacked
-            # find missing two points
-            points = np.array([[center_points[0][0], center_points[0][1]],
-                               [center_points[1][0], center_points[1][1]],
-                               [center_points[1][0] - diff_vector[1], center_points[1][1] + diff_vector[0]],
-                               [center_points[0][0] - diff_vector[1], center_points[0][1] + diff_vector[0]]])
-        else:  # assume diagonal
-            # find missing two points
-            points = np.array([[center_points[0][0], center_points[0][1]],
-                               [center_points[1][0], center_points[1][1]],
-                               [center_points[1][0] - diff_vector[1], center_points[1][1] - diff_vector[0]],
-                               [center_points[0][0] - diff_vector[1], center_points[0][1] - diff_vector[0]]])
-        # draw crate corner points
-        for point in points:
-            cv2.circle(image_copy, (point[0], point[1]), 2, (0, 255, 0), 2)
-        # find bounding box
-        rect = cv2.minAreaRect(points)
-        box = np.array(cv2.boxPoints(rect), dtype=int)
-        # use side length of rectangle as reference for length
-        side_length = np.max(rect[1])
-        # find center of bounding box
-        crate_center = np.array(rect[0], dtype=int)
-        cv2.drawContours(image_copy, [box], -1, (0, 0, 255), 2)
-        # calculate adjustments
-        shift_x = (image_center[0] - crate_center[0]) * CRATE_WIDTH / side_length
-        shift_y = (image_center[1] - crate_center[1]) * CRATE_WIDTH / side_length
-        twist = rect[-1]
 
     elif len(squares) == 3:
         print('Three Squares Found')
         # use center points of squares to construct a box
         (x, y), rad = cv2.minEnclosingCircle(center_points)
-        crate_center = [int(x), int(y)]
-        cv2.circle(image_copy, crate_center, int(rad), (0, 0, 255), 2)
+        # if square one is significantly larger than the others
+        if(squares[0][1][0] > 1.25*squares[1][1][0]) and (squares[0][1][0] > 1.25*squares[2][1][0]):
+            # assume that it contains the entire crate.
+            crate_center = [int(squares[0][0][0]), int(squares[0][0][1])]
+            rect = squares[0]
+        # if square two is significantly larger than the others
+        elif(squares[1][1][0] > 1.25*squares[0][1][0]) and (squares[1][1][0] > 1.25*squares[2][1][0]):
+            # assume that is contains the entire crate.
+            crate_center = [int(squares[1][0][0]), int(squares[1][0][1])]
+            rect = squares[1]
+        # if square two is significantly larger than the others
+        elif (squares[2][1][0] > 1.25*squares[0][1][0]) and (squares[2][1][0] > 1.25*squares[1][1][0]):
+            # assume that is contains the entire crate.
+            crate_center = [int(squares[2][0][0]), int(squares[2][0][1])]
+            rect = squares[2]
+        # otherwise assume three corners were found
+        else:
+            crate_center = [int(x), int(y)]
+            cv2.circle(image_copy, crate_center, int(rad), (0, 0, 255), 2)
+            rect = cv2.minAreaRect(center_points)
+        box = cv2.boxPoints(rect)
+        box = np.array(box, dtype='int')
+        cv2.drawContours(image_copy, [box], -1, (0, 0, 255), 2)
+        # calculate adjustments
+        side_length = np.max(rect[1])
+        shift_x = (image_center[0] - crate_center[0]) * CRATE_WIDTH / side_length
+        shift_y = (image_center[1] - crate_center[1]) * CRATE_WIDTH / side_length
+        twist = rect[-1] % 90
+        # only need to rotate angles less than 45 degrees
+        if twist > 45:
+            twist = twist - 90
     elif len(squares) == 4:  # found 3 - 4 squares, assume 3-4 corners found
         print('Four Squares Found')
         # use center points of squares to construct a box
@@ -160,12 +151,16 @@ def process_image(image, blur, sensitivity, loops = 0):
         # use side length of rectangle as reference for length
         side_length = np.max(rect[1])
         # find center of bounding box
-        crate_center = np.array(rect[0], dtype=int)
+        crate_center = [int(rect[0][0]), int(rect[0][1])]
         cv2.drawContours(image_copy, [box], -1, (0, 0, 255), 2)
         # calculate adjustments
         shift_x = (image_center[0] - crate_center[0]) * CRATE_WIDTH / side_length
         shift_y = (image_center[1] - crate_center[1]) * CRATE_WIDTH / side_length
-        twist = rect[-1]
+        # find angle to the nearest 90 degrees
+        twist = rect[-1] % 90
+        # only need to rotate angles less than 45 degrees
+        if twist > 45:
+            twist = twist - 90
     else:
         print('More than 4 squares found, could not find crate')
         crate_center = image_center
@@ -173,6 +168,7 @@ def process_image(image, blur, sensitivity, loops = 0):
     # draw center point
     cv2.circle(image_copy, crate_center, 2, (0, 0, 255), 4)
     # draw array from point center to image center
+    print(crate_center)
     cv2.arrowedLine(image_copy, crate_center, image_center, (0, 0, 0), 1)
 
     # draw adjustments onto image
@@ -213,8 +209,15 @@ def process_image(image, blur, sensitivity, loops = 0):
 
     # Display results
     # cv2.imshow('Segmented Image', segmented_img)
-    cv2.imshow('Edges', edge_image)
+    # cv2.imshow('Edges', edge_image)
     cv2.imshow('Processed Image', image_copy)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    # rotate image based on calculation and reprocess
+    M = cv2.getRotationMatrix2D(crate_center, twist, 1)
+    (h, w) = image.shape[:2]
+    rotated = cv2.warpAffine(image, M, (w, h))
+    cv2.imshow('Rotated Image', rotated)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     return shift_x, shift_y, twist
@@ -226,5 +229,5 @@ if __name__ == '__main__':
     ORIENTATION_SQUARE_SIZE = 5  # mm
 
     # Read the image
-    img = cv2.imread('Test Images/IMG_7290.jpg')
-    process_image(img, 3, 0.2)
+    img = cv2.imread('Test Images/IMG_7294.jpg')
+    process_image(img, 9, 0.2)
