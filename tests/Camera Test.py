@@ -1,8 +1,15 @@
-from picamzero import Camera
-import os
+from picamera import PiCamera
+import time
 
-cam = Camera()
+camera = PiCamera()
 
-cam.start_preview()
-cam.take_photo("/home/speck/Speck/tests/new_image.jpg")  # save the image to your desktop
-cam.stop_preview()
+camera.resolution = (1280, 720)
+camera.vflip = True
+
+camera.start_preview()
+time.sleep(2)
+
+camera.capture('/home/speck/Speck/tests/image.jpg')
+
+camera.stop_preview()
+camera.close()
