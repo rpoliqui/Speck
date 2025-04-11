@@ -17,8 +17,7 @@ Global Variables:
     WALK_GAIT: an array of leg movements that allow Speck to walk
 _______________________________________________________________________________________________________________________
 References:
-    Python. (2025, January 8). Python 3.13.1 documentation. Retrieved from Python: https://docs.python.org/3/
-    Geeks for Geeks. (2024, August 2). Python Docstrings. Retrieved from Geeks for Geeks:
+    https://docs.python.org/3/
     https://www.geeksforgeeks.org/python-docstrings/
     https://forums.raspberrypi.com/viewtopic.php?t=173157
     https://stackoverflow.com/questions/8247605/configuring-so-that-pip-install-can-work-from-github
@@ -51,14 +50,18 @@ References:
     https://stackoverflow.com/questions/40460873/how-to-draw-a-rectangle-by-specifying-its-4-corners
     https://gist.github.com/jdhao/1cb4c8f6561fbdb87859ac28a84b0201
     https://docs.opencv.org/4.x/dd/d49/tutorial_py_contour_features.html
+    https://community.appinventor.mit.edu/t/raspberry-pi-bluetooth-send-receive/59846/3
 """
+import subprocess
+
 # __________Import Statements__________
 import numpy as np
 import math
 from math import atan2, sin, asin, acos, sqrt, fabs
 import time
-# import cv2 as cv
-# from picamera import PiCamera
+import bluetooth
+import cv2 as cv
+# from picamera import PiCamerapi
 from threading import Thread, Timer, Barrier, Lock
 from queue import Queue
 from gpiozero import AngularServo, Button, Device, OutputDevice
@@ -480,10 +483,12 @@ class Speck:
                      Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE, flipped=True, hip_flip=True),
                      Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE),
                      Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE, flipped=True)]
+
         # create an array of 5 button objects to represent the object detectors.
         self.ObjectSensors = [Button(PIN_FAR_LEFT_SENSOR), Button(PIN_LEFT_SENSOR), Button(PIN_CENTER_SENSOR),
                               Button(PIN_RIGHT_SENSOR),
                               Button(PIN_FAR_RIGHT_SENSOR)]
+
         # create an array of buttons to control the limit switches
         self.LimitSwitches = [Button(PIN_LEFT_SWITCH), Button(PIN_RIGHT_SWITCH)]
         # set function for switches to perform when pressed
@@ -491,13 +496,17 @@ class Speck:
             button.hold_time = 0.5
             button.when_held = lambda: self.CrateJaws.close() if self.LimitSwitches[0].is_active and self.LimitSwitches[
                 1].is_active else print("Switch Held")
+
         # create the Crate Jaws object used for holding onto the crate
         self.CrateJaws = CrateJaws()
         self.CrateJaws.open()  # make sure the crate jaws start open
+
         # create the camera object used for detecting the crate
         self.Camera = Camera()
+
         # create state flags
         self.is_standing = False
+
         # create an array of the available gaits
         self.Gaits = [WALK_GAIT, STRAFE_GAIT, LEFT_TURN_GAIT, RIGHT_TURN_GAIT]
         # create a queue of movements for each leg to perform. Start with an infinite size
@@ -516,6 +525,17 @@ class Speck:
             thread.start()
         # start Speck in sitting position
         self.set_sit()
+
+        # set up bluetooth connection
+        subprocess.run(['service', 'bluetooth', 'start'])  # start bluetooth on pi
+
+        self.server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+        self.port = 22
+        self.server_sock.bind(("", self.port))
+        # Start bluetooth thread
+        Bluetooth_thread = Thread(target=self.bluetooth_server(), daemon=False)
+        Bluetooth_thread.start()
+
         # Store the version of code
         self.Version = "0.0.1"
 
@@ -534,6 +554,21 @@ class Speck:
                     time.sleep(STEP_TIME)
             else:  # not for this leg, do nothing
                 pass
+
+    # __________Bluetooth Server Function__________
+    def bluetooth_server(self):
+        self.server_sock.listen(1)
+        client_sock, address = self.server_sock.accept()
+        print("Client Address: ", address)
+        while True:
+            recv_data = client_sock.recv(1024)
+            print("Info Received: %s" % recv_data)
+            if recv_data == "Q":
+                print("End.")
+                break
+
+        client_sock.close()
+        self.server_sock.close()
 
     # __________Define Speck's Functions__________
     def check_collision(self):
