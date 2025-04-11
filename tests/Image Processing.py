@@ -226,7 +226,6 @@ def process_image(image, blur, sensitivity, loops=0):
 if __name__ == '__main__':
     # define system constants
     CRATE_WIDTH = 75  # mm
-    ORIENTATION_SQUARE_SIZE = 5  # mm
 
     # Read the image
     img = cv2.imread('Test Images/IMG_7294.jpg')
