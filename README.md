@@ -3,6 +3,8 @@ Speck is a mini quadruped robot that has been designed to pick up and carry a sp
 , inexpensive hardware and 3D printable structural components for a cheap and easily manufactured design. The software 
 utilizes Python as the primary programming language. 
 
+SPECK stands for Small Pal Engineered for Crate Karting.
+
 ## Getting Started
 These instructions assume that you have basic knowledge of how to connect to a Raspberry Pi via SSH and that your Raspberry Pi is connected to the internet. If your Raspberry Pi is not connected to the internet, then you will not be able to install the necessary code from this GitHub repository
 
