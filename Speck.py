@@ -51,17 +51,19 @@ References:
     https://gist.github.com/jdhao/1cb4c8f6561fbdb87859ac28a84b0201
     https://docs.opencv.org/4.x/dd/d49/tutorial_py_contour_features.html
     https://community.appinventor.mit.edu/t/raspberry-pi-bluetooth-send-receive/59846/3
+    https://www.w3schools.com/python/python_datetime.asp
 """
 import subprocess
 
 # __________Import Statements__________
 import numpy as np
 import math
-from math import atan2, sin, asin, acos, sqrt, fabs
 import time
 import bluetooth
-import cv2 as cv
-# from picamera import PiCamerapi
+import cv2
+import datetime
+from picamera2 import Picamera2
+from math import atan2, sin, asin, acos, sqrt, fabs
 from threading import Thread, Timer, Barrier, Lock
 from queue import Queue
 from gpiozero import AngularServo, Button, Device, OutputDevice
@@ -100,14 +102,15 @@ PIN_LEFT_SWITCH = 13
 PIN_RIGHT_SWITCH = 6
 
 # __________System Constants__________
-HIP_LENGTH = 74
-UPPER_LEG_LENGTH = 124.5
-LOWER_LEG_LENGTH = 110
-JAW_OPEN_TIME = 4.5
-JAW_CLOSE_TIME = 4.5
-STEP_TIME = .1
+HIP_LENGTH = 74  # mm
+UPPER_LEG_LENGTH = 124.5  # mm
+LOWER_LEG_LENGTH = 110  # mm
+JAW_OPEN_TIME = 4.5  # s
+JAW_CLOSE_TIME = 4.5  # s
+STEP_TIME = .1  # s
 SPECK_LENGTH = 181.3  # distance from center of longitudinal hip joints
-SPECK_WIDTH = 276.7  # distance from outside of both legs
+SPECK_WIDTH = 276.7  # distance from outside both legs
+CRATE_WIDTH = 75  # mm
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
@@ -384,6 +387,218 @@ class Camera:
         """
         Constructor for the Camera class
         """
+        self.camera = Picamera2()
+        self.camera.start()
+        self.most_recent_image = ""
+
+    def take_picture(self):
+        path = f"\Images\Raw Image - {datetime.datetime.now():c}.jpg"
+        self.camera.capture_file(path)
+        self.most_recent_image = path
+
+    def process_image(self, image: np.array, blur: int, sensitivity: float, loops=0):
+        if loops > 100:
+            print("!!Failed to Find Crate!!")
+            cv2.imshow('Processed image', image)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+            return False
+        # resize the image
+        image = cv2.resize(image, (600, 800))  # Resize to 800x600
+        # Apply a Gaussian blur to reduce noise
+        blurred_image = cv2.GaussianBlur(image, (blur, blur), 0)
+
+        # create copy of image to draw on
+        image_copy = image.copy()
+
+        # Convert image to grayscale for edge detection
+        img_gray = cv2.cvtColor(blurred_image, cv2.COLOR_BGR2GRAY)
+
+        # Calculate limits for edge detection using the grayscale image
+        median = np.mean(blurred_image)
+        lower = int(max(0, (1.0 - sensitivity) * median))
+        upper = int(min(255, (1.0 + sensitivity) * median))
+
+        # Detect edges followed by 1 iteration of dilation and erosion to remove any background noise.
+        edge_image = cv2.Canny(img_gray, lower, upper)
+        edge_image = cv2.dilate(edge_image, None, iterations=1)
+        edge_image = cv2.erode(edge_image, None, iterations=1)
+
+        # Find contours
+        contours, hierarchy = cv2.findContours(edge_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        # Define arrays of important objects
+        large_contours = []
+        squares = []
+        center_points = []
+
+        # Detect squares and draw them on the image
+        for c in contours:
+            # filter out small contours
+            if cv2.contourArea(c) < 25:
+                continue  # skip small contours
+            large_contours.append(c)
+
+            # find bounding box around each contour
+            rect = cv2.minAreaRect(c)
+            box = cv2.boxPoints(rect)
+            box = np.array(box, dtype='int')
+
+            # Get the width and height from the rectangle
+            (w, h) = rect[1]
+            if h == 0 or w == 0:
+                continue  # avoid division by zero
+
+            # Compute the aspect ratio (ensure it's >= 1 for logic to work)
+            aspect_ratio = float(w) / h if w >= h else float(h) / w
+
+            # contour is a square if aspect ratio is within 10% of 1
+            is_square = aspect_ratio <= 1.1
+
+            # if it is a square
+            if is_square:
+                # add to list of squares
+                squares.append(rect)
+
+                # Calculate centroid
+                cX, cY = np.array(np.mean(box, axis=0), dtype='int')
+                center_points.append([cX, cY])
+
+                # draw contours on original image in yellow to improve recursion performance
+                cv2.drawContours(image, c, -1, (0, 255, 255), 1)
+
+                # draw the bounding box, center point, and corner circles
+                cv2.drawContours(image_copy, [box], -1, (255, 0, 0), 2)
+                cv2.drawContours(image_copy, [box], -1, (255, 0, 0), 2)
+                cv2.circle(image_copy, (cX, cY), 2, (0, 0, 255), 3)
+                for (x, y) in list(box):
+                    # print('(x,y):',(x,y))
+                    cv2.circle(image_copy, (x, y), 2, (255, 0, 0), 2)
+
+        # draw point in center of image
+        image_center = [int(image.shape[1] / 2), int(image.shape[0] / 2)]
+        cv2.circle(image_copy, image_center, 2, (0, 255, 0), 4)
+
+        # define adjustment variables. Variables will be updated in later stage
+        shift_x = 0
+        shift_y = 0
+        twist = 0
+
+        # convert list of center points and squares to an array
+        center_points = np.array(center_points)
+
+        # determine orientation of box based on number of squares detected
+        if len(squares) < 3:  # didn't find any squares
+            print('Found %i sqaures(s)' % len(squares))
+            if 9 >= blur > 1:  # reprocess image with less blur
+                self.process_image(image, blur - 2, sensitivity, loops + 1)
+            elif blur == 1 and sensitivity < 1:  # reprocess image with more sensitivity
+                self.process_image(image, 9, sensitivity + 0.05, loops + 1)
+            elif sensitivity >= 1:
+                self.process_image(image, 9, sensitivity - .05, loops + 1)
+            return None
+
+        elif len(squares) == 3:
+            print('Three Squares Found')
+            # use center points of squares to construct a box
+            (x, y), rad = cv2.minEnclosingCircle(center_points)
+            # if square one is significantly larger than the others
+            if (squares[0][1][0] > 1.25 * squares[1][1][0]) and (squares[0][1][0] > 1.25 * squares[2][1][0]):
+                # assume that it contains the entire crate.
+                crate_center = [int(squares[0][0][0]), int(squares[0][0][1])]
+                rect = squares[0]
+            # if square two is significantly larger than the others
+            elif (squares[1][1][0] > 1.25 * squares[0][1][0]) and (squares[1][1][0] > 1.25 * squares[2][1][0]):
+                # assume that is contains the entire crate.
+                crate_center = [int(squares[1][0][0]), int(squares[1][0][1])]
+                rect = squares[1]
+            # if square two is significantly larger than the others
+            elif (squares[2][1][0] > 1.25 * squares[0][1][0]) and (squares[2][1][0] > 1.25 * squares[1][1][0]):
+                # assume that is contains the entire crate.
+                crate_center = [int(squares[2][0][0]), int(squares[2][0][1])]
+                rect = squares[2]
+            # otherwise assume three corners were found
+            else:
+                crate_center = [int(x), int(y)]
+                cv2.circle(image_copy, crate_center, int(rad), (0, 0, 255), 2)
+                rect = cv2.minAreaRect(center_points)
+            box = cv2.boxPoints(rect)
+            box = np.array(box, dtype='int')
+            cv2.drawContours(image_copy, [box], -1, (0, 0, 255), 2)
+            # calculate adjustments
+            side_length = np.max(rect[1])
+            shift_x = (image_center[0] - crate_center[0]) * CRATE_WIDTH / side_length
+            shift_y = (image_center[1] - crate_center[1]) * CRATE_WIDTH / side_length
+            twist = rect[-1] % 90
+            # only need to rotate angles less than 45 degrees
+            if twist > 45:
+                twist = twist - 90
+        elif len(squares) == 4:  # found 3 - 4 squares, assume 3-4 corners found
+            print('Four Squares Found')
+            # use center points of squares to construct a box
+            rect = cv2.minAreaRect(center_points)
+            box = np.array(cv2.boxPoints(rect), dtype=int)
+            # use side length of rectangle as reference for length
+            side_length = np.max(rect[1])
+            # find center of bounding box
+            crate_center = [int(rect[0][0]), int(rect[0][1])]
+            cv2.drawContours(image_copy, [box], -1, (0, 0, 255), 2)
+            # calculate adjustments
+            shift_x = (image_center[0] - crate_center[0]) * CRATE_WIDTH / side_length
+            shift_y = (image_center[1] - crate_center[1]) * CRATE_WIDTH / side_length
+            # find angle to the nearest 90 degrees
+            twist = rect[-1] % 90
+            # only need to rotate angles less than 45 degrees
+            if twist > 45:
+                twist = twist - 90
+        else:
+            print('More than 4 squares found, could not find crate')
+            crate_center = image_center
+
+        # draw center point
+        cv2.circle(image_copy, crate_center, 2, (0, 0, 255), 4)
+        # draw array from point center to image center
+        print(crate_center)
+        cv2.arrowedLine(image_copy, crate_center, image_center, (0, 0, 0), 1)
+
+        # draw adjustments onto image
+        cv2.putText(image_copy,  # image on which to draw text
+                    'Shift X = %.4f mm' % shift_x,
+                    (10, 20),  # bottom left corner of text
+                    cv2.FONT_HERSHEY_SIMPLEX,  # font to use
+                    0.5,  # font scale
+                    (255, 0, 0),  # color
+                    1,  # line thickness
+                    )
+        cv2.putText(image_copy,  # image on which to draw text
+                    'Shift Y = %.4f mm' % shift_y,
+                    (10, 40),  # bottom left corner of text
+                    cv2.FONT_HERSHEY_SIMPLEX,  # font to use
+                    0.5,  # font scale
+                    (255, 0, 0),  # color
+                    1,  # line thickness
+                    )
+        cv2.putText(image_copy,  # image on which to draw text
+                    'Twist = %.4f deg' % twist,
+                    (10, 60),  # bottom left corner of text
+                    cv2.FONT_HERSHEY_SIMPLEX,  # font to use
+                    0.5,  # font scale
+                    (255, 0, 0),  # color
+                    1,  # line thickness
+                    )
+
+        print('twist:', twist, "deg")
+        print('shift X:', shift_x, "mm")
+        print('Shift Y:', shift_y, "mm")
+
+        # Save and Return Results
+        cv2.imwrite('Processed Image - %c' % datetime.datetime.now(), image_copy)
+        return True, shift_x, shift_y, twist
+
+    def detect_crate(self):
+        self.take_picture()
+        shift_x, shift_y, twist = self.process_image(self.most_recent_image, 9, 0.2)
+        return shift_x, shift_y, twist
 
 
 class CrateJaws:
