@@ -392,11 +392,27 @@ class Camera:
         self.most_recent_image = ""
 
     def take_picture(self):
+        """
+        Function used to take a picture and keep track of where this most recent image is stored.
+
+        :return: None
+        """
         path = f"\Images\Raw Image - {datetime.datetime.now():c}.jpg"
         self.camera.capture_file(path)
         self.most_recent_image = path
 
     def process_image(self, image: np.array, blur: int, sensitivity: float, loops=0):
+        """
+        A recursive function used to detect the crate and determine how to adjust to center the crate.
+
+        :param image: The image to process
+        :param blur: The amount of blur used to reduce noise in the image
+        :param sensitivity: The sensitivity of the edge detection algorithm
+        :param loops: The number of times the image has been processed
+        :return: Found, shift_x, shift_y, twist: a flag that tells Speck if the crate was found and the amount of
+        correction necessary to align the crate. X is the front and back direction and y is the side to side direction.
+        Twist is the amount of rotation necessary to align the crate.
+        """
         if loops > 100:
             print("!!Failed to Find Crate!!")
             cv2.imshow('Processed image', image)
@@ -596,6 +612,12 @@ class Camera:
         return True, shift_x, shift_y, twist
 
     def detect_crate(self):
+        """
+        Function used to take a picture and detect if a crate is present and how to shift to properly align the crate.
+
+        :return: shift_x, shift_y, twist: the amount of correction necessary to align the crate. X is the front and back
+        direction and y is the side to side direction. Twist is the amount of rotation necessary to align the crate.
+        """
         self.take_picture()
         shift_x, shift_y, twist = self.process_image(self.most_recent_image, 9, 0.2)
         return shift_x, shift_y, twist
@@ -756,6 +778,13 @@ class Speck:
 
     # __________Define Movement Thread Function_________
     def leg_thread_function(self, leg_id):
+        """
+        Function to continuously check the movement queue for movement commands for this leg. This function runs in a
+        separate thread for each leg to allow all legs to move at once. Barriers are implemented to synchronize leg
+        motion.
+        :param leg_id: The ID of the leg to move.
+        :return: None
+        """
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
             self.thread_barrier.wait()  # wait for all threads to be ready, prevents threads from getting ahead,
             # only one loop is performed at a time
@@ -772,6 +801,11 @@ class Speck:
 
     # __________Bluetooth Server Function__________
     def bluetooth_server(self):
+        """
+        Function used to set up bluetooth connection and continuously check for commands. This function runs in a
+        separate thread so that Speck is always looking for new commands.
+        :return: None
+        """
         self.server_sock.listen(1)
         client_sock, address = self.server_sock.accept()
         print("Client Address: ", address)
@@ -806,40 +840,50 @@ class Speck:
     def set_stand(self):
         """
         Function used to make Speck quickly stand. Sets the position of all feet accordingly
+        :return: None
         """
         self.is_standing = True
-        self.Legs[1].set_position(25, 175, HIP_LENGTH)
-        self.Legs[0].set_position(25, 175, HIP_LENGTH)
+        self.Legs[1].set_position(-25, 175, HIP_LENGTH)
+        self.Legs[0].set_position(-25, 175, HIP_LENGTH)
         self.Legs[3].set_position(25, 175, HIP_LENGTH)
         self.Legs[2].set_position(25, 175, HIP_LENGTH)
+        return None
 
     def stand(self):
         """
         Function used to make Speck slowly stand. Sets the position of all feet accordingly
+        :return: None
         """
         self.is_standing = False
-        for i in range(3, -1, -1):
+        for i in range(1, 3, 1):
+            self.move_queues[i].put([4, -25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
+                                     HIP_LENGTH - self.Legs[i].current_position[2]])
+        for i in range(3, 5, 1):
             self.move_queues[i].put([4, 25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def set_sit(self):
         """
         Function used to make Speck quickly sit. Sets the position of all feet accordingly
+        :return: None
         """
         self.is_standing = False
         self.Legs[0].set_position(20, 40, HIP_LENGTH)
         self.Legs[1].set_position(20, 40, HIP_LENGTH)
         self.Legs[2].set_position(20, 40, HIP_LENGTH)
         self.Legs[3].set_position(20, 40, HIP_LENGTH)
+        return None
 
     def sit(self):
         """
         Function used to make Speck slowly sit. Sets the position of all feet accordingly
+        :return: None
         """
         self.is_standing = False
         for i in range(0, 4, 1):
             self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 40 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
+        return None
 
     def gait(self, gait):
         """
@@ -860,32 +904,61 @@ class Speck:
                 self.move_queues[leg].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
 
     def walk(self, steps):
+        """
+        Function used to walk forward a set number of steps
+        :param steps: number of steps to take
+        :return: None
+        """
         if not self.is_standing:  # if Speck isn't standing
             self.stand()
         for step in range(steps):
             self.gait(self.Gaits[0])
 
     def strafe_left(self):
+        """
+        Function used to strafe or side step to the left
+        :return: None
+        """
         if not self.is_standing:  # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[3])
 
     def strafe_right(self):
+        """
+        Function used to strafe or side step to the right
+        :return: None
+        """
         if not self.is_standing:  # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[4])
 
     def turn_right(self):
+        """
+        Function used to turn right
+        :return: None
+        """
         if not self.is_standing:  # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[2])
 
     def turn_left(self):
+        """
+        Function used to turn left
+        :return: None
+        """
         if not self.is_standing:  # if Speck isn't standing
             self.stand()
         self.gait(self.Gaits[3])
 
     def shift(self, forward: bool, distance: int):
+        """
+        Function used to slightly shift the robot for proper crate alignment.
+
+        :param forward: boolean value to choose direction of shift. True will shift front and back. False will shift
+        side to side
+        :param distance: the distance to shift in mm.
+        :return: None
+        """
         if forward:
             for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
@@ -894,8 +967,16 @@ class Speck:
             for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
                 self.move_queues[leg].put([4, 0, 0, ((-1) ** (leg % 2)) * distance])
+        return None
 
     def twist(self, cw: bool, theta: int):
+        """
+        Function used to rotate Speck to align crate.
+        :param cw: Boolean variable to control direction of rotation. True will turn clock wise. False will turn counter
+        clock wise
+        :param theta: the angle to rotate
+        :return: None
+        """
         theta_rad = math.radians(theta)
         if cw:
             for leg in range(4):
@@ -911,14 +992,25 @@ class Speck:
                 x = SPECK_LENGTH / 2 * math.cos(theta_rad) - SPECK_WIDTH / 2 * math.sin(theta_rad)
                 z = SPECK_LENGTH / 2 * math.sin(theta_rad) + SPECK_WIDTH / 2 * math.cos(theta_rad)
                 self.move_queues[leg].put([leg, x + x_cur, 0, z + z_cur])
+        return None
 
     def grab(self):
+        """
+        Function used to manually grab a crate by closing the crate jaws.
+        :return: None
+        """
         print("Grabbing")
         self.CrateJaws.close()
+        return None
 
     def drop(self):
+        """
+        Function used to drop a crate by manually opening the crate jaws.
+        :return: None
+        """
         print("Dropping")
         self.CrateJaws.open()  # open jaws
+        return None
 
     def __repr__(self):
         return "RF Leg Position: %i, %i, %i" \
