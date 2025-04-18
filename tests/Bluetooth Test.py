@@ -92,19 +92,34 @@ def init_bluetooth_adapter():
     logger.info("Adapter init:\n%s", out)
 
 def bluetooth_server():
-    with bluetooth.BluetoothSocket(bluetooth.RFCOMM) as server_sock:
-        server_sock.bind(("", PORT))
+    server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+    try:
+        server_sock.bind(("", 3))
         server_sock.listen(1)
-        logger.info("Listening on RFCOMM port %d", PORT)
+        print("Waiting for connection on RFCOMM channel 3...")
         client_sock, addr = server_sock.accept()
-        logger.info("Accepted connection from %s", addr)
-        with client_sock:
+        print("Accepted connection from", addr)
+
+        try:
             while True:
                 data = client_sock.recv(1024)
-                if not data or data == b"Q":
+                if not data:
                     break
-                logger.info("Recv: %s", data)
-    logger.info("Server shut down")
+                message = data.decode().strip()
+                print(f"Received: {message}")
+                if message == "Q":
+                    print("Quitting...")
+                    break
+        finally:
+            print("Closing client socket")
+            client_sock.close()
+
+    except Exception as e:
+        print("Bluetooth server error:", e)
+    finally:
+        print("Closing server socket")
+        server_sock.close()
+
 
 def main():
     run_cmd(['sudo', 'service', 'bluetooth', 'start'])
