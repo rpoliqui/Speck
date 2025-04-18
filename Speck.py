@@ -764,7 +764,23 @@ class Speck:
         self.set_sit()
 
         # set up bluetooth connection
-        subprocess.run(['service', 'bluetooth', 'start'])  # start bluetooth on pi
+        subprocess.run(['sudo', 'service', 'bluetooth', 'start'])  # start bluetooth on pi
+        print("\n[Setting up Bluetooth...]")
+        bluetoothctl_commands = f"""
+                                    power on
+                                    agent on
+                                    discoverable on
+                                    pairable on
+                                    scan on
+                                    """
+
+        # Run bluetoothctl with input commands
+        process = subprocess.Popen(['bluetoothctl'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True)
+        out, err = process.communicate(bluetoothctl_commands)
+        print(out)
+        if err:
+            print("[Bluetoothctl Error]", err)
 
         self.server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         self.port = 22
@@ -856,10 +872,10 @@ class Speck:
         """
         self.is_standing = False
         for i in range(1, 3, 1):
-            self.move_queues[i].put([4, -25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, -50 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
         for i in range(3, 5, 1):
-            self.move_queues[i].put([4, 25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, 50 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def set_sit(self):
