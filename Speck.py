@@ -62,7 +62,7 @@ import time
 import bluetooth
 import cv2
 import datetime
-from picamera2 import Picamera2
+#from picamera2 import Picamera2
 from math import atan2, sin, asin, acos, sqrt, fabs
 from threading import Thread, Timer, Barrier, Lock
 from queue import Queue
