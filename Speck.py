@@ -488,7 +488,7 @@ class Camera:
             print(f"Image NOT saved at {path}")
         self.most_recent_image = path
 
-    def process_image(self, image: np.array, blur: int, sensitivity: float, loops=0):
+    def process_image(self, image, blur: int, sensitivity: float, loops=0):
         """
         A recursive function used to detect the crate and determine how to adjust to center the crate.
 
@@ -710,6 +710,7 @@ class Camera:
         direction and y is the side to side direction. Twist is the amount of rotation necessary to align the crate.
         """
         self.take_picture()
+        print(self.most_recent_image)
         shift_x, shift_y, twist = self.process_image(self.most_recent_image, 9, 0.2)
         return shift_x, shift_y, twist
 
