@@ -479,7 +479,7 @@ class Camera:
 
         :return: None
         """
-        path = f"{self.directory}/`Raw Image - {datetime.datetime.now()}`.jpg"
+        path = f"{self.directory}/Raw Image - {datetime.datetime.now()}.jpg"
         self.camera.capture_file(path)
         # Confirm file was written
         if os.path.exists(path):
@@ -507,8 +507,6 @@ class Camera:
             cv2.destroyAllWindows()
             return False
 
-        # read the image
-        image = cv2.imread(image)
         # resize the image
         image = cv2.resize(image, (600, 800))  # Resize to 800x600
         # Apply a Gaussian blur to reduce noise
@@ -710,8 +708,10 @@ class Camera:
         direction and y is the side to side direction. Twist is the amount of rotation necessary to align the crate.
         """
         self.take_picture()
-        print(self.most_recent_image)
-        shift_x, shift_y, twist = self.process_image(self.most_recent_image, 9, 0.2)
+        # read the image from most recent image
+        image = cv2.imread(self.most_recent_image)
+        # call recursive function to detect crate
+        shift_x, shift_y, twist = self.process_image(image, 9, 0.2)
         return shift_x, shift_y, twist
 
 
