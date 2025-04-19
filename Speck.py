@@ -379,9 +379,9 @@ class Leg:
         :argument dz:type float: the distance in millimeters to change the z position by
         :return: None
         """
-        # define the number of steps as a quarter of the largest size so that each step is about 4mm. Take absolute
+        # define the number of steps as a quarter of the largest size so that each step is about 2mm. Take absolute
         # value to handle negatives
-        step_size = int(max(fabs(dx), fabs(dy), fabs(dz)) / 4)
+        step_size = int(max(fabs(dx), fabs(dy), fabs(dz)) / 2)
         for step in range(0, step_size):
             # set the position of the leg to the current position plus the changes given as arguments
             self.set_position(self.current_position[0] + dx / step_size, self.current_position[1] + dy / step_size,
