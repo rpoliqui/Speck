@@ -122,11 +122,11 @@ AvailablePins = np.ones(40)
 # {Step n+1: {Leg, dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
-WALK_GAIT = ((1, 50, 0, 25),
+WALK_GAIT = ((1, 50, 25, 0),
              (0, 0, -50, 0),
              (0, -50, 0, 0),
              (0, 0, 50, 0),
-             (1, -50, 0, -25),
+             (1, -50, -25, 0),
              (2, 100, 0, 0),
              (0, 50, 0, 0),
              (3, 0, -50, 0),
@@ -135,11 +135,11 @@ WALK_GAIT = ((1, 50, 0, 25),
              (2, -100, 0, 0),
              (0, -50, 0, 0),
              (4, 50, 0, 0),
-             (0, 50, 0, 25),
+             (0, 50, 25, 0),
              (1, 0, -50, 0),
              (1, -50, 0, 0),
              (1, 0, 50, 0),
-             (0, -50, 0, -25),
+             (0, -50, -25, 0),
              (3, 100, 0, 0),
              (1, 50, 0, 0),
              (2, 0, -50, 0),
@@ -386,7 +386,7 @@ class Leg:
             # set the position of the leg to the current position plus the changes given as arguments
             self.set_position(self.current_position[0] + dx / step_size, self.current_position[1] + dy / step_size,
                               self.current_position[2] + dz / step_size)
-            time.sleep(.025)
+            time.sleep(.01)
         return None
 
 
