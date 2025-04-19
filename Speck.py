@@ -697,7 +697,10 @@ class Camera:
 
         # Save and Return Results
         path = f"{self.directory}/Processed Image - {datetime.datetime.now()}.jpg"
-        cv2.imwrite(path, image_copy)
+        if cv2.imwrite(path, image_copy):
+            print(f"Image saved to {path}")
+        else:
+            print("Failed to save image.")
         return True, shift_x, shift_y, twist
 
     def detect_crate(self):
@@ -711,8 +714,8 @@ class Camera:
         # read the image from most recent image
         image = cv2.imread(self.most_recent_image)
         # call recursive function to detect crate
-        shift_x, shift_y, twist = self.process_image(image, 9, 0.2)
-        return shift_x, shift_y, twist
+        found, shift_x, shift_y, twist = self.process_image(image, 9, 0.2)
+        return found, shift_x, shift_y, twist
 
 
 # __________Main Speck Object__________
