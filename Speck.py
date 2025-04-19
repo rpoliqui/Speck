@@ -476,7 +476,7 @@ class Camera:
 
         :return: None
         """
-        path = f"\Images\Raw Image - {datetime.datetime.now()}.jpg"
+        path = f"/Images/Raw Image - {datetime.datetime.now()}.jpg"
         self.camera.capture_file(path)
         self.most_recent_image = path
 
@@ -687,7 +687,7 @@ class Camera:
         print('Shift Y:', shift_y, "mm")
 
         # Save and Return Results
-        path = f"\Images\Processed Image - {datetime.datetime.now()}.jpg"
+        path = f"/Images/Processed Image - {datetime.datetime.now()}.jpg"
         cv2.imwrite(path, image_copy)
         return True, shift_x, shift_y, twist
 
