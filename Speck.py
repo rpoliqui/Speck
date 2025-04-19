@@ -481,6 +481,11 @@ class Camera:
         os.makedirs(self.directory, exist_ok=True)
         path = f"{self.directory}/Raw Image - {datetime.datetime.now()}.jpg"
         self.camera.capture_file(path)
+        # Confirm file was written
+        if os.path.exists(path):
+            print(f"Image saved successfully at {path}")
+        else:
+            print(f"Image NOT saved at {path}")
         self.most_recent_image = path
 
     def process_image(self, image: np.array, blur: int, sensitivity: float, loops=0):
