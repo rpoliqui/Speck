@@ -122,7 +122,8 @@ AvailablePins = np.ones(40)
 # {Step n+1: {Leg, dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
-WALK_GAIT = ((0, 0, -50, 0),
+WALK_GAIT = ((1, 50, 0, 25),
+             (0, 0, -50, 0),
              (0, -50, 0, 0),
              (0, 0, 50, 0),
              (3, 0, -50, 0),
@@ -871,7 +872,7 @@ class Speck:
         """
         self.is_standing = False
         for i in range(0, 2, 1):
-            self.move_queues[i].put([4, -50 - self.Legs[i].current_position[0], 200 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, -25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
         for i in range(2, 4, 1):
             self.move_queues[i].put([4, - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
