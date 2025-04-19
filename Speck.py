@@ -479,7 +479,7 @@ class Camera:
 
         :return: None
         """
-        path = f"{self.directory}/Raw Image - {datetime.datetime.now()}.jpg"
+        path = f"{self.directory}/'Raw Image - {datetime.datetime.now()}'.jpg"
         self.camera.capture_file(path)
         # Confirm file was written
         if os.path.exists(path):
