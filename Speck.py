@@ -505,10 +505,8 @@ class Camera:
             cv2.imshow('Processed image', image)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
-            return False
+            return False, 0, 0, 0
 
-        # resize the image
-        image = cv2.resize(image, (600, 800))  # Resize to 800x600
         # Apply a Gaussian blur to reduce noise
         blurred_image = cv2.GaussianBlur(image, (blur, blur), 0)
 
