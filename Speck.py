@@ -467,7 +467,7 @@ class Camera:
         """
         Constructor for the Camera class
         """
-        self.directory = "/Images"
+        self.directory = "Images"
         os.makedirs(self.directory, exist_ok=True)
         self.camera = Picamera2()
         self.camera.start()
