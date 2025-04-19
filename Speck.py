@@ -751,7 +751,7 @@ class Speck:
         self.CrateJaws.open()  # make sure the crate jaws start open
 
         # create the camera object used for detecting the crate
-        # self.Camera = Camera()
+        self.Camera = Camera()
 
         # create state flags
         self.is_standing = False
