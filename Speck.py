@@ -593,12 +593,11 @@ class Camera:
         if len(squares) < 3:  # didn't find any squares
             print('Found %i sqaures(s)' % len(squares))
             if 9 >= blur > 1:  # reprocess image with less blur
-                self.process_image(image, blur - 2, sensitivity, loops + 1)
+                return self.process_image(image, blur - 2, sensitivity, loops + 1)
             elif blur == 1 and sensitivity < 1:  # reprocess image with more sensitivity
-                self.process_image(image, 9, sensitivity + 0.05, loops + 1)
+                return self.process_image(image, 9, sensitivity + 0.05, loops + 1)
             elif sensitivity >= 1:
-                self.process_image(image, 9, sensitivity - .05, loops + 1)
-            return None
+                return self.process_image(image, 9, sensitivity - .05, loops + 1)
 
         elif len(squares) == 3:
             print('Three Squares Found')
