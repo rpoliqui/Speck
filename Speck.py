@@ -1003,6 +1003,7 @@ class Speck:
         """
         if not self.is_standing:  # if Speck isn't standing
             self.stand()
+            time.sleep(1) # wait 1 second before walking
         for step in range(steps):
             self.gait(self.Gaits[0])
 
