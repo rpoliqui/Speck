@@ -971,7 +971,7 @@ class Speck:
         for step in range(0, len(gait) - 1, 1):  # loop through all steps for one cycle
             for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
-                print(gait[step][0])
+                print(leg in gait[step][0])
                 if leg in gait[step][0]:
                     self.move_queues[leg].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
 
