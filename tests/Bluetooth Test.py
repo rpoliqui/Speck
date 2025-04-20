@@ -18,8 +18,8 @@ my_peripheral = peripheral.Peripheral(
 )
 
 # 4) Define a GATT service (UUIDs are just examples; generate your own with uuidgen or Python)
-SERVICE_UUID = '12345678-1234-5678-1234-56789abcdef0'
-COMMAND_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef1'
+SERVICE_UUID = 'd8ed4126-c03b-499e-bf06-b69951b1fa6f'
+COMMAND_CHAR_UUID = '529d8996-17d1-4e7c-94e9-4e84a24cbc9f'
 
 my_peripheral.add_service(
     srv_id=1,
@@ -41,26 +41,26 @@ my_peripheral.add_characteristic(
 # setup pi to enable bluetooth connection
 subprocess.run(['sudo', 'systemctl', 'start', 'bluetooth'])  # start bluetooth on pi
 subprocess.run(['sudo', 'hciconfig', 'hci0', 'up'])  # start bluetooth on pi
-bluetoothctl_commands = f"""                                                               
-                                    power on                                               
-                                    manufacturer 0xffff 0x12 0x34                          
-                                    name SPECK                                             
-                                    register-service e2d36f99-8909-4136-9a49-d825508b297b  
-                                    yes                                                    
-                                    register-characteristic 0x1234 read                    
-                                    07                                                     
-                                    register-characteristic 0x5678 read,write              
-                                    13                                                     
-                                    register-application                                   
-                                    advertise on                                           
-                                    pairable on                                            
-                                    """
+# bluetoothctl_commands = f"""
+#                                     power on
+#                                     manufacturer 0xffff 0x12 0x34
+#                                     name SPECK
+#                                     register-service e2d36f99-8909-4136-9a49-d825508b297b
+#                                     yes
+#                                     register-characteristic 0x1234 read
+#                                     07
+#                                     register-characteristic 0x5678 read,write
+#                                     13
+#                                     register-application
+#                                     advertise on
+#                                     pairable on
+#                                     """
 
 # Run bluetoothctl with input commands
-process = subprocess.Popen(['bluetoothctl'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE, text=True)
-out, err = process.communicate(bluetoothctl_commands)
-if err:
-    print("[Bluetoothctl Error]", err)
-print(f'Advertising "{LOCAL_NAME}" on adapter {ADAPTER_ADDR}…')
+# process = subprocess.Popen(['bluetoothctl'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+#                            stderr=subprocess.PIPE, text=True)
+# out, err = process.communicate(bluetoothctl_commands)
+# if err:
+#     print("[Bluetoothctl Error]", err)
+# print(f'Advertising "{LOCAL_NAME}" on adapter {ADAPTER_ADDR}…')
 my_peripheral.publish()
