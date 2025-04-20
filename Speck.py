@@ -53,9 +53,6 @@ References:
     https://community.appinventor.mit.edu/t/raspberry-pi-bluetooth-send-receive/59846/3
     https://www.w3schools.com/python/python_datetime.asp
 """
-import os
-import subprocess
-
 # __________Import Statements__________
 import numpy as np
 import math
@@ -63,11 +60,13 @@ import time
 import bluetooth
 import cv2
 import datetime
+import os
+import subprocess
 from picamera2 import Picamera2
 from math import atan2, sin, asin, acos, sqrt, fabs
 from threading import Thread, Timer, Barrier, Lock
 from queue import Queue
-from gpiozero import AngularServo, Button, Device, OutputDevice
+from gpiozero import AngularServo, Button, Device, OutputDevice, LED
 from gpiozero.pins.pigpio import PiGPIOFactory
 
 # __________Pin Definition__________
@@ -101,6 +100,9 @@ PIN_FAR_RIGHT_SENSOR = 16
 # Limit Switch
 PIN_LEFT_SWITCH = 13
 PIN_RIGHT_SWITCH = 6
+
+# LED Flash
+PIN_FLASH = 4
 
 # __________System Constants__________
 HIP_LENGTH = 74  # mm
@@ -467,11 +469,17 @@ class Camera:
         """
         Constructor for the Camera class
         """
+        # define directory to store images
         self.directory = "Images"
+        # make sure this directory exists
         os.makedirs(self.directory, exist_ok=True)
+        # define and start camera object
         self.camera = Picamera2()
         self.camera.start()
+        # keep track of most recent image
         self.most_recent_image = ""
+        # define LED for flash
+        self.LED = LED(PIN_FLASH)
 
     def take_picture(self):
         """
@@ -479,14 +487,22 @@ class Camera:
 
         :return: None
         """
+        # pull LED pin low to turn on and wait one second
+        self.LED.off()
+        time.sleep(1)
+        # define image path and name
         path = f"{self.directory}/Raw Image - {datetime.datetime.now()}.jpg"
+        # take picture
         self.camera.capture_file(path)
         # Confirm file was written
         if os.path.exists(path):
             print(f"Image saved successfully at {path}")
         else:
             print(f"Image NOT saved at {path}")
+        # update most recent path to store the path to the image just taken
         self.most_recent_image = path
+        # pull LED pin high to turn off
+        self.LED.on()
 
     def process_image(self, image, blur: int, sensitivity: float, loops=0):
         """
@@ -789,8 +805,8 @@ class Speck:
         self.set_sit()
 
         # Start bluetooth thread
-        # Bluetooth_thread = Thread(target=self.bluetooth_server(), daemon=False)
-        # Bluetooth_thread.start()
+        Bluetooth_thread = Thread(target=self.bluetooth_server(), daemon=False)
+        Bluetooth_thread.start()
 
         # Store the version of code
         self.Version = "0.0.1"
@@ -1050,6 +1066,23 @@ class Speck:
         """
         print("Dropping")
         self.CrateJaws.open()  # open jaws
+        return None
+
+    def center_crate(self):
+        """
+        Function that takes a picture, detects shift and twist necessary to center crate, and makes the necessary
+        adjustments
+        :return: None
+        """
+        # use camera object to find shift and twist
+        found, shiftx, shifty, twist = self.Camera.detect_crate()
+        if found:
+            self.shift(forward=True, distance=shiftx)
+            self.shift(forward=False, distance=shifty)
+            if twist > 0:
+                self.twist(cw=True, theta=twist)
+            elif twist < 0:
+                self.twist(cw=False, theta=twist)
         return None
 
     def __repr__(self):
