@@ -895,7 +895,7 @@ class Speck:
         self.is_standing = False
 
         # create an array of the available gaits
-        self.Gaits = [WALK_GAIT, STRAFE_GAIT, LEFT_TURN_GAIT, RIGHT_TURN_GAIT]
+        self.Gaits = [WALK_GAIT, STRAFE_GAIT]
         # create a queue of movements for each leg to perform. Start with an infinite size
         #                  [RF_Queue, LF_Queue, RB_Queue, LB_Queue]
         self.move_queues = [Queue(0), Queue(0), Queue(0), Queue(0)]
