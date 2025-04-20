@@ -834,7 +834,7 @@ class Speck:
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
             self.thread_barrier.wait()  # wait for all threads to be ready, prevents threads from getting ahead,
             # only one loop is performed at a time
-            move = self.move_queues[leg_id].get(block=True)  # get the next movement in the queue when one is available
+            move = self.move_queues[leg_id].get(block=False)  # get the next movement in the queue when one is available
             print(move)
             if move[0] == 4:  # if command is for all legs
                 self.thread_barrier.wait()  # wait for all threads to be ready
@@ -972,7 +972,6 @@ class Speck:
         for step in range(0, len(gait) - 1, 1):  # loop through all steps for one cycle
             for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
-                print(gait[step])
                 if leg in gait[step][0]:
                     self.move_queues[leg].put([leg, gait[step][1], gait[step][2], gait[step][3]])
 
