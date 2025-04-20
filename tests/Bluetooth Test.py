@@ -1,3 +1,4 @@
+import subprocess
 from bluezero import peripheral
 
 # 1) Change this to your Pi's BLE MAC (from `hciconfig` or `bluetoothctl show`)
@@ -37,5 +38,28 @@ my_peripheral.add_characteristic(
 )
 
 # 5) Start advertising and enter the event loop
-print(f'▶️ Advertising "{LOCAL_NAME}" on adapter {ADAPTER_ADDR}…')
+# setup pi to enable bluetooth connection
+subprocess.run(['sudo', 'service', 'bluetooth', 'start'])  # start bluetooth on pi
+bluetoothctl_commands = f"""                                                               
+                                    power on                                               
+                                    manufacturer 0xffff 0x12 0x34                          
+                                    name SPECK                                             
+                                    register-service e2d36f99-8909-4136-9a49-d825508b297b  
+                                    yes                                                    
+                                    register-characteristic 0x1234 read                    
+                                    07                                                     
+                                    register-characteristic 0x5678 read,write              
+                                    13                                                     
+                                    register-application                                   
+                                    advertise on                                           
+                                    pairable on                                            
+                                    """
+
+# Run bluetoothctl with input commands
+process = subprocess.Popen(['bluetoothctl'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE, text=True)
+out, err = process.communicate(bluetoothctl_commands)
+if err:
+    print("[Bluetoothctl Error]", err)
+print(f'Advertising "{LOCAL_NAME}" on adapter {ADAPTER_ADDR}…')
 my_peripheral.publish()
