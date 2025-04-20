@@ -52,6 +52,10 @@ References:
     https://docs.opencv.org/4.x/dd/d49/tutorial_py_contour_features.html
     https://community.appinventor.mit.edu/t/raspberry-pi-bluetooth-send-receive/59846/3
     https://www.w3schools.com/python/python_datetime.asp
+    https://support.avh.corellium.com/devices/rpi4/rpi4-ble
+    https://iot.appinventor.mit.edu/iot/reference/bluetoothle
+    https://www.youtube.com/watch?v=gXXRpjzrBsA
+    https://www.youtube.com/watch?v=RvbWl8rZOoQ&t=352s
 """
 # __________Import Statements__________
 import numpy as np
@@ -614,6 +618,7 @@ class Camera:
                 return self.process_image(image, 9, sensitivity + 0.05, loops + 1)
             elif sensitivity >= 1:
                 return self.process_image(image, 9, sensitivity - .05, loops + 1)
+            crate_center = None
 
         elif len(squares) == 3:
             print('Three Squares Found')
@@ -675,7 +680,6 @@ class Camera:
         # draw center point
         cv2.circle(image_copy, crate_center, 2, (0, 0, 255), 4)
         # draw array from point center to image center
-        print(crate_center)
         cv2.arrowedLine(image_copy, crate_center, image_center, (0, 0, 0), 1)
 
         # draw adjustments onto image
@@ -841,39 +845,42 @@ class Speck:
         separate thread so that Speck is always looking for new commands.
         :return: None
         """
-        # define communication protocol and communciation port.
-        server_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-        port = 1
-        server_sock.bind(("", port))
         # setup pi to enable bluetooth connection
-        subprocess.run(['sudo', 'service', 'bluetooth', 'start'])  # start bluetooth on pi
-        bluetoothctl_commands = f"""
-                                            power on
-                                            agent on
-                                            discoverable on
-                                            pairable on
-                                            scan on
-                                            """
-
-        # Run bluetoothctl with input commands
-        process = subprocess.Popen(['bluetoothctl'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE, text=True)
-        out, err = process.communicate(bluetoothctl_commands)
-        if err:
-            print("[Bluetoothctl Error]", err)
-        server_sock.listen(1)
-        print("Waiting for connection on RFCOMM channel 3...")
-        client_sock, address = server_sock.accept()
-        print("Client Address: ", address)
-        while True:
-            recv_data = client_sock.recv(1024)
-            print("Info Received: %s" % recv_data)
-            if recv_data == "Q":
-                print("End.")
-                break
-
-        client_sock.close()
-        server_sock.close()
+        # subprocess.run(['sudo', 'service', 'bluetooth', 'start'])  # start bluetooth on pi
+        # bluetoothctl_commands = f"""
+        #                                     power on
+        #                                     manufacturer 0xffff 0x12 0x34
+        #                                     name SPECK
+        #                                     register-service e2d36f99-8909-4136-9a49-d825508b297b
+        #                                     yes
+        #                                     register-characteristic 0x1234 read
+        #                                     07
+        #                                     register-characteristic 0x5678 read,write
+        #                                     13
+        #                                     register-application
+        #                                     advertise on
+        #                                     pairable on
+        #                                     """
+        #
+        # # Run bluetoothctl with input commands
+        # process = subprocess.Popen(['bluetoothctl'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        #                            stderr=subprocess.PIPE, text=True)
+        # out, err = process.communicate(bluetoothctl_commands)
+        # if err:
+        #     print("[Bluetoothctl Error]", err)
+        # server_sock.listen(1)
+        # print("Waiting for connection on RFCOMM channel 3...")
+        # client_sock, address = server_sock.accept()
+        # print("Client Address: ", address)
+        # while True:
+        #     recv_data = client_sock.recv(1024)
+        #     print("Info Received: %s" % recv_data)
+        #     if recv_data == "Q":
+        #         print("End.")
+        #         break
+        #
+        # client_sock.close()
+        # server_sock.close()
 
     # __________Define Speck's Functions__________
     def check_collision(self):
