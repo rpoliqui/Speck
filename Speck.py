@@ -973,7 +973,7 @@ class Speck:
                 # if the command is not meant for one leg, nothing will happen
                 print(leg in gait[step][0])
                 if leg in gait[step][0]:
-                    self.move_queues[leg].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
+                    self.move_queues[leg].put([[gait[step][0]], gait[step][1], gait[step][2], gait[step][3]])
 
     def walk(self, steps):
         """
