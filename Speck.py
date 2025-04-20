@@ -835,10 +835,10 @@ class Speck:
             self.thread_barrier.wait()  # wait for all threads to be ready, prevents threads from getting ahead,
             # only one loop is performed at a time
             move = self.move_queues[leg_id].get(block=True)  # get the next movement in the queue when one is available
-            if 4 in move[0]:  # if command is for all legs
+            if move[0] == 4:  # if command is for all legs
                 self.thread_barrier.wait()  # wait for all threads to be ready
                 self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
-            elif leg_id in move[0]:  # if command is target at this leg
+            elif move[0] == leg_id:  # if command is target at this leg
                 with self.lock:  # lock all other threads and release after movement
                     self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
                     time.sleep(STEP_TIME)
@@ -973,7 +973,7 @@ class Speck:
                 # if the command is not meant for one leg, nothing will happen
                 print(leg in gait[step][0])
                 if leg in gait[step][0]:
-                    self.move_queues[leg].put([[gait[step][0]], gait[step][1], gait[step][2], gait[step][3]])
+                    self.move_queues[leg].put([leg, gait[step][1], gait[step][2], gait[step][3]])
 
     def walk(self, steps):
         """
