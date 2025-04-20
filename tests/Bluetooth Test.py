@@ -1,32 +1,41 @@
 from bluezero import peripheral
 
-# Callback when iPhone writes to the Pi
-def on_write(value):
-    print('Received from iPhone:', value.decode('utf-8'))
+# 1) Change this to your Pi's BLE MAC (from `hciconfig` or `bluetoothctl show`)
+ADAPTER_ADDR = 'B8:27:EB:12:34:56'
+LOCAL_NAME = 'SPECK'
 
-# Create the peripheral object using the correct argument name
+
+# 2) Callback for writes from the iPhone
+def on_write(value):
+    print('Received from iPhone:', bytes(value).decode('utf-8'))
+
+
+# 3) Create the Peripheral with the correct argument
 my_peripheral = peripheral.Peripheral(
-    adapter_name='hci0',        # ✅ Correct parameter
-    local_name='SPECK'          # Name shown on iPhone
+    adapter_address=ADAPTER_ADDR,
+    local_name=LOCAL_NAME
 )
 
-# Add a custom service
+# 4) Define a GATT service (UUIDs are just examples; generate your own with uuidgen or Python)
+SERVICE_UUID = '12345678-1234-5678-1234-56789abcdef0'
+COMMAND_CHAR_UUID = '12345678-1234-5678-1234-56789abcdef1'
+
 my_peripheral.add_service(
     srv_id=1,
-    uuid='12345678-1234-5678-1234-56789abcdef0',
+    uuid=SERVICE_UUID,
     primary=True
 )
 
-# Add a writable/readable/notify characteristic to that service
 my_peripheral.add_characteristic(
     srv_id=1,
     chr_id=1,
-    uuid='12345678-1234-5678-1234-56789abcdef1',
+    uuid=COMMAND_CHAR_UUID,
     value=[],
     notifying=False,
     flags=['read', 'write', 'notify'],
     write_callback=on_write
 )
 
-print("Advertising BLE service...")
+# 5) Start advertising and enter the event loop
+print(f'▶️ Advertising "{LOCAL_NAME}" on adapter {ADAPTER_ADDR}…')
 my_peripheral.publish()
