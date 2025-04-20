@@ -196,20 +196,81 @@ BACKWARD_WALK_GAIT = (([0],           0,  -50,  0),
                       ([0, 1, 2, 3],  50,    0,  0))
 
 STRAFE_STEP = 30
-STRAFE_GAIT = ((0, 0, -50, 0),
-               (0, 0, 0, -STRAFE_STEP),
-               (0, 0, 50, 0),
-               (3, 0, -50, 0),
-               (3, 0, 0, -STRAFE_STEP),
-               (3, 0, 50, 0),
-               (4, 0, 0, STRAFE_STEP),
-               (1, 0, -50, 0),
-               (1, 0, 0, -STRAFE_STEP),
-               (1, 0, 50, 0),
-               (2, 0, -50, 0),
-               (2, 0, 0, -STRAFE_STEP),
-               (2, 0, 50, 0),
-               (3, 0, -50, 0))
+# STRAFE_GAIT = ((0, 0, -50, 0),
+#                (0, 0, 0, -STRAFE_STEP),
+#                (0, 0, 50, 0),
+#                (3, 0, -50, 0),
+#                (3, 0, 0, -STRAFE_STEP),
+#                (3, 0, 50, 0),
+#                (4, 0, 0, STRAFE_STEP),
+#                (1, 0, -50, 0),
+#                (1, 0, 0, -STRAFE_STEP),
+#                (1, 0, 50, 0),
+#                (2, 0, -50, 0),
+#                (2, 0, 0, -STRAFE_STEP),
+#                (2, 0, 50, 0),
+#                (3, 0, -50, 0))
+
+STRAFE_LEFT_GAIT = (([0],           0,  -50,   0),   # RF swing left
+                    ([1, 2, 3],     0,    0,  -16),
+                    ([0],           0,    0,  -STRAFE_STEP),
+                    ([1, 2, 3],     0,    0,  -16),
+                    ([0],           0,   50,   0),
+                    ([1, 2, 3],     0,    0,  -18),
+
+                    ([3],           0,  -50,   0),   # LB swing left
+                    ([0, 1, 2],     0,    0,  -16),
+                    ([3],           0,    0,  -STRAFE_STEP),
+                    ([0, 1, 2],     0,    0,  -16),
+                    ([3],           0,   50,   0),
+                    ([0, 1, 2],     0,    0,  -14),
+
+                    ([1],           0,  -50,   0),   # LF swing left
+                    ([0, 2, 3],     0,    0,  -16),
+                    ([1],           0,    0,  -STRAFE_STEP),
+                    ([0, 2, 3],     0,    0,  -16),
+                    ([1],           0,   50,   0),
+                    ([0, 2, 3],     0,    0,  -14),
+
+                    ([2],           0,  -50,   0),   # RB swing left
+                    ([0, 1, 3],     0,    0,  -16),
+                    ([2],           0,    0,  -STRAFE_STEP),
+                    ([0, 1, 3],     0,    0,  -16),
+                    ([2],           0,   50,   0),
+                    ([0, 1, 3],     0,    0,  -14),
+
+                    ([0, 1, 2, 3],  0,    0,  -STRAFE_STEP))  # reset all feet
+
+STRAFE_RIGHT_GAIT = (([0],           0,  -50,   0),   # RF swing right
+                     ([1, 2, 3],     0,    0,   16),
+                     ([0],           0,    0,   STRAFE_STEP),
+                     ([1, 2, 3],     0,    0,   16),
+                     ([0],           0,   50,   0),
+                     ([1, 2, 3],     0,    0,   18),
+
+                     ([3],           0,  -50,   0),   # LB swing right
+                     ([0, 1, 2],     0,    0,   16),
+                     ([3],           0,    0,   STRAFE_STEP),
+                     ([0, 1, 2],     0,    0,   16),
+                     ([3],           0,   50,   0),
+                     ([0, 1, 2],     0,    0,   14),
+
+                     ([1],           0,  -50,   0),   # LF swing right
+                     ([0, 2, 3],     0,    0,   16),
+                     ([1],           0,    0,   STRAFE_STEP),
+                     ([0, 2, 3],     0,    0,   16),
+                     ([1],           0,   50,   0),
+                     ([0, 2, 3],     0,    0,   14),
+
+                     ([2],           0,  -50,   0),   # RB swing right
+                     ([0, 1, 3],     0,    0,   16),
+                     ([2],           0,    0,   STRAFE_STEP),
+                     ([0, 1, 3],     0,    0,   16),
+                     ([2],           0,   50,   0),
+                     ([0, 1, 3],     0,    0,   14),
+
+                     ([0, 1, 2, 3],  0,    0,   STRAFE_STEP))  # reset all feet
+
 
 TURN_LEFT_GAIT = (# RF forward while rest backwards
                   ([0],           0,  -50,   0),
@@ -895,7 +956,8 @@ class Speck:
         self.is_standing = False
 
         # create an array of the available gaits
-        self.Gaits = [WALK_GAIT, STRAFE_GAIT]
+        self.Gaits = [WALK_GAIT, BACKWARD_WALK_GAIT, STRAFE_LEFT_GAIT, STRAFE_RIGHT_GAIT, TURN_LEFT_GAIT,
+                      TURN_RIGHT_GAIT]
         # create a queue of movements for each leg to perform. Start with an infinite size
         #                  [RF_Queue, LF_Queue, RB_Queue, LB_Queue]
         self.move_queues = [Queue(0), Queue(0), Queue(0), Queue(0)]
@@ -1080,9 +1142,21 @@ class Speck:
         """
         if not self.is_standing:  # if Speck isn't standing
             self.stand()
-            time.sleep(1) # wait 1 second before walking
+            time.sleep(1)  # wait 1 second before walking
         for step in range(steps):
             self.gait(self.Gaits[0])
+
+    def reverse(self, steps):
+        """
+        Function used to walk forward a set number of steps
+        :param steps: number of steps to take
+        :return: None
+        """
+        if not self.is_standing:  # if Speck isn't standing
+            self.stand()
+            time.sleep(1)  # wait 1 second before walking
+        for step in range(steps):
+            self.gait(self.Gaits[1])
 
     def strafe_left(self):
         """
@@ -1091,11 +1165,20 @@ class Speck:
         """
         if not self.is_standing:  # if Speck isn't standing
             self.stand()
-        self.gait(self.Gaits[3])
+        self.gait(self.Gaits[2])
 
     def strafe_right(self):
         """
         Function used to strafe or side step to the right
+        :return: None
+        """
+        if not self.is_standing:  # if Speck isn't standing
+            self.stand()
+        self.gait(self.Gaits[3])
+
+    def turn_left(self):
+        """
+        Function used to turn left
         :return: None
         """
         if not self.is_standing:  # if Speck isn't standing
@@ -1109,16 +1192,7 @@ class Speck:
         """
         if not self.is_standing:  # if Speck isn't standing
             self.stand()
-        self.gait(self.Gaits[2])
-
-    def turn_left(self):
-        """
-        Function used to turn left
-        :return: None
-        """
-        if not self.is_standing:  # if Speck isn't standing
-            self.stand()
-        self.gait(self.Gaits[3])
+        self.gait(self.Gaits[5])
 
     def shift(self, forward: bool, distance: int):
         """
@@ -1148,9 +1222,15 @@ class Speck:
         :return: None
         """
         theta_rad = math.radians(theta)
+        # tan(theta) = (2*dz / SPECK_LENGTH)
+        # dz = tan(theta) * SPECK_LENGTH / 2
+        dz = theta_rad / (2 * SPECK_LENGTH)
         if cw:
             for leg in range(4):
-                pass
+                if leg == 0 or leg == 1:
+                    self.Legs[leg].move(0, 0, dz)
+                elif leg == 2 or leg == 3:
+                    self.Legs[leg].move(0, 0, -dz)
         else:
             for leg in range(4):
                 pass
