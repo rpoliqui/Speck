@@ -927,10 +927,10 @@ class Speck:
         self.is_standing = False
         for i in range(0, 2, 1):
             self.move_queues[i].put([4, -25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
-                                     HIP_LENGTH - 10 - self.Legs[i].current_position[2]])
+                                     HIP_LENGTH - 25 - self.Legs[i].current_position[2]])
         for i in range(2, 4, 1):
             self.move_queues[i].put([4, - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
-                                     HIP_LENGTH - 10 - self.Legs[i].current_position[2]])
+                                     HIP_LENGTH - 25 - self.Legs[i].current_position[2]])
 
     def set_sit(self):
         """
@@ -971,6 +971,7 @@ class Speck:
         for step in range(0, len(gait) - 1, 1):  # loop through all steps for one cycle
             for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
+                print(gait[step][0])
                 if leg in gait[step][0]:
                     self.move_queues[leg].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
 
