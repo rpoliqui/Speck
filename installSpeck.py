@@ -41,6 +41,7 @@ if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
     subprocess.run(['pip', 'install', '--no-cache-dir', '--force-reinstall' 'simplejpeg'])  # Update package to use jpgs
     subprocess.run(['pip', 'install', '--upgrade', 'datetime'])  # Update package to get date and times
     subprocess.run(['pip', 'install', '--upgrade', 'gpiozero'])  # Update gpiozero
+    subprocess.run(['pip', 'install', '--upgrade', 'bluezero'])  # Update bluezero
     subprocess.run(['pip', 'install', '--upgrade', 'numpy'])  # Update numpy
 else:  # Wi-Fi is not connected, Speck cannot be updated
     print("Speck cannot be updated without a wifi connection.")
