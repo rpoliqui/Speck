@@ -158,7 +158,7 @@ WALK_GAIT = (# RF forward while rest backwards
              ([2],           0,   50,  0),
              ([0, 1, 3],    14,    0,  0),
              # All forward to finish loop
-             ([0, 1, 2, 3], -100,    0,  0))
+             ([0, 1, 2, 3], -50,    0,  0))
 
 
 # array storing changes in x, y and z positions for each leg to enable Speck to walk backwards.
