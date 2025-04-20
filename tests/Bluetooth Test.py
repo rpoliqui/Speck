@@ -1,9 +1,13 @@
 import subprocess
+# setup pi to enable bluetooth connection
+subprocess.run(['sudo', 'systemctl', 'start', 'bluetooth'])  # start bluetooth on pi
+subprocess.run(['sudo', 'hciconfig', 'hci0', 'up'])  # start bluetooth on pi
+
 from bluezero import peripheral
 
 # 1) Change this to your Pi's BLE MAC (from `hciconfig` or `bluetoothctl show`)
 ADAPTER_ADDR = 'D8:3A:DD:5F:A2:60'
-LOCAL_NAME = 'SPECK'
+LOCAL_NAME = 'speck'
 
 
 # 2) Callback for writes from the iPhone
@@ -12,10 +16,7 @@ def on_write(value):
 
 
 # 3) Create the Peripheral with the correct argument
-my_peripheral = peripheral.Peripheral(
-    adapter_address=ADAPTER_ADDR,
-    local_name=LOCAL_NAME
-)
+my_peripheral = peripheral.Peripheral(ADAPTER_ADDR, LOCAL_NAME)
 
 # 4) Define a GATT service (UUIDs are just examples; generate your own with uuidgen or Python)
 SERVICE_UUID = 'd8ed4126-c03b-499e-bf06-b69951b1fa6f'
@@ -38,9 +39,6 @@ my_peripheral.add_characteristic(
 )
 
 # 5) Start advertising and enter the event loop
-# setup pi to enable bluetooth connection
-subprocess.run(['sudo', 'systemctl', 'start', 'bluetooth'])  # start bluetooth on pi
-subprocess.run(['sudo', 'hciconfig', 'hci0', 'up'])  # start bluetooth on pi
 # bluetoothctl_commands = f"""
 #                                     power on
 #                                     manufacturer 0xffff 0x12 0x34
@@ -62,5 +60,7 @@ subprocess.run(['sudo', 'hciconfig', 'hci0', 'up'])  # start bluetooth on pi
 # out, err = process.communicate(bluetoothctl_commands)
 # if err:
 #     print("[Bluetoothctl Error]", err)
-# print(f'Advertising "{LOCAL_NAME}" on adapter {ADAPTER_ADDR}…')
+print(f'Advertising "{LOCAL_NAME}" on adapter {ADAPTER_ADDR}…')
 my_peripheral.publish()
+my_peripheral.run()
+
