@@ -1,21 +1,32 @@
 from bluezero import peripheral
 
-# Define callback function for characteristic write
+# Callback when iPhone writes to the Pi
 def on_write(value):
-    print("Received from iPhone:", value.decode('utf-8'))
+    print('Received from iPhone:', value.decode('utf-8'))
 
-# Define the BLE GATT structure
-my_peripheral = peripheral.Peripheral(adapter_addr='hci0', local_name='SPECK')
+# Create the peripheral object using the correct argument name
+my_peripheral = peripheral.Peripheral(
+    adapter_name='hci0',        # ✅ Correct parameter
+    local_name='SPECK'          # Name shown on iPhone
+)
 
-my_peripheral.add_service(srv_id=1, uuid='12345678-1234-5678-1234-56789abcdef0', primary=True)
+# Add a custom service
+my_peripheral.add_service(
+    srv_id=1,
+    uuid='12345678-1234-5678-1234-56789abcdef0',
+    primary=True
+)
 
-my_peripheral.add_characteristic(srv_id=1,
-                                  chr_id=1,
-                                  uuid='12345678-1234-5678-1234-56789abcdef1',
-                                  value=[],
-                                  notifying=False,
-                                  flags=['read', 'write', 'notify'],
-                                  write_callback=on_write)
+# Add a writable/readable/notify characteristic to that service
+my_peripheral.add_characteristic(
+    srv_id=1,
+    chr_id=1,
+    uuid='12345678-1234-5678-1234-56789abcdef1',
+    value=[],
+    notifying=False,
+    flags=['read', 'write', 'notify'],
+    write_callback=on_write
+)
 
-print("Starting BLE advertising...")
+print("Advertising BLE service...")
 my_peripheral.publish()
