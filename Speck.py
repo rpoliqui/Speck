@@ -784,7 +784,10 @@ class Speck:
         self.CrateJaws.open()  # make sure the crate jaws start open
 
         # create the camera object used for detecting the crate
-        self.Camera = Camera()
+        try:
+            self.Camera = Camera()
+        except RuntimeError as e:
+            print(f"Camera Not Available: {e}")
 
         # create state flags
         self.is_standing = False
