@@ -125,36 +125,40 @@ CRATE_WIDTH = 75  # mm
 AvailablePins = np.ones(40)
 
 # array storing changes in x, y and z positions for each leg to enable Speck to walk. Layout:
-# {Step n: {Leg, dx, dy, dz},
-# {Step n+1: {Leg, dx, dy, dz}}
+# {Step n: {[Legs], dx, dy, dz},
+# {Step n+1: {[Legs], dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
-WALK_GAIT = ((1, 50, 25, 0),
-             (0, 0, -50, 0),
-             (0, -50, 0, 0),
-             (0, 0, 50, 0),
-             (1, -50, -25, 0),
-             (2, 100, 0, 0),
-             (0, 50, 0, 0),
-             (3, 0, -50, 0),
-             (3, -50, 0, 0),
-             (3, 0, 50, 0),
-             (2, -100, 0, 0),
-             (0, -50, 0, 0),
-             (4, 50, 0, 0),
-             (0, 50, 25, 0),
-             (1, 0, -50, 0),
-             (1, -50, 0, 0),
-             (1, 0, 50, 0),
-             (0, -50, -25, 0),
-             (3, 100, 0, 0),
-             (1, 50, 0, 0),
-             (2, 0, -50, 0),
-             (2, -50, 0, 0),
-             (2, 0, 50, 0),
-             (3, -100, 0, 0),
-             (1, -50, 0, 0),
-             (4, 50, 0, 0))
+WALK_GAIT = (([0], 0, -50, 0),
+             ([1, 2, 3], 50, 0, 0),
+             ([0], -50, 0, 0),
+             ([0], 0, 50, 0))
+# WALK_GAIT = ((1, 50, 25, 0),
+#              (0, 0, -50, 0),
+#              (0, -50, 0, 0),
+#              (0, 0, 50, 0),
+#              (1, -50, -25, 0),
+#              (2, 100, 0, 0),
+#              (0, 50, 0, 0),
+#              (3, 0, -50, 0),
+#              (3, -50, 0, 0),
+#              (3, 0, 50, 0),
+#              (2, -100, 0, 0),
+#              (0, -50, 0, 0),
+#              (4, 50, 0, 0),
+#              (0, 50, 25, 0),
+#              (1, 0, -50, 0),
+#              (1, -50, 0, 0),
+#              (1, 0, 50, 0),
+#              (0, -50, -25, 0),
+#              (3, 100, 0, 0),
+#              (1, 50, 0, 0),
+#              (2, 0, -50, 0),
+#              (2, -50, 0, 0),
+#              (2, 0, 50, 0),
+#              (3, -100, 0, 0),
+#              (1, -50, 0, 0),
+#              (4, 50, 0, 0))
 
 STRAFE_STEP = 30
 STRAFE_GAIT = ((0, 0, -50, 0),
@@ -956,7 +960,7 @@ class Speck:
         function to run basic gait motions without smooth motion. Passed a sequence of movement arrays.
 
         :param gait:type: int[[int, int, int, int]]: an array of movement arrays. One movement array in the form
-        [Leg, dx, dy, dz] where Leg is the leg to move (0 = RF, 1 = LF, 2 = RB, 3 = LB, 4 = ALL). dx dy and dz and
+        [[Legs], dx, dy, dz] where Leg is the leg to move (0 = RF, 1 = LF, 2 = RB, 3 = LB, 4 = ALL). dx dy and dz and
         changes in the foot position in millimeters
         :return: None
         """
@@ -967,7 +971,8 @@ class Speck:
         for step in range(0, len(gait) - 1, 1):  # loop through all steps for one cycle
             for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
-                self.move_queues[leg].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
+                if leg in gait[step][0]:
+                    self.move_queues[leg].put([gait[step][0], gait[step][1], gait[step][2], gait[step][3]])
 
     def walk(self, steps):
         """
