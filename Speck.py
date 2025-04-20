@@ -129,57 +129,71 @@ AvailablePins = np.ones(40)
 # {Step n+1: {[Legs], dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
-WALK_GAIT = (([0], 0, -50, 0),
-             ([1, 2, 3], 16, 0, 0),
-             ([0], -50, 0, 0),
-             ([1, 2, 3], 16, 0, 0),
-             ([0], 0, 50, 0),
-             ([1, 2, 3], 18, 0, 0),
-             ([3], 0, -50, 0),
-             ([0, 1, 2], 16, 0, 0),
-             ([3], -50, 0, 0),
-             ([0, 1, 2], 16, 0, 0),
-             ([3], 0, 50, 0),
-             ([0, 1, 2], 14, 0, 0),
-             ([1], 0, -50, 0),
-             ([0, 2, 3], 16, 0, 0),
-             ([1], -50, 0, 0),
-             ([0, 2, 3], 16, 0, 0),
-             ([1], 0, 50, 0),
-             ([0, 2, 3], 14, 0, 0),
-             ([2], 0, -50, 0),
-             ([0, 1, 3], 16, 0, 0),
-             ([2], -50, 0, 0),
-             ([0, 1, 3], 16, 0, 0),
-             ([2], 0, 50, 0),
-             ([0, 1, 3], 14, 0, 0),
-             ([0, 1, 2, 3], -50, 0, 0))
-# WALK_GAIT = ((1, 50, 25, 0),
-#              (0, 0, -50, 0),
-#              (0, -50, 0, 0),
-#              (0, 0, 50, 0),
-#              (1, -50, -25, 0),
-#              (2, 100, 0, 0),
-#              (0, 50, 0, 0),
-#              (3, 0, -50, 0),
-#              (3, -50, 0, 0),
-#              (3, 0, 50, 0),
-#              (2, -100, 0, 0),
-#              (0, -50, 0, 0),
-#              (4, 50, 0, 0),
-#              (0, 50, 25, 0),
-#              (1, 0, -50, 0),
-#              (1, -50, 0, 0),
-#              (1, 0, 50, 0),
-#              (0, -50, -25, 0),
-#              (3, 100, 0, 0),
-#              (1, 50, 0, 0),
-#              (2, 0, -50, 0),
-#              (2, -50, 0, 0),
-#              (2, 0, 50, 0),
-#              (3, -100, 0, 0),
-#              (1, -50, 0, 0),
-#              (4, 50, 0, 0))
+WALK_GAIT = (# RF forward while rest backwards
+             ([0],           0,  -50,  0),
+             ([1, 2, 3],    16,    0,  0),
+             ([0],         -50,    0,  0),
+             ([1, 2, 3],    16,    0,  0),
+             ([0],           0,   50,  0),
+             ([1, 2, 3],    18,    0,  0),
+             # LB forward while rest backwards
+             ([3],           0,  -50,  0),
+             ([0, 1, 2],    16,    0,  0),
+             ([3],         -50,    0,  0),
+             ([0, 1, 2],    16,    0,  0),
+             ([3],           0,   50,  0),
+             ([0, 1, 2],    14,    0,  0),
+             # LF forward while rest backwards
+             ([1],           0,  -50,  0),
+             ([0, 2, 3],    16,    0,  0),
+             ([1],         -50,    0,  0),
+             ([0, 2, 3],    16,    0,  0),
+             ([1],           0,   50,  0),
+             ([0, 2, 3],    14,    0,  0),
+             # RF forward while rest backwards
+             ([2],           0,  -50,  0),
+             ([0, 1, 3],    16,    0,  0),
+             ([2],         -50,    0,  0),
+             ([0, 1, 3],    16,    0,  0),
+             ([2],           0,   50,  0),
+             ([0, 1, 3],    14,    0,  0),
+             # All forward to finish loop
+             ([0, 1, 2, 3], -50,    0,  0))
+
+
+# array storing changes in x, y and z positions for each leg to enable Speck to walk backwards.
+# Layout: ( [legs], dx, dy, dz )
+# LEGS: [RF, LF, RB, LB]
+# DIRECTIONS: +X = backwards, +Y = downward
+BACKWARD_WALK_GAIT = (([0],           0,  -50,  0),
+                      ([1, 2, 3],   -16,    0,  0),
+                      ([0],          50,    0,  0),
+                      ([1, 2, 3],   -16,    0,  0),
+                      ([0],           0,   50,  0),
+                      ([1, 2, 3],   -18,    0,  0),
+
+                      ([3],           0,  -50,  0),
+                      ([0, 1, 2],   -16,    0,  0),
+                      ([3],          50,    0,  0),
+                      ([0, 1, 2],   -16,    0,  0),
+                      ([3],           0,   50,  0),
+                      ([0, 1, 2],   -14,    0,  0),
+
+                      ([1],           0,  -50,  0),
+                      ([0, 2, 3],   -16,    0,  0),
+                      ([1],          50,    0,  0),
+                      ([0, 2, 3],   -16,    0,  0),
+                      ([1],           0,   50,  0),
+                      ([0, 2, 3],   -14,    0,  0),
+
+                      ([2],           0,  -50,  0),
+                      ([0, 1, 3],   -16,    0,  0),
+                      ([2],          50,    0,  0),
+                      ([0, 1, 3],   -16,    0,  0),
+                      ([2],           0,   50,  0),
+                      ([0, 1, 3],   -14,    0,  0),
+
+                      ([0, 1, 2, 3],  50,    0,  0))
 
 STRAFE_STEP = 30
 STRAFE_GAIT = ((0, 0, -50, 0),
@@ -197,42 +211,105 @@ STRAFE_GAIT = ((0, 0, -50, 0),
                (2, 0, 50, 0),
                (3, 0, -50, 0))
 
-TURN_STEP = 30
-LEFT_TURN_GAIT = ((0, 0, -50, 0),
-                  (0, 0, 0, TURN_STEP),
-                  (0, 0, 50, 0),
-                  (3, 0, -50, 0),
-                  (3, 0, 0, -TURN_STEP),
-                  (3, 0, 50, 0),
-                  (1, 0, -50, 0),
-                  (1, 0, 0, TURN_STEP),
-                  (1, 0, 50, 0),
-                  (2, 0, -50, 0),
-                  (2, 0, 0, -TURN_STEP),
-                  (2, 0, 50, 0),
-                  (0, 0, 0, -TURN_STEP),
-                  (1, 0, 0, -TURN_STEP),
-                  (2, 0, 0, TURN_STEP),
-                  (3, 0, 0, TURN_STEP),
-                  (3, 0, 0, TURN_STEP))
+TURN_LEFT_GAIT = (# RF forward while rest backwards
+                  ([0],           0,  -50,   0),
+                  ([1, 2, 3],    16,    0,   0),
+                  ([0],         -50,    0,   0),
+                  ([1, 2, 3],    16,    0,   0),
+                  ([0],           0,   50,   0),
+                  ([1, 2, 3],    18,    0,   0),
+                  # LB forward while rest backwards
+                  ([3],           0,  -50,   0),
+                  ([0, 1, 2],    16,    0,   0),
+                  ([3],         -50,    0,   0),
+                  ([0, 1, 2],    16,    0,   0),
+                  ([3],           0,   50,   0),
+                  ([0, 1, 2],    14,    0,   0),
+                  # LF forward while rest backwards
+                  ([1],           0,  -50,   0),
+                  ([0, 2, 3],    16,    0,   0),
+                  ([1],         -50,    0,   0),
+                  ([0, 2, 3],    16,    0,   0),
+                  ([1],           0,   50,   0),
+                  ([0, 2, 3],    14,    0,   0),
+                  # RB forward while rest backwards
+                  ([2],           0,  -50,   0),
+                  ([0, 1, 3],    16,    0,   0),
+                  ([2],         -50,    0,   0),
+                  ([0, 1, 3],    16,    0,   0),
+                  ([2],           0,   50,   0),
+                  ([0, 1, 3],    14,    0,   0),
+                  # All forward to finish loop
+                  ([0, 1, 2, 3], -50,    0,   0))
 
-RIGHT_TURN_GAIT = ((0, 0, -50, 0),
-                   (0, 0, 0, -TURN_STEP),
-                   (0, 0, 50, 0),
-                   (3, 0, -50, 0),
-                   (3, 0, 0, TURN_STEP),
-                   (3, 0, 50, 0),
-                   (1, 0, -50, 0),
-                   (1, 0, 0, -TURN_STEP),
-                   (1, 0, 50, 0),
-                   (2, 0, -50, 0),
-                   (2, 0, 0, TURN_STEP),
-                   (2, 0, 50, 0),
-                   (0, 0, 0, TURN_STEP),
-                   (1, 0, 0, TURN_STEP),
-                   (2, 0, 0, -TURN_STEP),
-                   (3, 0, 0, -TURN_STEP),
-                   (3, 0, 0, -TURN_STEP))
+TURN_RIGHT_GAIT = (# RF backward while rest forwards
+                   ([0],           0,  -50,   0),
+                   ([1, 2, 3],   -16,    0,   0),
+                   ([0],          50,    0,   0),
+                   ([1, 2, 3],   -16,    0,   0),
+                   ([0],           0,   50,   0),
+                   ([1, 2, 3],   -18,    0,   0),
+                   # LB backward while rest forwards
+                   ([3],           0,  -50,   0),
+                   ([0, 1, 2],   -16,    0,   0),
+                   ([3],          50,    0,   0),
+                   ([0, 1, 2],   -16,    0,   0),
+                   ([3],           0,   50,   0),
+                   ([0, 1, 2],   -14,    0,   0),
+                   # LF backward while rest forwards
+                   ([1],           0,  -50,   0),
+                   ([0, 2, 3],   -16,    0,   0),
+                   ([1],          50,    0,   0),
+                   ([0, 2, 3],   -16,    0,   0),
+                   ([1],           0,   50,   0),
+                   ([0, 2, 3],   -14,    0,   0),
+                   # RB backward while rest forwards
+                   ([2],           0,  -50,   0),
+                   ([0, 1, 3],   -16,    0,   0),
+                   ([2],          50,    0,   0),
+                   ([0, 1, 3],   -16,    0,   0),
+                   ([2],           0,   50,   0),
+                   ([0, 1, 3],   -14,    0,   0),
+                   # All backward to finish loop
+                   ([0, 1, 2, 3],  50,    0,   0))
+
+
+# TURN_STEP = 30
+# LEFT_TURN_GAIT = ((0, 0, -50, 0),
+#                   (0, 0, 0, TURN_STEP),
+#                   (0, 0, 50, 0),
+#                   (3, 0, -50, 0),
+#                   (3, 0, 0, -TURN_STEP),
+#                   (3, 0, 50, 0),
+#                   (1, 0, -50, 0),
+#                   (1, 0, 0, TURN_STEP),
+#                   (1, 0, 50, 0),
+#                   (2, 0, -50, 0),
+#                   (2, 0, 0, -TURN_STEP),
+#                   (2, 0, 50, 0),
+#                   (0, 0, 0, -TURN_STEP),
+#                   (1, 0, 0, -TURN_STEP),
+#                   (2, 0, 0, TURN_STEP),
+#                   (3, 0, 0, TURN_STEP),
+#                   (3, 0, 0, TURN_STEP))
+#
+# RIGHT_TURN_GAIT = ((0, 0, -50, 0),
+#                    (0, 0, 0, -TURN_STEP),
+#                    (0, 0, 50, 0),
+#                    (3, 0, -50, 0),
+#                    (3, 0, 0, TURN_STEP),
+#                    (3, 0, 50, 0),
+#                    (1, 0, -50, 0),
+#                    (1, 0, 0, -TURN_STEP),
+#                    (1, 0, 50, 0),
+#                    (2, 0, -50, 0),
+#                    (2, 0, 0, TURN_STEP),
+#                    (2, 0, 50, 0),
+#                    (0, 0, 0, TURN_STEP),
+#                    (1, 0, 0, TURN_STEP),
+#                    (2, 0, 0, -TURN_STEP),
+#                    (3, 0, 0, -TURN_STEP),
+#                    (3, 0, 0, -TURN_STEP))
 
 # __________Environment Setup__________
 factory = PiGPIOFactory()  # define pin factory to use servos for more accurate servo control
@@ -1073,18 +1150,11 @@ class Speck:
         theta_rad = math.radians(theta)
         if cw:
             for leg in range(4):
-                x_cur = self.Legs[leg].current_position[0]
-                z_cur = self.Legs[leg].current_position[2]
-                x = SPECK_LENGTH / 2 * math.cos(theta_rad) - SPECK_WIDTH / 2 * math.sin(theta_rad)
-                z = SPECK_LENGTH / 2 * math.sin(theta_rad) + SPECK_WIDTH / 2 * math.cos(theta_rad)
-                self.move_queues[leg].put([leg, x - x_cur, 0, z - z_cur])
+                pass
         else:
             for leg in range(4):
-                x_cur = self.Legs[leg].current_position[0]
-                z_cur = self.Legs[leg].current_position[2]
-                x = SPECK_LENGTH / 2 * math.cos(theta_rad) - SPECK_WIDTH / 2 * math.sin(theta_rad)
-                z = SPECK_LENGTH / 2 * math.sin(theta_rad) + SPECK_WIDTH / 2 * math.cos(theta_rad)
-                self.move_queues[leg].put([leg, x + x_cur, 0, z + z_cur])
+                pass
+                # self.move_queues[leg].put([leg,])
         return None
 
     def grab(self):
@@ -1114,11 +1184,13 @@ class Speck:
         # use camera object to find shift and twist
         found, shiftx, shifty, twist = self.Camera.detect_crate()
         if found:
-            self.shift(forward=True, distance=shiftx)
-            self.shift(forward=False, distance=shifty)
-            if twist > 0:
+            if shiftx >= 2 or shiftx <= -2:
+                self.shift(forward=True, distance=shiftx)
+            if shifty >= 2 or shifty <= -2:
+                self.shift(forward=False, distance=shifty)
+            if twist > 10:
                 self.twist(cw=True, theta=twist)
-            elif twist < 0:
+            elif twist < -10:
                 self.twist(cw=False, theta=twist)
         return None
 
