@@ -39,7 +39,8 @@ my_peripheral.add_characteristic(
 
 # 5) Start advertising and enter the event loop
 # setup pi to enable bluetooth connection
-subprocess.run(['sudo', 'service', 'bluetooth', 'start'])  # start bluetooth on pi
+subprocess.run(['sudo', 'systemctl', 'start', 'bluetooth'])  # start bluetooth on pi
+subprocess.run(['sudo', 'hciconfig', 'hci0', 'up'])  # start bluetooth on pi
 bluetoothctl_commands = f"""                                                               
                                     power on                                               
                                     manufacturer 0xffff 0x12 0x34                          
