@@ -7,7 +7,7 @@ from bluezero import peripheral
 
 # 1) Change this to your Pi's BLE MAC (from `hciconfig` or `bluetoothctl show`)
 ADAPTER_ADDR = 'D8:3A:DD:5F:A2:60'
-LOCAL_NAME = 'speck'
+LOCAL_NAME = 'SPECK'
 
 
 # 2) Callback for writes from the iPhone
