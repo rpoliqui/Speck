@@ -1002,7 +1002,7 @@ class Speck:
             elif move[0] == leg_id:  # if command is target at this leg
                 with self.lock:  # lock all other threads and release after movement
                     self.Legs[leg_id].move(move[1], move[2], move[3])  # move the leg
-                    # time.sleep(STEP_TIME)
+                    time.sleep(STEP_TIME)
             else:  # not for this leg, do nothing
                 pass
 
