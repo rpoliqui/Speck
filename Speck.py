@@ -114,7 +114,7 @@ UPPER_LEG_LENGTH = 124.5  # mm
 LOWER_LEG_LENGTH = 110  # mm
 JAW_OPEN_TIME = 4.5  # s
 JAW_CLOSE_TIME = 4.5  # s
-STEP_TIME = .1  # s
+STEP_TIME = .05  # s
 SPECK_LENGTH = 181.3  # distance from center of longitudinal hip joints
 SPECK_WIDTH = 276.7  # distance from outside both legs
 CRATE_WIDTH = 75  # mm
@@ -158,7 +158,8 @@ WALK_GAIT = (# RF forward while rest backwards
              ([2],           0,   50,  0),
              ([0, 1, 3],    14,    0,  0),
              # All forward to finish loop
-             ([4],         -50,    0,  0))
+             ([4],         -50,    0,  0),
+             ([4],         -50,    0,  0),)
 
 
 # array storing changes in x, y and z positions for each leg to enable Speck to walk backwards.
@@ -1000,7 +1001,7 @@ class Speck:
                 self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
             elif move[0] == leg_id:  # if command is target at this leg
                 with self.lock:  # lock all other threads and release after movement
-                    self.Legs[leg_id].move(move[1], move[2], move[3])  # move the leg
+                    self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
                     time.sleep(STEP_TIME)
             else:  # not for this leg, do nothing
                 pass
@@ -1086,7 +1087,7 @@ class Speck:
         """
         self.is_standing = False
         for i in range(0, 2, 1):
-            self.move_queues[i].put([4, -25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4,  - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
         for i in range(2, 4, 1):
             self.move_queues[i].put([4, - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
@@ -1131,7 +1132,7 @@ class Speck:
         for step in range(0, len(gait) - 1, 1):  # loop through all steps for one cycle
             for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
-                if leg in gait[step][0] or leg == 4:
+                if leg in gait[step][0] or 4 in gait[step][0]:
                     self.move_queues[leg].put([leg, gait[step][1], gait[step][2], gait[step][3]])
 
     def walk(self, steps):
