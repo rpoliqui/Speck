@@ -158,7 +158,7 @@ WALK_GAIT = (# RF forward while rest backwards
              ([2],           0,   50,  0),
              ([0, 1, 3],    14,    0,  0),
              # All forward to finish loop
-             ([0, 1, 2, 3], -50,    0,  0))
+             ([4],         -50,    0,  0))
 
 
 # array storing changes in x, y and z positions for each leg to enable Speck to walk backwards.
@@ -193,7 +193,7 @@ BACKWARD_WALK_GAIT = (([0],           0,  -50,  0),
                       ([2],           0,   50,  0),
                       ([0, 1, 3],   -14,    0,  0),
 
-                      ([0, 1, 2, 3],  50,    0,  0))
+                      ([4],  50,    0,  0))
 
 STRAFE_STEP = 30
 # STRAFE_GAIT = ((0, 0, -50, 0),
@@ -239,7 +239,7 @@ STRAFE_LEFT_GAIT = (([0],           0,  -50,   0),   # RF swing left
                     ([2],           0,   50,   0),
                     ([0, 1, 3],     0,    0,  -14),
 
-                    ([0, 1, 2, 3],  0,    0,  -STRAFE_STEP))  # reset all feet
+                    ([4],  0,    0,  -STRAFE_STEP))  # reset all feet
 
 STRAFE_RIGHT_GAIT = (([0],           0,  -50,   0),   # RF swing right
                      ([1, 2, 3],     0,    0,   16),
@@ -269,7 +269,7 @@ STRAFE_RIGHT_GAIT = (([0],           0,  -50,   0),   # RF swing right
                      ([2],           0,   50,   0),
                      ([0, 1, 3],     0,    0,   14),
 
-                     ([0, 1, 2, 3],  0,    0,   STRAFE_STEP))  # reset all feet
+                     ([4],  0,    0,   STRAFE_STEP))  # reset all feet
 
 
 TURN_LEFT_GAIT = (# RF forward while rest backwards
@@ -301,7 +301,7 @@ TURN_LEFT_GAIT = (# RF forward while rest backwards
                   ([2],           0,   50,   0),
                   ([0, 1, 3],    14,    0,   0),
                   # All forward to finish loop
-                  ([0, 1, 2, 3], -50,    0,   0))
+                  ([4], -50,    0,   0))
 
 TURN_RIGHT_GAIT = (# RF backward while rest forwards
                    ([0],           0,  -50,   0),
@@ -332,7 +332,7 @@ TURN_RIGHT_GAIT = (# RF backward while rest forwards
                    ([2],           0,   50,   0),
                    ([0, 1, 3],   -14,    0,   0),
                    # All backward to finish loop
-                   ([0, 1, 2, 3],  50,    0,   0))
+                   ([4],  50,    0,   0))
 
 
 # TURN_STEP = 30
@@ -1131,7 +1131,7 @@ class Speck:
         for step in range(0, len(gait) - 1, 1):  # loop through all steps for one cycle
             for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
-                if leg in gait[step][0]:
+                if leg in gait[step][0] or leg == 4:
                     self.move_queues[leg].put([leg, gait[step][1], gait[step][2], gait[step][3]])
 
     def walk(self, steps):
