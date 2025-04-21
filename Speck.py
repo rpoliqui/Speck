@@ -1090,7 +1090,7 @@ class Speck:
             self.move_queues[i].put([4, -25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
         for i in range(2, 4, 1):
-            self.move_queues[i].put([4, -25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def set_sit(self):
