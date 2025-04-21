@@ -1001,7 +1001,7 @@ class Speck:
                 self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
             elif move[0] == leg_id:  # if command is target at this leg
                 with self.lock:  # lock all other threads and release after movement
-                    self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
+                    self.Legs[leg_id].move(move[1], move[2], move[3])  # move the leg
                     # time.sleep(STEP_TIME)
             else:  # not for this leg, do nothing
                 pass
@@ -1132,7 +1132,7 @@ class Speck:
         for step in range(0, len(gait) - 1, 1):  # loop through all steps for one cycle
             for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
-                if leg in gait[step][0] or 4 in gait[step][0]:
+                if (leg in gait[step][0]) or (4 in gait[step][0]):
                     self.move_queues[leg].put([leg, gait[step][1], gait[step][2], gait[step][3]])
 
     def walk(self, steps):
