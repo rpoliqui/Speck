@@ -55,7 +55,8 @@ References:
     https://support.avh.corellium.com/devices/rpi4/rpi4-ble
     https://iot.appinventor.mit.edu/iot/reference/bluetoothle
     https://www.youtube.com/watch?v=gXXRpjzrBsA
-    https://www.youtube.com/watch?v=RvbWl8rZOoQ&t=352s
+    https://www.youtube.com/watch?v=RvbWl8rZOoQ
+    https://github.com/ukBaz/python-bluezero/blob/main/examples/peripheral_read_with_without_options.py
 """
 # __________Import Statements__________
 import numpy as np
@@ -124,42 +125,42 @@ CRATE_WIDTH = 75  # mm
 # 1 = available; 0 = unavailable
 AvailablePins = np.ones(40)
 
+# __________Gait Arrays__________
 # array storing changes in x, y and z positions for each leg to enable Speck to walk. Layout:
 # {Step n: {[Legs], dx, dy, dz},
 # {Step n+1: {[Legs], dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 WALK_GAIT = (# RF forward while rest backwards
-             ([0],           0,  -50,  0),
-             ([1, 2, 3],    16,    0,  0),
-             ([0],         -50,    0,  0),
-             ([1, 2, 3],    16,    0,  0),
-             ([0],           0,   50,  0),
-             ([1, 2, 3],    18,    0,  0),
+             ([0],         -60,  -50,  0),
+             ([1, 2, 3],    20,    0,  0),
+             ([0],         -60,    50,  0),
+             ([1, 2, 3],    20,    0,  0),
              # LB forward while rest backwards
-             ([3],           0,  -50,  0),
-             ([0, 1, 2],    16,    0,  0),
-             ([3],         -50,    0,  0),
-             ([0, 1, 2],    16,    0,  0),
-             ([3],           0,   50,  0),
-             ([0, 1, 2],    14,    0,  0),
+             ([3],         -60,  -50,  0),
+             ([0, 1, 2],    20,    0,  0),
+             ([3],         -60,   50,  0),
+             ([0, 1, 2],    20,    0,  0),
              # LF forward while rest backwards
-             ([1],           0,  -50,  0),
-             ([0, 2, 3],    16,    0,  0),
-             ([1],         -50,    0,  0),
-             ([0, 2, 3],    16,    0,  0),
-             ([1],           0,   50,  0),
-             ([0, 2, 3],    14,    0,  0),
+             ([1],         -60,  -50,  0),
+             ([0, 2, 3],    20,    0,  0),
+             ([1],         -60,   50,  0),
+             ([0, 2, 3],    20,    0,  0),
              # RF forward while rest backwards
-             ([2],           0,  -50,  0),
-             ([0, 1, 3],    16,    0,  0),
-             ([2],         -50,    0,  0),
-             ([0, 1, 3],    16,    0,  0),
-             ([2],           0,   50,  0),
-             ([0, 1, 3],    14,    0,  0),
-             # All forward to finish loop
-             ([4],         -100,    0,  0),
-             ([4],         -50,    0,  0))
+             ([2],         -60,  -50,  0),
+             ([0, 1, 3],    20,    0,  0),
+             ([2],         -60,   50,  0),
+             ([0, 1, 3],    20,    0,  0))
+
+TROT = (([0, 3], -30, -50, 0),
+        ([1, 2],  15,   0, 0),
+        ([0, 3], -30,  50, 0),
+        ([1, 2],  15,   0, 0),
+
+        ([1, 2], -30, -50, 0),
+        ([0, 3],  15,   0, 0),
+        ([1, 2], -30,  50, 0),
+        ([0, 3],  15,   0, 0))
 
 
 # array storing changes in x, y and z positions for each leg to enable Speck to walk backwards.
