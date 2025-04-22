@@ -1235,8 +1235,10 @@ class Speck:
                     self.Legs[leg].move(0, 0, -dz)
         else:
             for leg in range(4):
-                pass
-                # self.move_queues[leg].put([leg,])
+                if leg == 0 or leg == 1:
+                    self.Legs[leg].move(0, 0, -dz)
+                elif leg == 2 or leg == 3:
+                    self.Legs[leg].move(0, 0, dz)
         return None
 
     def grab(self):
@@ -1275,6 +1277,23 @@ class Speck:
             elif twist < -10:
                 self.twist(cw=False, theta=twist)
         return None
+
+    def grab_crate(self):
+        """
+        This function centers the crate and grabs it if it is close enough to the center
+        :return: None
+        """
+        self.center_crate()
+        found, x, y, theta = self.Camera.detect_crate()
+        if found and (-2 < x < 2) and (-2 < y < 2) and (-10 < theta < 10):
+            self.sit()
+        else:
+            self.center_crate()
+            found, x, y, theta = self.Camera.detect_crate()
+            if found and (-2 < x < 2) and (-2 < y < 2) and (-10 < theta < 10):
+                self.sit()
+            else:
+                print("Couldn't Center Crate")
 
     def __repr__(self):
         return "RF Leg Position: %i, %i, %i" \
