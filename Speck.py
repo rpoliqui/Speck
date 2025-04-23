@@ -687,8 +687,6 @@ class Camera:
         """
         if loops > 100:
             print("!!Failed to Find Crate!!")
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
             return False, 0, 0, 0
 
         # Apply a Gaussian blur to reduce noise
