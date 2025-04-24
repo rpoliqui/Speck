@@ -131,7 +131,12 @@ AvailablePins = np.ones(40)
 # {Step n+1: {[Legs], dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
-WALK_GAIT = ( # RF forward while rest backwards
+WALK_GAIT = ( # LF forward while rest backwards
+             ([1],         -45,  -45,  0),
+             ([0, 2, 3],    15,    0,  0),
+             ([1],         -45,   45,  0),
+             ([0, 2, 3],    15,    0,  0),
+             # RF forward while rest backwards
              ([0],         -45,  -45,  0),
              ([1, 2, 3],    15,    0,  0),
              ([0],         -45,    45,  0),
@@ -145,12 +150,7 @@ WALK_GAIT = ( # RF forward while rest backwards
              ([2],         -45,  -45,  0),
              ([0, 1, 3],    15,    0,  0),
              ([2],         -45,   45,  0),
-             ([0, 1, 3],    15,    0,  0),
-             # LF forward while rest backwards
-             ([1],         -45,  -45,  0),
-             ([0, 2, 3],    15,    0,  0),
-             ([1],         -45,   45,  0),
-             ([0, 2, 3],    15,    0,  0))
+             ([0, 1, 3],    15,    0,  0))
 
 TROT = (([0, 3], -30, -30, 0),
         ([1, 2],  15,   0, 0),
