@@ -132,25 +132,33 @@ AvailablePins = np.ones(40)
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 WALK_GAIT = ( # RB forward while rest backwards
-             ([2],         -45,  -45,  0),
-             ([0, 1, 3],    15,    0,  0),
-             ([2],         -45,   45,  0),
-             ([0, 1, 3],    15,    0,  0),
+             ([2],          0,   -45,  0),
+             ([0, 1, 3],    5,    0,  0),
+             ([2],        -45,    0,  0),
+             ([0, 1, 3],    5,    0,  0),
+             ([2],          0,   45,  0),
+             ([0, 1, 3],    5,    0,  0),
              # LF forward while rest backwards
-             ([1],         -45,  -45,  0),
-             ([0, 2, 3],    15,    0,  0),
-             ([1],         -45,   45,  0),
-             ([0, 2, 3],    15,    0,  0),
+             ([1],          0,   -45,  0),
+             ([0, 2, 3],    5,    0,  0),
+             ([1],        -45,    0,  0),
+             ([0, 2, 3],    5,    0,  0),
+             ([1],          0,   45,  0),
+             ([0, 2, 3],    5,    0,  0),
              # LB forward while rest backwards
-             ([3],         -45,  -45,  0),
-             ([0, 1, 2],    15,    0,  0),
-             ([3],         -45,   45,  0),
-             ([0, 1, 2],    15,    0,  0),
+             ([3],          0,   -45,  0),
+             ([0, 1, 2],    5,    0,  0),
+             ([3],        -45,    0,  0),
+             ([0, 1, 2],    5,    0,  0),
+             ([3],          0,   45,  0),
+             ([0, 1, 2],    5,    0,  0),
              # RF forward while rest backwards
-             ([0],         -45,  -45,  0),
-             ([1, 2, 3],    15,    0,  0),
-             ([0],         -45,    45,  0),
-             ([1, 2, 3],    15,    0,  0))
+             ([0],          0,   -45,  0),
+             ([2, 1, 3],    5,    0,  0),
+             ([0],        -45,    0,  0),
+             ([2, 1, 3],    5,    0,  0),
+             ([0],          0,   45,  0),
+             ([2, 1, 3],    5,    0,  0))
 
 TROT = (([0, 3], -30, -30, 0),
         ([1, 2],  15,   0, 0),
@@ -1085,10 +1093,10 @@ class Speck:
         """
         self.is_standing = False
         for i in range(0, 2, 1):
-            self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 150 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
         for i in range(2, 4, 1):
-            self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 150 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def set_sit(self):
