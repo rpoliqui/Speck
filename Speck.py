@@ -115,7 +115,7 @@ UPPER_LEG_LENGTH = 124.5  # mm
 LOWER_LEG_LENGTH = 110  # mm
 JAW_OPEN_TIME = 4.5  # s
 JAW_CLOSE_TIME = 4.5  # s
-STEP_TIME = .05  # s
+STEP_TIME = .025  # s
 SPECK_LENGTH = 181.3  # distance from center of longitudinal hip joints
 SPECK_WIDTH = 276.7  # distance from outside both legs
 CRATE_WIDTH = 75  # mm
@@ -1088,7 +1088,7 @@ class Speck:
             self.move_queues[i].put([4, 0 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
         for i in range(2, 4, 1):
-            self.move_queues[i].put([4, 50 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, 65 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def set_sit(self):
