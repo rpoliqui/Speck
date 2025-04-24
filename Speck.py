@@ -132,46 +132,39 @@ AvailablePins = np.ones(40)
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 WALK_GAIT = (
-    # RB forward while rest backwards
-    ([2],         0, -45, 0),       # Lift RB
-    ([0, 1],      5, -10, 0),       # Pitch forward (slightly)
-    ([3],         5,   0, 0),       # Slight support shift
-    ([2],       -45,   0, 0),       # Move RB forward
-    ([0, 1, 3],   5,   0, 0),       # Step others backward
-    ([2],         0,  45, 0),       # Lower RB
-    ([0, 1],      5,  10, 0),       # Pitch back to neutral
-    ([3],         5,   0, 0),       # Return balance
+    # RB lift (lean forward), swing, drop, recover
+    ([2],         0,  -30,  0),
+    ([0, 1, 3],   5,  -10,  0),
+    ([2],        30,    0,  0),
+    ([0, 1, 3],  10,    0,  0),
+    ([2],         0,   30,  0),
+    ([0, 1, 3],   5,   10,  0),
 
-    # LF forward while rest backwards
-    ([1],         0, -45, 0),       # Lift LF
-    ([2, 3],      5,  10, 0),       # Pitch backward
-    ([0],         5,   0, 0),       # Support shift
-    ([1],       -45,   0, 0),       # Move LF forward
-    ([0, 2, 3],   5,   0, 0),       # Others step back
-    ([1],         0,  45, 0),       # Lower LF
-    ([2, 3],      5, -10, 0),       # Return pitch forward
-    ([0],         5,   0, 0),
+    # LF lift (lean back), swing, drop, recover
+    ([1],         0,  -30,  0),
+    ([0, 2, 3],   5,   10,  0),
+    ([1],        30,    0,  0),
+    ([0, 2, 3],  10,    0,  0),
+    ([1],         0,   30,  0),
+    ([0, 2, 3],   5,  -10,  0),
 
-    # LB forward while rest backwards
-    ([3],         0, -45, 0),       # Lift LB
-    ([0, 1],      5, -10, 0),       # Pitch forward
-    ([2],         5,   0, 0),       # Support shift
-    ([3],       -45,   0, 0),       # Move LB forward
-    ([0, 1, 2],   5,   0, 0),       # Others step back
-    ([3],         0,  45, 0),       # Lower LB
-    ([0, 1],      5,  10, 0),       # Pitch back
-    ([2],         5,   0, 0),
+    # RF lift (lean back), swing, drop, recover
+    ([0],         0,  -30,  0),
+    ([1, 2, 3],   5,   10,  0),
+    ([0],        30,    0,  0),
+    ([1, 2, 3],  10,    0,  0),
+    ([0],         0,   30,  0),
+    ([1, 2, 3],   5,  -10,  0),
 
-    # RF forward while rest backwards
-    ([0],         0, -45, 0),       # Lift RF
-    ([2, 3],      5,  10, 0),       # Pitch backward
-    ([1],         5,   0, 0),       # Support shift
-    ([0],       -45,   0, 0),       # Move RF forward
-    ([1, 2, 3],   5,   0, 0),       # Others step back
-    ([0],         0,  45, 0),       # Lower RF
-    ([2, 3],      5, -10, 0),       # Pitch forward
-    ([1],         5,   0, 0)
+    # LB lift (lean forward), swing, drop, recover
+    ([3],         0,  -30,  0),
+    ([0, 1, 2],   5,  -10,  0),
+    ([3],        30,    0,  0),
+    ([0, 1, 2],  10,    0,  0),
+    ([3],         0,   30,  0),
+    ([0, 1, 2],   5,   10,  0),
 )
+
 
 
 TROT = (([0, 3], -30, -30, 0),
