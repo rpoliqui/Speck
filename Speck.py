@@ -131,39 +131,46 @@ AvailablePins = np.ones(40)
 # {Step n+1: {[Legs], dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
+# Tunable parameters
+LIFT        = 30    # mm in Y to lift the leg
+SWING       = 30    # mm in X to swing the leg forward
+STANCE      = 10    # mm in X to slide the stance legs backward
+PITCH_SHIFT = 10    # mm in Y to pitch the body
+
 WALK_GAIT = (
-    # RB lift (lean forward), swing, drop, recover
-    ([2],         0,  -30,  0),
-    ([0, 1, 3],   5,  -10,  0),
-    ([2],        30,    0,  0),
-    ([0, 1, 3],  10,    0,  0),
-    ([2],         0,   30,  0),
-    ([0, 1, 3],   5,   10,  0),
+    # ——— RB phase ———
+    ([2],           0,   -LIFT,    0),     # lift RB
+    ([0, 1, 3],     0,   -PITCH_SHIFT, 0), # pitch forward
+    ([2],        +SWING,    0,     0),     # swing RB forward
+    ([0, 1, 3],   -STANCE,   0,     0),     # slide body back on stance legs
+    ([2],           0,   +LIFT,    0),     # drop RB
+    ([0, 1, 3],     0,   +PITCH_SHIFT, 0), # return pitch to neutral
 
-    # LF lift (lean back), swing, drop, recover
-    ([1],         0,  -30,  0),
-    ([0, 2, 3],   5,   10,  0),
-    ([1],        30,    0,  0),
-    ([0, 2, 3],  10,    0,  0),
-    ([1],         0,   30,  0),
-    ([0, 2, 3],   5,  -10,  0),
+    # ——— LF phase ———
+    ([1],           0,   -LIFT,    0),     # lift LF
+    ([0, 2, 3],     0,   +PITCH_SHIFT, 0), # pitch backward
+    ([1],        +SWING,    0,     0),     # swing LF forward
+    ([0, 2, 3],   -STANCE,   0,     0),     # slide body back on stance legs
+    ([1],           0,   +LIFT,    0),     # drop LF
+    ([0, 2, 3],     0,   -PITCH_SHIFT, 0), # return pitch to neutral
 
-    # RF lift (lean back), swing, drop, recover
-    ([0],         0,  -30,  0),
-    ([1, 2, 3],   5,   10,  0),
-    ([0],        30,    0,  0),
-    ([1, 2, 3],  10,    0,  0),
-    ([0],         0,   30,  0),
-    ([1, 2, 3],   5,  -10,  0),
+    # ——— RF phase ———
+    ([0],           0,   -LIFT,    0),     # lift RF
+    ([1, 2, 3],     0,   +PITCH_SHIFT, 0), # pitch backward
+    ([0],        +SWING,    0,     0),     # swing RF forward
+    ([1, 2, 3],   -STANCE,   0,     0),     # slide body back on stance legs
+    ([0],           0,   +LIFT,    0),     # drop RF
+    ([1, 2, 3],     0,   -PITCH_SHIFT, 0), # return pitch to neutral
 
-    # LB lift (lean forward), swing, drop, recover
-    ([3],         0,  -30,  0),
-    ([0, 1, 2],   5,  -10,  0),
-    ([3],        30,    0,  0),
-    ([0, 1, 2],  10,    0,  0),
-    ([3],         0,   30,  0),
-    ([0, 1, 2],   5,   10,  0),
+    # ——— LB phase ———
+    ([3],           0,   -LIFT,    0),     # lift LB
+    ([0, 1, 2],     0,   -PITCH_SHIFT, 0), # pitch forward
+    ([3],        +SWING,    0,     0),     # swing LB forward
+    ([0, 1, 2],   -STANCE,   0,     0),     # slide body back on stance legs
+    ([3],           0,   +LIFT,    0),     # drop LB
+    ([0, 1, 2],     0,   +PITCH_SHIFT, 0), # return pitch to neutral
 )
+
 
 
 
