@@ -131,16 +131,16 @@ AvailablePins = np.ones(40)
 # {Step n+1: {[Legs], dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
-WALK_GAIT = (# RF forward while rest backwards
-             ([0],         -45,  -45,  0),
-             ([1, 2, 3],    15,    0,  0),
-             ([0],         -45,    45,  0),
-             ([1, 2, 3],    15,    0,  0),
-             # LB forward while rest backwards
+WALK_GAIT = ( # LB forward while rest backwards
              ([3],         -45,  -45,  0),
              ([0, 1, 2],    15,    0,  0),
              ([3],         -45,   45,  0),
              ([0, 1, 2],    15,    0,  0),
+             # RF forward while rest backwards
+             ([0],         -45,  -45,  0),
+             ([1, 2, 3],    15,    0,  0),
+             ([0],         -45,    45,  0),
+             ([1, 2, 3],    15,    0,  0),
              # LF forward while rest backwards
              ([1],         -45,  -45,  0),
              ([0, 2, 3],    15,    0,  0),
