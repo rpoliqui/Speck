@@ -132,7 +132,7 @@ AvailablePins = np.ones(40)
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 # Tunable parameters
-LIFT        = 30    # mm in Y to lift the leg
+LIFT        = 50    # mm in Y to lift the leg
 SWING       = 30    # mm in X to swing the leg forward
 STANCE      = 10    # mm in X to slide the stance legs backward
 PITCH_SHIFT = 10    # mm in Y to pitch the body
