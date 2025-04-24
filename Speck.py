@@ -131,27 +131,33 @@ AvailablePins = np.ones(40)
 # {Step n+1: {[Legs], dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
-# based on PuppyPi Walk parameters :contentReference[oaicite:0]{index=0}
-LIFT   = 50   # mm foot lift  (≈ 5 cm z_clearance)
-SWING  = 20   # mm swing-forward per lifted diagonal pair
-STANCE = 20   # mm slide-back per supporting diagonal pair
-
-DIAGONAL_1 = [0, 3]  # RF & LB  (legs 1 & 4 in Hackster numbering)
-DIAGONAL_2 = [1, 2]  # LF & RB  (legs 2 & 3)
+# Tunable parameters
+LIFT           = 30   # mm how high to lift each foot
+FRONT_NEUTRAL  =  -50  # mm X‐position for “front” feet
+REAR_NEUTRAL   = 50  # mm X‐position for “rear” feet
 
 WALK_GAIT = (
-    # --- Diagonal 1 (RF & LB) swing, while LF & RB support ---
-    (DIAGONAL_1,     0,   -LIFT,  0),  # lift RF+LB
-    (DIAGONAL_1,   +SWING, 0,      0),  # swing RF+LB forward
-    (DIAGONAL_1,     0,   +LIFT,  0),  # drop  RF+LB
-    (DIAGONAL_2,   -STANCE, 0,      0),  # slide LF+RB back
+    # ——— RB (leg 2) swings from rear → front ———
+    ([2],           0,      -LIFT,    0),       # lift RB
+    ([2],   FRONT_NEUTRAL - REAR_NEUTRAL, 0, 0), # move RB forward into front neutral
+    ([2],           0,      +LIFT,    0),       # drop  RB
 
-    # --- Diagonal 2 (LF & RB) swing, while RF & LB support ---
-    (DIAGONAL_2,     0,   -LIFT,  0),  # lift LF+RB
-    (DIAGONAL_2,   +SWING, 0,      0),  # swing LF+RB forward
-    (DIAGONAL_2,     0,   +LIFT,  0),  # drop  LF+RB
-    (DIAGONAL_1,   -STANCE, 0,      0),  # slide RF+LB back
+    # ——— LF (leg 1) swings from front → rear ———
+    ([1],           0,      -LIFT,    0),       # lift LF
+    ([1],   REAR_NEUTRAL - FRONT_NEUTRAL, 0, 0), # move LF backward into rear neutral
+    ([1],           0,      +LIFT,    0),       # drop  LF
+
+    # ——— RF (leg 0) swings from front → rear ———
+    ([0],           0,      -LIFT,    0),       # lift RF
+    ([0],   REAR_NEUTRAL - FRONT_NEUTRAL, 0, 0), # move RF backward into rear neutral
+    ([0],           0,      +LIFT,    0),       # drop  RF
+
+    # ——— LB (leg 3) swings from rear → front ———
+    ([3],           0,      -LIFT,    0),       # lift LB
+    ([3],   FRONT_NEUTRAL - REAR_NEUTRAL, 0, 0), # move LB forward into front neutral
+    ([3],           0,      +LIFT,    0),       # drop  LB
 )
+
 
 
 TROT = (([0, 3], -30, -30, 0),
