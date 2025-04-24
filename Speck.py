@@ -132,47 +132,52 @@ AvailablePins = np.ones(40)
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 # Tunable parameters
-LIFT        = 50    # mm in Y to lift the leg
-SWING       = 30    # mm in X to swing the leg forward
-STANCE      = 10    # mm in X to slide the stance legs backward
-PITCH_SHIFT = 10    # mm in Y to pitch the body
+LIFT           = 30    # mm in Y to lift the main leg
+SWING          = 30    # mm in X to swing the main leg forward
+STANCE         = 10    # mm in X to slide the three stance legs backward
+PITCH_SHIFT    = 10    # mm in Y to pitch the body
+DIAG_SHIFT     = 10    # mm in X to shift the rear-diagonal leg backward
+LOWER_DIAG     = 5     # mm in Y to lower the rear-diagonal leg
 
-WALK_GAIT = (
-    # ——— RB phase ———
-    ([2],           0,   -LIFT,    0),     # lift RB
-    ([0, 1, 3],     0,   -PITCH_SHIFT, 0), # pitch forward
-    ([2],        -SWING,    0,     0),     # swing RB forward
-    ([0, 1, 3],   STANCE,   0,     0),     # slide body back on stance legs
-    ([2],           0,   +LIFT,    0),     # drop RB
-    ([0, 1, 3],     0,   +PITCH_SHIFT, 0), # return pitch to neutral
+# helper: rear-diagonal mapping
+REAR_DIAG = {2: 1, 1: 2, 0: 3, 3: 0}
 
-    # ——— LF phase ———
-    ([1],           0,   -LIFT,    0),     # lift LF
-    ([0, 2, 3],     0,   +PITCH_SHIFT, 0), # pitch backward
-    ([1],        -SWING,    0,     0),     # swing LF forward
-    ([0, 2, 3],   STANCE,   0,     0),     # slide body back on stance legs
-    ([1],           0,   +LIFT,    0),     # drop LF
-    ([0, 2, 3],     0,   -PITCH_SHIFT, 0), # return pitch to neutral
-
-    # ——— RF phase ———
-    ([0],           0,   -LIFT,    0),     # lift RF
-    ([1, 2, 3],     0,   +PITCH_SHIFT, 0), # pitch backward
-    ([0],        -SWING,    0,     0),     # swing RF forward
-    ([1, 2, 3],   STANCE,   0,     0),     # slide body back on stance legs
-    ([0],           0,   +LIFT,    0),     # drop RF
-    ([1, 2, 3],     0,   -PITCH_SHIFT, 0), # return pitch to neutral
-
-    # ——— LB phase ———
-    ([3],           0,   -LIFT,    0),     # lift LB
-    ([0, 1, 2],     0,   -PITCH_SHIFT, 0), # pitch forward
-    ([3],        -SWING,    0,     0),     # swing LB forward
-    ([0, 1, 2],   STANCE,   0,     0),     # slide body back on stance legs
-    ([3],           0,   +LIFT,    0),     # drop LB
-    ([0, 1, 2],     0,   +PITCH_SHIFT, 0), # return pitch to neutral
+WALK_GAIT = tuple(
+    # for each lifting leg in diagonal order: 2→1→0→3
+    leg_phase
+    for lifting_leg in (2, 1, 0, 3)
+    for leg_phase in (
+        # 1) lift main leg
+        ([lifting_leg],           0,    -LIFT,          0),
+        # 2) pitch body (forward if rear-leg, backward if front-leg)
+        ([l for l in range(4) if l != lifting_leg],
+                                   0,
+                                   -PITCH_SHIFT if lifting_leg in (2,3) else +PITCH_SHIFT,
+                                   0),
+        # 3) lower & shift rear-diagonal foot
+        ([REAR_DIAG[lifting_leg]],
+                                  -DIAG_SHIFT,
+                                  +LOWER_DIAG,
+                                   0),
+        # 4) swing main leg forward
+        ([lifting_leg],         +SWING,  0,              0),
+        # 5) slide other three stance legs
+        ([l for l in range(4) if l != lifting_leg],
+                                 -STANCE,  0,              0),
+        # 6) drop main leg
+        ([lifting_leg],           0,    +LIFT,          0),
+        # 7) return rear-diag to neutral height
+        ([REAR_DIAG[lifting_leg]],
+                                   0,
+                                  -LOWER_DIAG,
+                                   0),
+        # 8) reset pitch
+        ([l for l in range(4) if l != lifting_leg],
+                                   0,
+                                   +PITCH_SHIFT if lifting_leg in (2,3) else -PITCH_SHIFT,
+                                   0),
+    )
 )
-
-
-
 
 TROT = (([0, 3], -30, -30, 0),
         ([1, 2],  15,   0, 0),
