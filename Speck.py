@@ -131,32 +131,39 @@ AvailablePins = np.ones(40)
 # {Step n+1: {[Legs], dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
-# Tunable parameters
-LIFT           = 30   # mm how high to lift each foot
-FRONT_NEUTRAL  =  -25  # mm X‐position for “front” feet
-REAR_NEUTRAL   = 25  # mm X‐position for “rear” feet
 
+# ==============================
+# Tunable gait parameters
+# ==============================
+LIFT   = 30   # mm how high to lift each foot
+SWING  = 20   # mm how far forward to swing
+STANCE = 20   # mm how far back to slide supporting diagonal (set = SWING for zero drift)
+
+# Diagonal leg groupings (indices into self.Legs)
+DIAG1 = [0, 3]   # RF & LB
+DIAG2 = [1, 2]   # LF & RB
+
+# ==============================
+# Improved WALK_GAIT
+# ==============================
 WALK_GAIT = (
-    # ——— RB (leg 2) swings from rear → front ———
-    ([2],           0,      -LIFT,    0),       # lift RB
-    ([2],   FRONT_NEUTRAL - REAR_NEUTRAL, 0, 0), # move RB forward into front neutral
-    ([2],           0,      +LIFT,    0),       # drop  RB
+    # ——— Phase 1: lift & swing Diag1 ———
+    (DIAG1,    0,     -LIFT,   0),   # lift RF & LB
+    (DIAG1,   +SWING,   0,     0),   # swing RF & LB forward
+    (DIAG1,    0,     +LIFT,   0),   # drop  RF & LB
 
-    # ——— LF (leg 1) swings from front → rear ———
-    ([1],           0,      -LIFT,    0),       # lift LF
-    ([1],   REAR_NEUTRAL - FRONT_NEUTRAL, 0, 0), # move LF backward into rear neutral
-    ([1],           0,      +LIFT,    0),       # drop  LF
+    # ——— Phase 2: slide Diag2 back ———
+    (DIAG2,   -STANCE,  0,     0),   # slide LF & RB backward
 
-    # ——— RF (leg 0) swings from front → rear ———
-    ([0],           0,      -LIFT,    0),       # lift RF
-    ([0],   REAR_NEUTRAL - FRONT_NEUTRAL, 0, 0), # move RF backward into rear neutral
-    ([0],           0,      +LIFT,    0),       # drop  RF
+    # ——— Phase 3: lift & swing Diag2 ———
+    (DIAG2,    0,     -LIFT,   0),   # lift LF & RB
+    (DIAG2,   +SWING,   0,     0),   # swing LF & RB forward
+    (DIAG2,    0,     +LIFT,   0),   # drop  LF & RB
 
-    # ——— LB (leg 3) swings from rear → front ———
-    ([3],           0,      -LIFT,    0),       # lift LB
-    ([3],   FRONT_NEUTRAL - REAR_NEUTRAL, 0, 0), # move LB forward into front neutral
-    ([3],           0,      +LIFT,    0),       # drop  LB
+    # ——— Phase 4: slide Diag1 back ———
+    (DIAG1,   -STANCE,  0,     0),   # slide RF & LB backward
 )
+
 
 
 
