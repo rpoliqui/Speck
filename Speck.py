@@ -131,53 +131,28 @@ AvailablePins = np.ones(40)
 # {Step n+1: {[Legs], dx, dy, dz}}
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
-# Tunable parameters
-LIFT           = 30    # mm in Y to lift the main leg
-SWING          = 30    # mm in X to swing the main leg forward
-STANCE         = 10    # mm in X to slide the three stance legs backward
-PITCH_SHIFT    = 10    # mm in Y to pitch the body
-DIAG_SHIFT     = 10    # mm in X to shift the rear-diagonal leg backward
-LOWER_DIAG     = 5     # mm in Y to lower the rear-diagonal leg
+# based on PuppyPi Walk parameters :contentReference[oaicite:0]{index=0}
+LIFT   = 50   # mm foot lift  (≈ 5 cm z_clearance)
+SWING  = 20   # mm swing-forward per lifted diagonal pair
+STANCE = 20   # mm slide-back per supporting diagonal pair
 
-# helper: rear-diagonal mapping
-REAR_DIAG = {2: 1, 1: 2, 0: 3, 3: 0}
+DIAGONAL_1 = [0, 3]  # RF & LB  (legs 1 & 4 in Hackster numbering)
+DIAGONAL_2 = [1, 2]  # LF & RB  (legs 2 & 3)
 
-WALK_GAIT = tuple(
-    # for each lifting leg in diagonal order: 2→1→0→3
-    leg_phase
-    for lifting_leg in (2, 1, 0, 3)
-    for leg_phase in (
-        # 1) lift main leg
-        ([lifting_leg],           0,    -LIFT,          0),
-        # 2) pitch body (forward if rear-leg, backward if front-leg)
-        ([l for l in range(4) if l != lifting_leg],
-                                   0,
-                                   -PITCH_SHIFT if lifting_leg in (2,3) else +PITCH_SHIFT,
-                                   0),
-        # 3) lower & shift rear-diagonal foot
-        ([REAR_DIAG[lifting_leg]],
-                                  -DIAG_SHIFT,
-                                  +LOWER_DIAG,
-                                   0),
-        # 4) swing main leg forward
-        ([lifting_leg],         +SWING,  0,              0),
-        # 5) slide other three stance legs
-        ([l for l in range(4) if l != lifting_leg],
-                                 -STANCE,  0,              0),
-        # 6) drop main leg
-        ([lifting_leg],           0,    +LIFT,          0),
-        # 7) return rear-diag to neutral height
-        ([REAR_DIAG[lifting_leg]],
-                                   0,
-                                  -LOWER_DIAG,
-                                   0),
-        # 8) reset pitch
-        ([l for l in range(4) if l != lifting_leg],
-                                   0,
-                                   +PITCH_SHIFT if lifting_leg in (2,3) else -PITCH_SHIFT,
-                                   0),
-    )
+WALK_GAIT_HACK = (
+    # --- Diagonal 1 (RF & LB) swing, while LF & RB support ---
+    (DIAGONAL_1,     0,   -LIFT,  0),  # lift RF+LB
+    (DIAGONAL_1,   +SWING, 0,      0),  # swing RF+LB forward
+    (DIAGONAL_1,     0,   +LIFT,  0),  # drop  RF+LB
+    (DIAGONAL_2,   -STANCE, 0,      0),  # slide LF+RB back
+
+    # --- Diagonal 2 (LF & RB) swing, while RF & LB support ---
+    (DIAGONAL_2,     0,   -LIFT,  0),  # lift LF+RB
+    (DIAGONAL_2,   +SWING, 0,      0),  # swing LF+RB forward
+    (DIAGONAL_2,     0,   +LIFT,  0),  # drop  LF+RB
+    (DIAGONAL_1,   -STANCE, 0,      0),  # slide RF+LB back
 )
+
 
 TROT = (([0, 3], -30, -30, 0),
         ([1, 2],  15,   0, 0),
