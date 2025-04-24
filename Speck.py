@@ -133,8 +133,8 @@ AvailablePins = np.ones(40)
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 # Tunable parameters
 LIFT           = 30   # mm how high to lift each foot
-FRONT_NEUTRAL  =  -50  # mm X‐position for “front” feet
-REAR_NEUTRAL   = 50  # mm X‐position for “rear” feet
+FRONT_NEUTRAL  =  -25  # mm X‐position for “front” feet
+REAR_NEUTRAL   = 25  # mm X‐position for “rear” feet
 
 WALK_GAIT = (
     # ——— RB (leg 2) swings from rear → front ———
