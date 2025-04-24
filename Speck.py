@@ -1093,10 +1093,10 @@ class Speck:
         """
         self.is_standing = False
         for i in range(0, 2, 1):
-            self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, -30 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
         for i in range(2, 4, 1):
-            self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, -30 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
 
     def set_sit(self):
