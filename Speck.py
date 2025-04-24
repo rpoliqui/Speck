@@ -1303,6 +1303,8 @@ class Speck:
         """
         self.center_crate()
         found, x, y, theta = self.Camera.detect_crate()
+        while (abs(x) > 150) or (abs(y) > 150):
+            found, x, y, theta = self.Camera.detect_crate()
         if found and (3 < x < 7) and (-2 < y < 2) and (-10 < theta < 10):
             self.sit()
         else:
