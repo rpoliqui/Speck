@@ -139,7 +139,7 @@ STANCE = 20   # mm slide-back per supporting diagonal pair
 DIAGONAL_1 = [0, 3]  # RF & LB  (legs 1 & 4 in Hackster numbering)
 DIAGONAL_2 = [1, 2]  # LF & RB  (legs 2 & 3)
 
-WALK_GAIT_HACK = (
+WALK_GAIT = (
     # --- Diagonal 1 (RF & LB) swing, while LF & RB support ---
     (DIAGONAL_1,     0,   -LIFT,  0),  # lift RF+LB
     (DIAGONAL_1,   +SWING, 0,      0),  # swing RF+LB forward
