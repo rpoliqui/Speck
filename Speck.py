@@ -142,7 +142,7 @@ WALK_GAIT = (
     ([2],           0,   -LIFT,    0),     # lift RB
     ([0, 1, 3],     0,   -PITCH_SHIFT, 0), # pitch forward
     ([2],        -SWING,    0,     0),     # swing RB forward
-    ([0, 1, 3],   -STANCE,   0,     0),     # slide body back on stance legs
+    ([0, 1, 3],   STANCE,   0,     0),     # slide body back on stance legs
     ([2],           0,   +LIFT,    0),     # drop RB
     ([0, 1, 3],     0,   +PITCH_SHIFT, 0), # return pitch to neutral
 
@@ -150,7 +150,7 @@ WALK_GAIT = (
     ([1],           0,   -LIFT,    0),     # lift LF
     ([0, 2, 3],     0,   +PITCH_SHIFT, 0), # pitch backward
     ([1],        -SWING,    0,     0),     # swing LF forward
-    ([0, 2, 3],   -STANCE,   0,     0),     # slide body back on stance legs
+    ([0, 2, 3],   STANCE,   0,     0),     # slide body back on stance legs
     ([1],           0,   +LIFT,    0),     # drop LF
     ([0, 2, 3],     0,   -PITCH_SHIFT, 0), # return pitch to neutral
 
@@ -158,7 +158,7 @@ WALK_GAIT = (
     ([0],           0,   -LIFT,    0),     # lift RF
     ([1, 2, 3],     0,   +PITCH_SHIFT, 0), # pitch backward
     ([0],        -SWING,    0,     0),     # swing RF forward
-    ([1, 2, 3],   -STANCE,   0,     0),     # slide body back on stance legs
+    ([1, 2, 3],   STANCE,   0,     0),     # slide body back on stance legs
     ([0],           0,   +LIFT,    0),     # drop RF
     ([1, 2, 3],     0,   -PITCH_SHIFT, 0), # return pitch to neutral
 
@@ -166,7 +166,7 @@ WALK_GAIT = (
     ([3],           0,   -LIFT,    0),     # lift LB
     ([0, 1, 2],     0,   -PITCH_SHIFT, 0), # pitch forward
     ([3],        -SWING,    0,     0),     # swing LB forward
-    ([0, 1, 2],   -STANCE,   0,     0),     # slide body back on stance legs
+    ([0, 1, 2],   STANCE,   0,     0),     # slide body back on stance legs
     ([3],           0,   +LIFT,    0),     # drop LB
     ([0, 1, 2],     0,   +PITCH_SHIFT, 0), # return pitch to neutral
 )
