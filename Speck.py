@@ -837,7 +837,7 @@ class Camera:
                 twist = twist - 90
         else:
             print('More than 4 squares found, could not find crate')
-            crate_center = image_center
+            return False, 0, 0, 0
 
         # draw center point
         cv2.circle(image_copy, crate_center, 2, (0, 0, 255), 4)
@@ -1265,7 +1265,7 @@ class Speck:
         # use camera object to find shift and twist
         found, shiftx, shifty, twist = self.Camera.detect_crate()
         if found:
-            if shiftx >= 2 or shiftx <= -2:
+            if shiftx >= 7 or shiftx <= 3:
                 self.shift(forward=True, distance=shiftx)
             if shifty >= 2 or shifty <= -2:
                 self.shift(forward=False, distance=shifty)
@@ -1282,12 +1282,12 @@ class Speck:
         """
         self.center_crate()
         found, x, y, theta = self.Camera.detect_crate()
-        if found and (-2 < x < 2) and (-2 < y < 2) and (-10 < theta < 10):
+        if found and (3 < x < 7) and (-2 < y < 2) and (-10 < theta < 10):
             self.sit()
         else:
             self.center_crate()
             found, x, y, theta = self.Camera.detect_crate()
-            if found and (-2 < x < 2) and (-2 < y < 2) and (-10 < theta < 10):
+            if found and (3 < x < 7) and (-2 < y < 2) and (-10 < theta < 10):
                 self.sit()
             else:
                 print("Couldn't Center Crate")
