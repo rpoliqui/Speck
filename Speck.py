@@ -134,7 +134,7 @@ AvailablePins = np.ones(40)
 
 STEP_SIZE = 75
 STEP_RAISE = 40
-VERTICAL_SHIFT = 20
+VERTICAL_SHIFT = 10
 
 WALK_GAIT = (  ([4], 25, 0, 0),   # shift backwards to a stable position
                ([4], 0, -VERTICAL_SHIFT, 0),  # lower center of mass for stability
@@ -173,7 +173,7 @@ WALK_GAIT = (  ([4], 25, 0, 0),   # shift backwards to a stable position
                ([0], 0, STEP_RAISE, 0),
                ([2, 1, 3], 0, 0, 0),
                # shift back to starting position
-               ([4], 45, 0, 0),
+               ([4], 60, 0, 0),
                ([4], 0, VERTICAL_SHIFT, 0))
 
 
