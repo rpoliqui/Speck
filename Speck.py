@@ -133,8 +133,8 @@ AvailablePins = np.ones(40)
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 
 STEP_SIZE = 75
-STEP_RAISE = 50
-VERTICAL_SHIFT = 25
+STEP_RAISE = 40
+VERTICAL_SHIFT = 20
 
 WALK_GAIT = (  ([4], 25, 0, 0),   # shift backwards to a stable position
                ([4], 0, -VERTICAL_SHIFT, 0),  # lower center of mass for stability
