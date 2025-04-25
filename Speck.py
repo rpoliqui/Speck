@@ -132,7 +132,7 @@ AvailablePins = np.ones(40)
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 
-WALK_GAIT = (  ([4], 30, 0, 0),
+WALK_GAIT = (  ([4], 25, 0, 0),
 
                ([3], 0, -50, 0),
                ([0, 1, 2], 0, 0, 0),
@@ -141,7 +141,7 @@ WALK_GAIT = (  ([4], 30, 0, 0),
                ([3], 0,  50, 0),
                ([0, 1, 2], 0, 0, 0),
 
-               ([4], -30, 0, 0),
+               ([4], -25, 0, 0),
 
                ([1], 0, -50, 0),
                ([0, 3, 2], 0, 0, 0),
@@ -1019,7 +1019,7 @@ class Speck:
             elif move[0] == leg_id:  # if command is target at this leg
                 with self.lock:  # lock all other threads and release after movement
                     self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
-                    time.sleep(STEP_TIME)
+                    #time.sleep(STEP_TIME)
             else:  # not for this leg, do nothing
                 pass
 
