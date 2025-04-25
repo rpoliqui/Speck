@@ -132,7 +132,7 @@ AvailablePins = np.ones(40)
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 
-WALK_GAIT = (  ([4], 25, 0, 0),
+WALK_GAIT = (  ([4], 25, -10, 0),
                ([4], 0, 0, 0),
 
                ([3], 0, -50, 0),
@@ -172,7 +172,7 @@ WALK_GAIT = (  ([4], 25, 0, 0),
                ([0], 0, 50, 0),
                ([2, 1, 3], 0, 0, 0),
 
-               ([4], 45, 0, 0))
+               ([4], 45, 10, 0))
 
 
 TROT = (([0, 3], -30, -30, 0),
