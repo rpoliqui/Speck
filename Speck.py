@@ -132,47 +132,44 @@ AvailablePins = np.ones(40)
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 
-WALK_GAIT = (  ([4], 25, -10, 0),
-               ([4], 0, 0, 0),
-
+WALK_GAIT = (  ([4], 25, 0, 0),   # shift backwards to a stable position
+               ([4], 0, -25, 0),  # lower center of mass for stability
+               # move back left leg forward
                ([3], 0, -50, 0),
                ([0, 1, 2], 0, 0, 0),
                ([3], -60, 0, 0),
                ([0, 1, 2], 0, 0, 0),
                ([3], 0,  50, 0),
                ([0, 1, 2], 0, 0, 0),
-
-               ([4], -25, 10, 0),
-               ([4], 0, 0, 0),
-
+               # shift into new stable position
+               ([4], -25, 0, 0),
+               # move front left leg forward
                ([1], 0, -50, 0),
                ([0, 3, 2], 0, 0, 0),
                ([1], -60, 0, 0),
                ([0, 3, 2], 0, 0, 0),
                ([1], 0,  50, 0),
                ([0, 3, 2], 0, 0, 0),
-
-               ([4], 55, -10, 0),
-               ([4], 0, 0, 0),
-
+               # shift into new stable position
+               ([4], 55, 0, 0),
+               # move back left leg forward
                ([2], 0, -50, 0),
                ([0, 1, 3], 0, 0, 0),
                ([2], -60, 0, 0),
                ([0, 1, 3], 0, 0, 0),
                ([2], 0, 50, 0),
                ([0, 1, 3], 0, 0, 0),
-
+               # shift into new stable position
                ([4], -40, 0, 0),
-               ([4], 0, 0, 0),
-
+               # move front left leg forward.
                ([0], 0, -50, 0),
                ([2, 1, 3], 0, 0, 0),
                ([0], -60, 0, 0),
                ([2, 1, 3], 0, 0, 0),
                ([0], 0, 50, 0),
                ([2, 1, 3], 0, 0, 0),
-
-               ([4], 45, 10, 0))
+               # shift back to starting position
+               ([4], 45, 25, 0))
 
 
 TROT = (([0, 3], -30, -30, 0),
