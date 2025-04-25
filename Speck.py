@@ -155,7 +155,7 @@ WALK_GAIT = (  ([4], 25, 0, 0),   # shift backwards to a stable position
                ([1], 0,  STEP_RAISE, 0),
                ([0, 3, 2], 0, 0, 0),
                # shift into new stable position
-               ([4], 55, 0, 0),
+               ([4], 60, 0, 0),
                # move back left leg forward
                ([2], 0, -STEP_RAISE, 0),
                ([0, 1, 3], 0, 0, 0),
