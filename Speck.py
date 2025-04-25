@@ -1291,6 +1291,9 @@ class Speck:
         """
         # use camera object to find shift and twist
         found, shiftx, shifty, twist = self.Camera.detect_crate()
+        while (abs(shiftx) > 150) or (abs(shifty) > 150):
+            print("Shift too large")
+            found, shiftx, shifty, twist = self.Camera.detect_crate()
         if found:
             if shiftx >= 7 or shiftx <= 3:
                 self.shift(forward=True, distance=shiftx)
