@@ -182,7 +182,7 @@ WALK_GAIT = (
     ([2, 1, 3], 0, 0, 0),
 
     # shift back to starting position (adjusted to cancel total drift)
-    ([4], -90, 0, 0),
+    ([4], 45, 0, 0),
     ([4], 0, VERTICAL_SHIFT, 0)
 )
 
