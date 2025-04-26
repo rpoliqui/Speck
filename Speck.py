@@ -162,7 +162,7 @@ WALK_GAIT = (
     ([0, 3, 2], 0, 0, 0),
 
     # shift into new stable position
-    ([4], 45, -2 * VERTICAL_SHIFT, 0),
+    ([4], 50, -2 * VERTICAL_SHIFT, 0),
 
     # move back left leg forward
     ([2], 0, -STEP_RAISE, 0),
@@ -173,7 +173,7 @@ WALK_GAIT = (
     ([0, 1, 3], 0, 0, 0),
 
     # shift into new stable position
-    ([4], -20, 0, 0),
+    ([4], -25, 0, 0),
 
     # move front left leg forward.
     ([0], 0, -STEP_RAISE, 0),
@@ -184,7 +184,7 @@ WALK_GAIT = (
     ([2, 1, 3], 0, 0, 0),
 
     # shift back to starting position (adjusted to cancel total drift)
-    ([4], 45, 0, 0),
+    ([4], 40, 0, 0),
     ([4], 0, VERTICAL_SHIFT, 0)
 )
 
@@ -592,7 +592,7 @@ class Leg:
         end = (start[0] + dx, start[1] + dy, start[2] + dz)  # end position is the start plus the necessary change
 
         # default easing method is ease out circular method
-        easer = Ease_in_out_sine(start=0, end=1, duration=1)
+        easer = Ease_in_out_sine(start=0, end=1, duration=0.85)
 
         for frame in range(steps + 1):
             alpha = frame / steps  # in [0..1]
