@@ -554,9 +554,9 @@ class Leg:
         except ZeroDivisionError:
             long_hip_angle = 0
         # set all three servos to the calculated angles
-        self.hip_lat.set_angle(round(-1 * (90 - math.degrees(lat_hip_angle))))
-        self.hip_long.set_angle(round(-math.degrees(long_hip_angle)))
-        self.knee.set_angle(round(180 - math.degrees(knee_angle)))
+        self.hip_lat.set_angle(-1 * (90 - math.degrees(lat_hip_angle)))
+        self.hip_long.set_angle(-math.degrees(long_hip_angle))
+        self.knee.set_angle(180 - math.degrees(knee_angle))
         return None
 
     def move(self, dx: float, dy: float, dz: float):
