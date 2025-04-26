@@ -585,8 +585,8 @@ class Leg:
         :argument dz:type float: the distance in millimeters to change the z position by
         :return: None
         """
-        # Number of frames: ~30 Hz
-        fps = 30
+        # Number of frames: ~10 Hz
+        fps = 10
         steps = int(duration * fps) # number of steps that will occur
         start = tuple(self.current_position)  # current position is the starting position of the servo.
         end = (start[0] + dx, start[1] + dy, start[2] + dz)  # end position is the start plus the necessary change
@@ -1037,7 +1037,7 @@ class Speck:
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
             self.thread_barrier.wait()  # wait for all threads to be ready, prevents threads from getting ahead,
             # only one loop is performed at a time
-            move = self.move_queues[leg_id].get(timeout=0.05) # get the next movement in the queue when one is available
+            move = self.move_queues[leg_id].get(block=False) # get the next movement in the queue when one is available
             if move[0] == 4:  # if command is for all legs
                 self.thread_barrier.wait()  # wait for all threads to be ready
                 self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
