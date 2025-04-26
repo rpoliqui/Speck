@@ -5,7 +5,12 @@ from bluezero import peripheral
 
 # --- Helper: get hci0 MAC address automatically ---
 def get_bt_mac():
-    result = subprocess.run(['hciconfig', 'hci0'], capture_output=True, text=True)
+    result = subprocess.run(
+        ['hciconfig', 'hci0'],
+        capture_output=True,
+        text=True,
+        check=True
+    )
     match = re.search(r'BD Address: ([0-9A-F:]{17})', result.stdout)
     if match:
         return match.group(1)
@@ -13,8 +18,8 @@ def get_bt_mac():
 
 
 # --- Bring up Bluetooth ---
-subprocess.run(['sudo', 'systemctl', 'start', 'bluetooth'])
-subprocess.run(['sudo', 'hciconfig', 'hci0', 'up'])
+subprocess.run(['sudo', 'systemctl', 'start', 'bluetooth'], check=True)
+subprocess.run(['sudo', 'hciconfig', 'hci0', 'up'], check=True)
 
 # --- BLE setup ---
 ADAPTER_ADDR = get_bt_mac()
@@ -24,39 +29,30 @@ CMD_CHAR_UUID = '529d8996-17d1-4e7c-94e9-4e84a24cbc9f'
 ERR_CHAR_UUID = 'a1b2c3d4-5678-90ab-cdef-1234567890ab'
 
 
-# You'll replace this stub with your real robot-control code:
-def robot_execute_command(cmd_str: str):
-    """
-    Send the given command string to your robot.
-    Raise an exception or return False on failure.
-    """
+# Stub: replace with your actual robot command executor
+def robot_execute_command(cmd_str: str) -> bool:
     print(f"[Robot] Executing command: {cmd_str}")
-    # e.g. GPIO or serial write here...
-    # If something bad happens, raise RuntimeError("…")
+    # TODO: send cmd_str to motors/serial/GPIO here
+    # Return False or raise on failure
     return True
 
 
-# Called by Bluezero when iPhone writes to the Command Characteristic
+# Called when the phone writes to the Command Characteristic
 def on_write(value):
     try:
         cmd = bytes(value).decode('utf-8').strip()
         print('Received from iPhone:', cmd)
 
-        # Send to robot:
-        ok = robot_execute_command(cmd)
-        if not ok:
-            # if robot_execute_command returns False, push error
-            send_error(f"Command '{cmd}' failed")
+        if not robot_execute_command(cmd):
+            send_error(f"Command failed: '{cmd}'")
     except Exception as e:
-        # On any exception, send the error back
         send_error(f"Error handling '{value}': {e}")
 
 
-# Create the peripheral and add services/chars
-my_peripheral = peripheral.Peripheral(adapter_addr=ADAPTER_ADDR,
-                                      local_name=LOCAL_NAME)
+# Create the Peripheral (positional args, not keywords!)
+my_peripheral = peripheral.Peripheral(ADAPTER_ADDR, LOCAL_NAME)
 
-# 1) Primary service
+# 1) Add primary service
 my_peripheral.add_service(
     srv_id=1,
     uuid=SERVICE_UUID,
@@ -75,7 +71,6 @@ my_peripheral.add_characteristic(
 )
 
 # 3) Error Characteristic (Pi → iPhone)
-#    Readable so phone can pull latest, and Notifiable so we can push
 my_peripheral.add_characteristic(
     srv_id=1,
     chr_id=2,
@@ -86,29 +81,20 @@ my_peripheral.add_characteristic(
 )
 
 
-# Helper to update & notify error messages
+# Helper to push error messages back to the phone
 def send_error(msg: str):
-    """
-    Writes `msg` into the Error characteristic and notifies
-    any connected central (the iPhone).
-    """
-    # Update the characteristic's value
+    # Update the characteristic
     my_peripheral.update_characteristic_value(
         srv_id=1,
         chr_id=2,
         value=list(msg.encode('utf-8'))
     )
-    # Send out a notification
-    my_peripheral.notify(
-        srv_id=1,
-        chr_id=2
-    )
-    print(f"[Error -> iPhone] {msg}")
+    # Notify any connected central
+    my_peripheral.notify(srv_id=1, chr_id=2)
+    print(f"[Error → iPhone] {msg}")
 
 
-# Start advertising & GATT server
-print(f'Advertising "{LOCAL_NAME}" on {ADAPTER_ADDR}…')
+# Advertise and run
+print(f'Advertising "{LOCAL_NAME}" on adapter {ADAPTER_ADDR}…')
 my_peripheral.publish()
-
-# Blocking loop: handles GATT requests & notifications
 my_peripheral.run()
