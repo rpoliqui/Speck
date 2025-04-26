@@ -38,73 +38,41 @@ def robot_execute_command(cmd_str: str) -> bool:
 
 
 # Called when the phone writes to the Command Characteristic
+_last_cmd = b''
+
+
 def on_write(value):
-    try:
-        cmd = bytes(value).decode('utf-8').strip()
-        print('Received from iPhone:', cmd)
-        ok = robot_execute_command(cmd)
-        if not ok:
-            send_error(f"Command failed: '{cmd}'")
-    except Exception as e:
-        # Never let an exception crash your GATT server
-        print(f"[on_write error] {e}")
-        try:
-            send_error(f"Internal error: {e}")
-        except Exception as ne:
-            print(f"[send_error also failed] {ne}")
+    global _last_cmd
+    _last_cmd = bytes(value)
+    print(f"[on_write] Got {_last_cmd!r}")
+    # Optionally acknowledge via notify:
+    my_peripheral.notify(srv_id=1, chr_id=1)
 
 
+def on_read():
+    return list(_last_cmd)
 
-# Create the Peripheral (positional args, not keywords!)
+
+# Create Peripheral instance with positional args
 my_peripheral = peripheral.Peripheral(ADAPTER_ADDR, LOCAL_NAME)
 
-# 1) Add primary service
-my_peripheral.add_service(
-    srv_id=1,
-    uuid=SERVICE_UUID,
-    primary=True
-)
+# Service and characteristic setup
+my_peripheral.add_service(srv_id=1, uuid=SERVICE_UUID, primary=True)
 
-# Command Characteristic (iPhone → Pi)
 my_peripheral.add_characteristic(
-    srv_id=1,
-    chr_id=1,
-    uuid=CMD_CHAR_UUID,
-    value=[],                  # initial empty value
+    srv_id=1, chr_id=1, uuid=CMD_CHAR_UUID,
+    value=[],
     notifying=False,
     flags=[
         'read',
         'write',
-        'write-without-response'
+        'write-without-response',
+        'notify'
     ],
-    write_callback=on_write
+    write_callback=on_write,
+    read_callback=on_read
 )
 
-# Error Characteristic (Pi → iPhone)
-my_peripheral.add_characteristic(
-    srv_id=1,
-    chr_id=2,
-    uuid=ERR_CHAR_UUID,
-    value=[],
-    notifying=False,
-    flags=['read', 'notify']
-)
-
-
-# Helper to push error messages back to the phone
-def send_error(msg: str):
-    # Update the characteristic
-    my_peripheral.update_characteristic_value(
-        srv_id=1,
-        chr_id=2,
-        value=list(msg.encode('utf-8'))
-    )
-    # Notify any connected central
-    my_peripheral.notify(srv_id=1, chr_id=2)
-    print(f"[Error → iPhone] {msg}")
-
-
-# Advertise and run
-print(f'Advertising "{LOCAL_NAME}" on adapter {ADAPTER_ADDR}…')
+print(f'Advertising…')
 my_peripheral.publish()
 my_peripheral.run()
