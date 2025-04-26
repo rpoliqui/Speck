@@ -1046,7 +1046,7 @@ class Speck:
                     self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
             else:  # not for this leg, do nothing
                 pass
-            time.sleep(0.03)
+            #time.sleep(0.03)
 
     # __________Bluetooth Server Function__________
     def bluetooth_server(self):
