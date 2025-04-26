@@ -4,153 +4,139 @@ import re
 import logging
 from bluezero import peripheral
 
-# ─── CONFIGURE LOGGING ────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='[%(asctime)s] %(levelname)-8s %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
-log = logging.getLogger(__name__)
+# Set up logging for debugging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# If you want full HCI debugging, open a separate terminal and run:
-#   sudo btmon > btmon.log
-# Then repro your test and inspect btmon.log for ATT_Write requests/errors.
-
-# ─── 1) Helper: Get hci0 MAC address ─────────────────────────────────────────
+# Function to get the Bluetooth MAC address
 def get_bt_mac():
     try:
-        result = subprocess.run(
-            ['hciconfig', 'hci0'],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        match = re.search(r'BD Address:\s*([0-9A-F:]{17})', result.stdout)
-        if not match:
-            raise RuntimeError("No BD Address in hciconfig output")
-        mac = match.group(1)
-        log.info(f"Found adapter MAC: {mac}")
-        return mac
-    except Exception as e:
-        log.error(f"Failed to get hci0 MAC: {e}")
-        raise
+        output = subprocess.check_output("hciconfig", stderr=subprocess.STDOUT)
+        match = re.search(r"([0-9A-F]{2}[:]){5}[0-9A-F]{2}", output.decode())
+        if match:
+            return match.group(0)
+    except subprocess.CalledProcessError as e:
+        logging.error("Error getting Bluetooth MAC address: %s", e)
+    return None
 
-# ─── 2) Bring up Bluetooth ────────────────────────────────────────────────────
+# Function to enable Bluetooth if not already enabled
 def enable_bluetooth():
-    for cmd in (['systemctl', 'start', 'bluetooth'],
-                ['hciconfig', 'hci0', 'up']):
-        try:
-            subprocess.run(['sudo'] + cmd, check=True)
-            log.info(f"Ran: sudo {' '.join(cmd)}")
-        except subprocess.CalledProcessError as e:
-            log.error(f"Command failed: sudo {' '.join(cmd)} → {e}")
-            raise
+    try:
+        subprocess.check_call("sudo systemctl start bluetooth", shell=True)
+        subprocess.check_call("sudo hciconfig hci0 up", shell=True)
+        logging.info("Bluetooth enabled successfully.")
+    except subprocess.CalledProcessError as e:
+        logging.error("Failed to enable Bluetooth: %s", e)
 
-# ─── 3) BLE PARAMETERS ───────────────────────────────────────────────────────
+# BLE parameters
 ADAPTER_ADDR = get_bt_mac()
-LOCAL_NAME   = 'SPECK'
+LOCAL_NAME = 'SPECK'
 SERVICE_UUID = 'd8ed4126-c03b-499e-bf06-b69951b1fa6f'
-CMD_UUID     = '529d8996-17d1-4e7c-94e9-4e84a24cbc9f'
-NOTI_UUID    = 'a1b2c3d4-5678-90ab-cdef-1234567890ab'
+CMD_UUID = '529d8996-17d1-4e7c-94e9-4e84a24cbc9f'
+NOTI_UUID = 'a1b2c3d4-5678-90ab-cdef-1234567890ab'
 
-# ─── 4) State & Robot Stub ───────────────────────────────────────────────────
 _last_cmd = b''
 
-def robot_execute_command(cmd: str) -> bool:
-    """
-    Replace this stub with your actual robot-control logic.
-    Return True on success, False on recoverable failure.
-    Raise on fatal errors.
-    """
-    log.info(f"[Robot] Executing command: {cmd!r}")
-    # TODO: implement GPIO/serial/whatever here
+# Callback for executing the received command
+def robot_execute_command(cmd):
+    logging.info(f"[Robot] Received command: {cmd!r}")
     return True
 
-# ─── 5) GATT CALLBACKS ───────────────────────────────────────────────────────
-def on_connect(device):
-    log.info(f"[BLE] Device connected: {device}")
+# Callback for when a device connects
+def on_connect(dev):
+    logging.info(f"[BLE] Device connected: {dev}")
 
-def on_disconnect(device):
-    log.info(f"[BLE] Device disconnected: {device}")
+# Callback for when a device disconnects
+def on_disconnect(dev):
+    logging.info(f"[BLE] Device disconnected: {dev}")
 
+# Callback for writing data to the command characteristic
 def on_write_cmd(value):
     global _last_cmd
+    _last_cmd = bytes(value)
+    cmd = _last_cmd.decode('utf-8', errors='replace').strip()
+    logging.info(f"[CMD WRITE] Command: '{cmd}'")
     try:
-        _last_cmd = bytes(value)
-        cmd_str = _last_cmd.decode('utf-8', errors='replace').strip()
-        log.info(f"[CMD WRITE] Received {len(_last_cmd)} bytes → {cmd_str!r}")
-
-        success = robot_execute_command(cmd_str)
-        if not success:
-            raise RuntimeError("robot_execute_command returned False")
-
-        # Acknowledge via notification
-        send_notification(f"ACK: {cmd_str}")
-
+        if not robot_execute_command(cmd):
+            raise RuntimeError("Command execution failed.")
+        send_notification(f"ACK:{cmd}")
     except Exception as e:
-        log.error(f"Error in on_write_cmd: {e}")
-        send_notification(f"ERR: {e}")
+        logging.error(e)
+        send_notification(f"ERR:{e}")
 
+# Callback for reading the last command
 def on_read_cmd():
-    log.debug(f"[CMD READ] Returning last command: {_last_cmd!r}")
+    logging.debug(f"[CMD READ] Returning: {_last_cmd!r}")
     return list(_last_cmd)
 
+# Callback for reading notifications (currently empty)
 def on_read_noti():
-    # Not used; notifications are pushed programmatically
     return []
 
-# ─── 6) NOTIFICATION HELPER ─────────────────────────────────────────────────
-def send_notification(msg: str):
+# Function to send a notification
+def send_notification(msg):
     data = list(msg.encode('utf-8'))
-    ble_periph.update_characteristic_value(
-        srv_id=1, chr_id=2, value=data
-    )
-    ble_periph.notify(
-        srv_id=1, chr_id=2
-    )
-    log.info(f"[NOTIFY] {msg}")
+    ble_periph.update_characteristic_value(1, 2, data)
+    ble_periph.notify(1, 2)
+    logging.info(f"[NOTIFY] Sent: {msg}")
 
-# ─── 7) MAIN SETUP ───────────────────────────────────────────────────────────
+# Main function to set up and run the BLE peripheral
 if __name__ == '__main__':
     enable_bluetooth()
 
+    # Create a BLE peripheral object
     ble_periph = peripheral.Peripheral(ADAPTER_ADDR, LOCAL_NAME)
-    ble_periph.on_connect    = on_connect
+    ble_periph.on_connect = on_connect
     ble_periph.on_disconnect = on_disconnect
 
-    # Primary service
-    ble_periph.add_service(
-        srv_id=1,
-        uuid=SERVICE_UUID,
-        primary=True
-    )
+    # Add the custom service
+    ble_periph.add_service(srv_id=1, uuid=SERVICE_UUID, primary=True)
 
-    # Command Characteristic (iPhone → Pi)
+    # Command characteristic (chr_id=1)
     ble_periph.add_characteristic(
         srv_id=1, chr_id=1, uuid=CMD_UUID,
         value=[],
         notifying=False,
-        flags=[
-            'write-without-response',  # must be first for iOS
-            'write',                   # backup write-with-response
-            'read'
-        ],
+        flags=['write-without-response', 'write', 'read'],
         write_callback=on_write_cmd,
         read_callback=on_read_cmd
     )
+    # Descriptor: User Description (0x2901)
+    ble_periph.add_descriptor(
+        srv_id=1, chr_id=1, dsc_id=1,
+        uuid='2901',
+        value=list(b'Robot Command')
+    )
+    # Descriptor: Presentation Format (0x2904)
+    # Format: uint8, exponent 0, unit 0x2700 (unitless), namespace 1, description 0
+    ble_periph.add_descriptor(
+        srv_id=1, chr_id=1, dsc_id=2,
+        uuid='2904',
+        value=[0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+    )
 
-    # Notification Characteristic (Pi → iPhone)
+    # Notification characteristic (chr_id=2)
     ble_periph.add_characteristic(
         srv_id=1, chr_id=2, uuid=NOTI_UUID,
         value=[],
         notifying=False,
-        flags=[
-            'read',
-            'notify'  # adds CCCD
-        ],
+        flags=['read', 'notify'],
         read_callback=on_read_noti
     )
+    # Descriptor: User Description (0x2901)
+    ble_periph.add_descriptor(
+        srv_id=1, chr_id=2, dsc_id=1,
+        uuid='2901',
+        value=list(b'Robot Ack/Error')
+    )
+    # Descriptor: Presentation Format (0x2904)
+    ble_periph.add_descriptor(
+        srv_id=1, chr_id=2, dsc_id=2,
+        uuid='2904',
+        value=[0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+    )
 
-    log.info(f'Advertising "{LOCAL_NAME}" on {ADAPTER_ADDR}…')
+    logging.info(f'Advertising "{LOCAL_NAME}" on {ADAPTER_ADDR}…')
     ble_periph.publish()
+
+    # Run the BLE peripheral
     ble_periph.run()
