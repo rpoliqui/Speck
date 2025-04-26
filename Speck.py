@@ -196,215 +196,6 @@ TROT = (([0, 3], -30, -30, 0),
         ([1, 2], -30, 30, 0),
         ([0, 3], 15, 0, 0))
 
-# array storing changes in x, y and z positions for each leg to enable Speck to walk backwards.
-# Layout: ( [legs], dx, dy, dz )
-# LEGS: [RF, LF, RB, LB]
-# DIRECTIONS: +X = backwards, +Y = downward
-BACKWARD_WALK_GAIT = (([0], 0, -50, 0),
-                      ([1, 2, 3], -16, 0, 0),
-                      ([0], 50, 0, 0),
-                      ([1, 2, 3], -16, 0, 0),
-                      ([0], 0, 50, 0),
-                      ([1, 2, 3], -18, 0, 0),
-
-                      ([3], 0, -50, 0),
-                      ([0, 1, 2], -16, 0, 0),
-                      ([3], 50, 0, 0),
-                      ([0, 1, 2], -16, 0, 0),
-                      ([3], 0, 50, 0),
-                      ([0, 1, 2], -14, 0, 0),
-
-                      ([1], 0, -50, 0),
-                      ([0, 2, 3], -16, 0, 0),
-                      ([1], 50, 0, 0),
-                      ([0, 2, 3], -16, 0, 0),
-                      ([1], 0, 50, 0),
-                      ([0, 2, 3], -14, 0, 0),
-
-                      ([2], 0, -50, 0),
-                      ([0, 1, 3], -16, 0, 0),
-                      ([2], 50, 0, 0),
-                      ([0, 1, 3], -16, 0, 0),
-                      ([2], 0, 50, 0),
-                      ([0, 1, 3], -14, 0, 0),
-
-                      ([4], 50, 0, 0))
-
-STRAFE_STEP = 30
-# STRAFE_GAIT = ((0, 0, -50, 0),
-#                (0, 0, 0, -STRAFE_STEP),
-#                (0, 0, 50, 0),
-#                (3, 0, -50, 0),
-#                (3, 0, 0, -STRAFE_STEP),
-#                (3, 0, 50, 0),
-#                (4, 0, 0, STRAFE_STEP),
-#                (1, 0, -50, 0),
-#                (1, 0, 0, -STRAFE_STEP),
-#                (1, 0, 50, 0),
-#                (2, 0, -50, 0),
-#                (2, 0, 0, -STRAFE_STEP),
-#                (2, 0, 50, 0),
-#                (3, 0, -50, 0))
-
-STRAFE_LEFT_GAIT = (([0], 0, -50, 0),  # RF swing left
-                    ([1, 2, 3], 0, 0, -16),
-                    ([0], 0, 0, -STRAFE_STEP),
-                    ([1, 2, 3], 0, 0, -16),
-                    ([0], 0, 50, 0),
-                    ([1, 2, 3], 0, 0, -18),
-
-                    ([3], 0, -50, 0),  # LB swing left
-                    ([0, 1, 2], 0, 0, -16),
-                    ([3], 0, 0, -STRAFE_STEP),
-                    ([0, 1, 2], 0, 0, -16),
-                    ([3], 0, 50, 0),
-                    ([0, 1, 2], 0, 0, -14),
-
-                    ([1], 0, -50, 0),  # LF swing left
-                    ([0, 2, 3], 0, 0, -16),
-                    ([1], 0, 0, -STRAFE_STEP),
-                    ([0, 2, 3], 0, 0, -16),
-                    ([1], 0, 50, 0),
-                    ([0, 2, 3], 0, 0, -14),
-
-                    ([2], 0, -50, 0),  # RB swing left
-                    ([0, 1, 3], 0, 0, -16),
-                    ([2], 0, 0, -STRAFE_STEP),
-                    ([0, 1, 3], 0, 0, -16),
-                    ([2], 0, 50, 0),
-                    ([0, 1, 3], 0, 0, -14),
-
-                    ([4], 0, 0, -STRAFE_STEP))  # reset all feet
-
-STRAFE_RIGHT_GAIT = (([0], 0, -50, 0),  # RF swing right
-                     ([1, 2, 3], 0, 0, 16),
-                     ([0], 0, 0, STRAFE_STEP),
-                     ([1, 2, 3], 0, 0, 16),
-                     ([0], 0, 50, 0),
-                     ([1, 2, 3], 0, 0, 18),
-
-                     ([3], 0, -50, 0),  # LB swing right
-                     ([0, 1, 2], 0, 0, 16),
-                     ([3], 0, 0, STRAFE_STEP),
-                     ([0, 1, 2], 0, 0, 16),
-                     ([3], 0, 50, 0),
-                     ([0, 1, 2], 0, 0, 14),
-
-                     ([1], 0, -50, 0),  # LF swing right
-                     ([0, 2, 3], 0, 0, 16),
-                     ([1], 0, 0, STRAFE_STEP),
-                     ([0, 2, 3], 0, 0, 16),
-                     ([1], 0, 50, 0),
-                     ([0, 2, 3], 0, 0, 14),
-
-                     ([2], 0, -50, 0),  # RB swing right
-                     ([0, 1, 3], 0, 0, 16),
-                     ([2], 0, 0, STRAFE_STEP),
-                     ([0, 1, 3], 0, 0, 16),
-                     ([2], 0, 50, 0),
-                     ([0, 1, 3], 0, 0, 14),
-
-                     ([4], 0, 0, STRAFE_STEP))  # reset all feet
-
-TURN_LEFT_GAIT = (  # RF forward while rest backwards
-    ([0], 0, -50, 0),
-    ([1, 2, 3], 16, 0, 0),
-    ([0], -50, 0, 0),
-    ([1, 2, 3], 16, 0, 0),
-    ([0], 0, 50, 0),
-    ([1, 2, 3], 18, 0, 0),
-    # LB forward while rest backwards
-    ([3], 0, -50, 0),
-    ([0, 1, 2], 16, 0, 0),
-    ([3], -50, 0, 0),
-    ([0, 1, 2], 16, 0, 0),
-    ([3], 0, 50, 0),
-    ([0, 1, 2], 14, 0, 0),
-    # LF forward while rest backwards
-    ([1], 0, -50, 0),
-    ([0, 2, 3], 16, 0, 0),
-    ([1], -50, 0, 0),
-    ([0, 2, 3], 16, 0, 0),
-    ([1], 0, 50, 0),
-    ([0, 2, 3], 14, 0, 0),
-    # RB forward while rest backwards
-    ([2], 0, -50, 0),
-    ([0, 1, 3], 16, 0, 0),
-    ([2], -50, 0, 0),
-    ([0, 1, 3], 16, 0, 0),
-    ([2], 0, 50, 0),
-    ([0, 1, 3], 14, 0, 0),
-    # All forward to finish loop
-    ([4], -50, 0, 0))
-
-TURN_RIGHT_GAIT = (  # RF backward while rest forwards
-    ([0], 0, -50, 0),
-    ([1, 2, 3], -16, 0, 0),
-    ([0], 50, 0, 0),
-    ([1, 2, 3], -16, 0, 0),
-    ([0], 0, 50, 0),
-    ([1, 2, 3], -18, 0, 0),
-    # LB backward while rest forwards
-    ([3], 0, -50, 0),
-    ([0, 1, 2], -16, 0, 0),
-    ([3], 50, 0, 0),
-    ([0, 1, 2], -16, 0, 0),
-    ([3], 0, 50, 0),
-    ([0, 1, 2], -14, 0, 0),
-    # LF backward while rest forwards
-    ([1], 0, -50, 0),
-    ([0, 2, 3], -16, 0, 0),
-    ([1], 50, 0, 0),
-    ([0, 2, 3], -16, 0, 0),
-    ([1], 0, 50, 0),
-    ([0, 2, 3], -14, 0, 0),
-    # RB backward while rest forwards
-    ([2], 0, -50, 0),
-    ([0, 1, 3], -16, 0, 0),
-    ([2], 50, 0, 0),
-    ([0, 1, 3], -16, 0, 0),
-    ([2], 0, 50, 0),
-    ([0, 1, 3], -14, 0, 0),
-    # All backward to finish loop
-    ([4], 50, 0, 0))
-
-# TURN_STEP = 30
-# LEFT_TURN_GAIT = ((0, 0, -50, 0),
-#                   (0, 0, 0, TURN_STEP),
-#                   (0, 0, 50, 0),
-#                   (3, 0, -50, 0),
-#                   (3, 0, 0, -TURN_STEP),
-#                   (3, 0, 50, 0),
-#                   (1, 0, -50, 0),
-#                   (1, 0, 0, TURN_STEP),
-#                   (1, 0, 50, 0),
-#                   (2, 0, -50, 0),
-#                   (2, 0, 0, -TURN_STEP),
-#                   (2, 0, 50, 0),
-#                   (0, 0, 0, -TURN_STEP),
-#                   (1, 0, 0, -TURN_STEP),
-#                   (2, 0, 0, TURN_STEP),
-#                   (3, 0, 0, TURN_STEP),
-#                   (3, 0, 0, TURN_STEP))
-#
-# RIGHT_TURN_GAIT = ((0, 0, -50, 0),
-#                    (0, 0, 0, -TURN_STEP),
-#                    (0, 0, 50, 0),
-#                    (3, 0, -50, 0),
-#                    (3, 0, 0, TURN_STEP),
-#                    (3, 0, 50, 0),
-#                    (1, 0, -50, 0),
-#                    (1, 0, 0, -TURN_STEP),
-#                    (1, 0, 50, 0),
-#                    (2, 0, -50, 0),
-#                    (2, 0, 0, TURN_STEP),
-#                    (2, 0, 50, 0),
-#                    (0, 0, 0, TURN_STEP),
-#                    (1, 0, 0, TURN_STEP),
-#                    (2, 0, 0, -TURN_STEP),
-#                    (3, 0, 0, -TURN_STEP),
-#                    (3, 0, 0, -TURN_STEP))
-
 # __________Environment Setup__________
 factory = PiGPIOFactory()  # define pin factory to use servos for more accurate servo control
 Device.pin_factory = factory
@@ -583,6 +374,10 @@ class Leg:
         :argument dz:type float: the distance in millimeters to change the z position by
         :return: None
         """
+        # Don't waste time and processing moving nowhere
+        if dx == 0 and dy == 0 and dz == 0:
+            return None
+
         # Number of frames: ~30 Hz
         fps = 30
         steps = int(duration * fps)  # number of steps that will occur
@@ -997,8 +792,7 @@ class Speck:
         self.is_standing = False
 
         # create an array of the available gaits
-        self.Gaits = [WALK_GAIT, BACKWARD_WALK_GAIT, STRAFE_LEFT_GAIT, STRAFE_RIGHT_GAIT, TURN_LEFT_GAIT,
-                      TURN_RIGHT_GAIT]
+        self.Gaits = [WALK_GAIT]
         # create a queue of movements for each leg to perform. Start with an infinite size
         #                  [RF_Queue, LF_Queue, RB_Queue, LB_Queue]
         self.move_queues = [Queue(0), Queue(0), Queue(0), Queue(0)]
