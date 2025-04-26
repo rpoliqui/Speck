@@ -42,11 +42,17 @@ def on_write(value):
     try:
         cmd = bytes(value).decode('utf-8').strip()
         print('Received from iPhone:', cmd)
-
-        if not robot_execute_command(cmd):
+        ok = robot_execute_command(cmd)
+        if not ok:
             send_error(f"Command failed: '{cmd}'")
     except Exception as e:
-        send_error(f"Error handling '{value}': {e}")
+        # Never let an exception crash your GATT server
+        print(f"[on_write error] {e}")
+        try:
+            send_error(f"Internal error: {e}")
+        except Exception as ne:
+            print(f"[send_error also failed] {ne}")
+
 
 
 # Create the Peripheral (positional args, not keywords!)
@@ -59,18 +65,22 @@ my_peripheral.add_service(
     primary=True
 )
 
-# 2) Command Characteristic (iPhone → Pi)
+# Command Characteristic (iPhone → Pi)
 my_peripheral.add_characteristic(
     srv_id=1,
     chr_id=1,
     uuid=CMD_CHAR_UUID,
-    value=[],
+    value=[],                  # initial empty value
     notifying=False,
-    flags=['write'],
+    flags=[
+        'read',
+        'write',
+        'write-without-response'
+    ],
     write_callback=on_write
 )
 
-# 3) Error Characteristic (Pi → iPhone)
+# Error Characteristic (Pi → iPhone)
 my_peripheral.add_characteristic(
     srv_id=1,
     chr_id=2,
