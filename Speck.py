@@ -140,7 +140,6 @@ VERTICAL_SHIFT = 10
 
 WALK_GAIT = (
     ([4], 25, 0, 0),  # shift backwards to a stable position
-    ([4], 0, -VERTICAL_SHIFT, 0),  # lower center of mass for stability
 
     # move back left leg forward
     ([3], 0, -STEP_RAISE, 0),
@@ -183,9 +182,8 @@ WALK_GAIT = (
     ([0], 0, STEP_RAISE, 0),
     ([2, 1, 3], 0, 0, 0),
 
-    # shift back to starting position (adjusted to cancel total drift)
+    # shift back to starting position
     ([4], 40, 0, 0),
-    ([4], 0, VERTICAL_SHIFT, 0)
 )
 
 TROT = (([0, 3], -30, -30, 0),
@@ -585,9 +583,9 @@ class Leg:
         :argument dz:type float: the distance in millimeters to change the z position by
         :return: None
         """
-        # Number of frames: ~10 Hz
-        fps = 10
-        steps = int(duration * fps) # number of steps that will occur
+        # Number of frames: ~30 Hz
+        fps = 30
+        steps = int(duration * fps)  # number of steps that will occur
         start = tuple(self.current_position)  # current position is the starting position of the servo.
         end = (start[0] + dx, start[1] + dy, start[2] + dz)  # end position is the start plus the necessary change
 
