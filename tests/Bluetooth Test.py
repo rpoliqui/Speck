@@ -3,104 +3,97 @@ import subprocess
 import re
 from bluezero import peripheral
 
-# 1) Fetch hci0 MAC
+# 1) Get the Pi’s hci0 address
 def get_bt_mac():
-    res = subprocess.run(['hciconfig', 'hci0'],
-                         capture_output=True, text=True, check=True)
-    m = re.search(r'BD Address: ([0-9A-F:]{17})', res.stdout)
+    out = subprocess.run(
+        ['hciconfig', 'hci0'],
+        capture_output=True, text=True, check=True
+    ).stdout
+    m = re.search(r'BD Address: ([0-9A-F:]{17})', out)
     if not m:
-        raise RuntimeError('Cannot find hci0 address; is Bluetooth up?')
+        raise RuntimeError("hci0 not up or no MAC found")
     return m.group(1)
 
 # 2) Bring up Bluetooth
 subprocess.run(['sudo', 'systemctl', 'start', 'bluetooth'], check=True)
 subprocess.run(['sudo', 'hciconfig', 'hci0', 'up'], check=True)
 
-# 3) BLE params
-ADAPTER_ADDR = get_bt_mac()
-LOCAL_NAME   = 'SPECK'
-SERVICE_UUID = 'd8ed4126-c03b-499e-bf06-b69951b1fa6f'
-CMD_UUID     = '529d8996-17d1-4e7c-94e9-4e84a24cbc9f'
-NOTI_UUID    = 'a1b2c3d4-5678-90ab-cdef-1234567890ab'
+# 3) BLE parameters
+ADAPTER = get_bt_mac()
+NAME    = 'SPECK'
+SVC     = 'd8ed4126-c03b-499e-bf06-b69951b1fa6f'
+CMD_CHR = '529d8996-17d1-4e7c-94e9-4e84a24cbc9f'
+NOT_CHR = 'a1b2c3d4-5678-90ab-cdef-1234567890ab'
 
-_last_cmd = b''
+_last = b''
 
-# 4) Your robot stub
-def robot_execute_command(cmd: str) -> bool:
-    print(f"[Robot] → {cmd}")
-    # TODO: GPIO / serial / etc.
+# 4) Robot stub
+def robot_execute_command(cmd):
+    print(f"[ROBOT] would run: {cmd!r}")
     return True
 
 # 5) Callbacks
-def on_connect(device):
-    print(f"[BLE] Connected: {device}")
+def on_connect(dev):
+    print(f"[BLE] Connected: {dev}")
 
-def on_disconnect(device):
-    print(f"[BLE] Disconnected: {device}")
+def on_disconnect(dev):
+    print(f"[BLE] Disconnected: {dev}")
 
 def on_write_cmd(value):
-    global _last_cmd
-    _last_cmd = bytes(value)
-    cmd_str = _last_cmd.decode('utf-8', errors='replace').strip()
-    print(f"[CMD WRITE] '{cmd_str}'")
+    global _last
+    _last = bytes(value)
+    s = _last.decode('utf-8', errors='replace').strip()
+    print(f"[WRITE] got {len(_last)} bytes → {s!r}")
     try:
-        success = robot_execute_command(cmd_str)
-        if not success:
-            raise RuntimeError('robot_execute_command returned False')
-        # ACK back:
-        send_notification(f"ACK: {cmd_str}")
+        if not robot_execute_command(s):
+            raise RuntimeError("robot reported failure")
+        send_notification(f"ACK:{s}")
     except Exception as e:
-        send_notification(f"ERROR: {e}")
+        send_notification(f"ERR:{e}")
 
 def on_read_cmd():
-    print(f"[CMD READ] {_last_cmd!r}")
-    return list(_last_cmd)
+    print(f"[READ] returning {_last!r}")
+    return list(_last)
 
-def on_read_noti():
-    # not used; notifications are pushed
+def on_read_notif():
     return []
 
-# 6) Notification helper
-def send_notification(msg: str):
+def send_notification(msg):
     data = list(msg.encode('utf-8'))
-    ble_periph.update_characteristic_value(srv_id=1, chr_id=2, value=data)
-    ble_periph.notify(srv_id=1, chr_id=2)
+    ble_periph.update_characteristic_value(1, 2, data)
+    ble_periph.notify(1, 2)
     print(f"[NOTIFY] {msg}")
 
-# 7) Build the Peripheral
-ble_periph = peripheral.Peripheral(ADAPTER_ADDR, LOCAL_NAME)
+# 6) Build
+ble_periph = peripheral.Peripheral(ADAPTER, NAME)
 ble_periph.on_connect    = on_connect
 ble_periph.on_disconnect = on_disconnect
 
-ble_periph.add_service(srv_id=1, uuid=SERVICE_UUID, primary=True)
+ble_periph.add_service( srv_id=1, uuid=SVC, primary=True )
 
-# — Command Characteristic (iPhone→Pi) —
+# — Command characteristic: ONLY write-without-response + read —
 ble_periph.add_characteristic(
-    srv_id=1, chr_id=1, uuid=CMD_UUID,
+    srv_id=1, chr_id=1, uuid=CMD_CHR,
     value=[],
     notifying=False,
     flags=[
-        'write-without-response',  # priority for iOS
-        'write',                   # fallback write with response
+        'write-without-response',
         'read'
     ],
     write_callback=on_write_cmd,
     read_callback=on_read_cmd
 )
 
-# — Notification Characteristic (Pi→iPhone) —
+# — Notification characteristic —
 ble_periph.add_characteristic(
-    srv_id=1, chr_id=2, uuid=NOTI_UUID,
+    srv_id=1, chr_id=2, uuid=NOT_CHR,
     value=[],
     notifying=False,
-    flags=[
-        'read',
-        'notify'   # creates CCCD
-    ],
-    read_callback=on_read_noti
+    flags=['read', 'notify'],
+    read_callback=on_read_notif
 )
 
-# 8) Advertise & loop
-print(f'Advertising "{LOCAL_NAME}" @ {ADAPTER_ADDR}…')
+# 7) Advertise & loop
+print(f'Advertising "{NAME}" @ {ADAPTER} …')
 ble_periph.publish()
 ble_periph.run()
