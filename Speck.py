@@ -136,45 +136,56 @@ STEP_SIZE = 75
 STEP_RAISE = 40
 VERTICAL_SHIFT = 10
 
-WALK_GAIT = (  ([4], 25, 0, 0),   # shift backwards to a stable position
-               ([4], 0, -VERTICAL_SHIFT, 0),  # lower center of mass for stability
-               # move back left leg forward
-               ([3], 0, -STEP_RAISE, 0),
-               ([0, 1, 2], 0, 0, 0),
-               ([3], -STEP_SIZE, 0, 0),
-               ([0, 1, 2], 0, 0, 0),
-               ([3], 0,  STEP_RAISE, 0),
-               ([0, 1, 2], 0, 0, 0),
-               # shift into new stable position
-               ([4], -15, 2*VERTICAL_SHIFT, 0),
-               # move front left leg forward
-               ([1], 0, -STEP_RAISE, 0),
-               ([0, 3, 2], 0, 0, 0),
-               ([1], -STEP_SIZE, 0, 0),
-               ([0, 3, 2], 0, 0, 0),
-               ([1], 0,  STEP_RAISE, 0),
-               ([0, 3, 2], 0, 0, 0),
-               # shift into new stable position
-               ([4], 45, -2*VERTICAL_SHIFT, 0),
-               # move back left leg forward
-               ([2], 0, -STEP_RAISE, 0),
-               ([0, 1, 3], 0, 0, 0),
-               ([2], -STEP_SIZE, 0, 0),
-               ([0, 1, 3], 0, 0, 0),
-               ([2], 0, STEP_RAISE, 0),
-               ([0, 1, 3], 0, 0, 0),
-               # shift into new stable position
-               ([4], -20, 0, 0),
-               # move front left leg forward.
-               ([0], 0, -STEP_RAISE, 0),
-               ([2, 1, 3], 0, 0, 0),
-               ([0], -STEP_SIZE, 0, 0),
-               ([2, 1, 3], 0, 0, 0),
-               ([0], 0, STEP_RAISE, 0),
-               ([2, 1, 3], 0, 0, 0),
-               # shift back to starting position
-               ([4], 55, 0, 0),
-               ([4], 0, VERTICAL_SHIFT, 0))
+WALK_GAIT = (
+    ([4], 25, 0, 0),   # shift backwards to a stable position
+    ([4], 0, -VERTICAL_SHIFT, 0),  # lower center of mass for stability
+
+    # move back left leg forward
+    ([3], 0, -STEP_RAISE, 0),
+    ([0, 1, 2], 0, 0, 0),
+    ([3], -STEP_SIZE, 0, 0),
+    ([0, 1, 2], 0, 0, 0),
+    ([3], 0,  STEP_RAISE, 0),
+    ([0, 1, 2], 0, 0, 0),
+
+    # shift into new stable position
+    ([4], -15, 2*VERTICAL_SHIFT, 0),
+
+    # move front left leg forward
+    ([1], 0, -STEP_RAISE, 0),
+    ([0, 3, 2], 0, 0, 0),
+    ([1], -STEP_SIZE, 0, 0),
+    ([0, 3, 2], 0, 0, 0),
+    ([1], 0,  STEP_RAISE, 0),
+    ([0, 3, 2], 0, 0, 0),
+
+    # shift into new stable position
+    ([4], 45, -2*VERTICAL_SHIFT, 0),
+
+    # move back left leg forward
+    ([2], 0, -STEP_RAISE, 0),
+    ([0, 1, 3], 0, 0, 0),
+    ([2], -STEP_SIZE, 0, 0),
+    ([0, 1, 3], 0, 0, 0),
+    ([2], 0, STEP_RAISE, 0),
+    ([0, 1, 3], 0, 0, 0),
+
+    # shift into new stable position
+    ([4], -20, 0, 0),
+
+    # move front left leg forward.
+    ([0], 0, -STEP_RAISE, 0),
+    ([2, 1, 3], 0, 0, 0),
+    ([0], -STEP_SIZE, 0, 0),
+    ([2, 1, 3], 0, 0, 0),
+    ([0], 0, STEP_RAISE, 0),
+    ([2, 1, 3], 0, 0, 0),
+
+    # shift back to starting position (adjusted to cancel total drift)
+    ([4], -90, 0, 0),
+    ([4], 0, VERTICAL_SHIFT, 0)
+)
+
 
 
 TROT = (([0, 3], -30, -30, 0),
