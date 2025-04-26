@@ -134,7 +134,7 @@ AvailablePins = np.ones(40)
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 
-STEP_SIZE = 75
+STEP_SIZE = 50
 STEP_RAISE = 40
 VERTICAL_SHIFT = 10
 
