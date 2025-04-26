@@ -592,7 +592,7 @@ class Leg:
         end = (start[0] + dx, start[1] + dy, start[2] + dz)  # end position is the start plus the necessary change
 
         # default easing method is ease out circular method
-        easer = Ease_in_out_sine(start=0, end=1, duration=0.85)
+        easer = Ease_in_out_sine(start=0, end=1, duration=1)
 
         for frame in range(steps + 1):
             alpha = frame / steps  # in [0..1]
@@ -1141,10 +1141,10 @@ class Speck:
         :return: None
         """
         self.is_standing = False
-        self.Legs[0].set_position(20, 40, HIP_LENGTH)
-        self.Legs[1].set_position(20, 40, HIP_LENGTH)
-        self.Legs[2].set_position(20, 40, HIP_LENGTH)
-        self.Legs[3].set_position(20, 40, HIP_LENGTH)
+        self.Legs[0].set_position(18, 40, HIP_LENGTH)
+        self.Legs[1].set_position(18, 40, HIP_LENGTH)
+        self.Legs[2].set_position(18, 40, HIP_LENGTH)
+        self.Legs[3].set_position(18, 40, HIP_LENGTH)
         return None
 
     def sit(self):
@@ -1154,7 +1154,7 @@ class Speck:
         """
         self.is_standing = False
         for i in range(0, 4, 1):
-            self.move_queues[i].put([4, 20 - self.Legs[i].current_position[0], 40 - self.Legs[i].current_position[1],
+            self.move_queues[i].put([4, 18 - self.Legs[i].current_position[0], 40 - self.Legs[i].current_position[1],
                                      HIP_LENGTH - self.Legs[i].current_position[2]])
         return None
 
