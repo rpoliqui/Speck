@@ -3,122 +3,118 @@ import subprocess
 import re
 from bluezero import peripheral
 
-# --- 1) Helper to get the Pi's hci0 MAC address ---
+# 1) Helper to grab hci0’s MAC dynamically
 def get_bt_mac():
-    result = subprocess.run(
-        ['hciconfig', 'hci0'],
-        capture_output=True,
-        text=True,
-        check=True
-    )
-    match = re.search(r'BD Address: ([0-9A-F:]{17})', result.stdout)
-    if not match:
-        raise RuntimeError('Unable to find hci0 MAC address. Is Bluetooth up?')
-    return match.group(1)
+    res = subprocess.run(['hciconfig', 'hci0'],
+                         capture_output=True, text=True, check=True)
+    m = re.search(r'BD Address: ([0-9A-F:]{17})', res.stdout)
+    if not m:
+        raise RuntimeError('Could not find hci0 address; is Bluetooth up?')
+    return m.group(1)
 
-# --- 2) Bring up Bluetooth ---
+# 2) Bring up Bluetooth
 subprocess.run(['sudo', 'systemctl', 'start', 'bluetooth'], check=True)
 subprocess.run(['sudo', 'hciconfig', 'hci0', 'up'], check=True)
 
-# --- 3) BLE parameters ---
-ADAPTER_ADDR  = get_bt_mac()
-LOCAL_NAME    = 'SPECK'
-SERVICE_UUID  = 'd8ed4126-c03b-499e-bf06-b69951b1fa6f'
-CHAR_UUID     = '529d8996-17d1-4e7c-94e9-4e84a24cbc9f'
+# 3) BLE params
+ADAPTER_ADDR = get_bt_mac()
+LOCAL_NAME   = 'SPECK'
+SERVICE_UUID = 'd8ed4126-c03b-499e-bf06-b69951b1fa6f'
+CMD_UUID     = '529d8996-17d1-4e7c-94e9-4e84a24cbc9f'
+NOTI_UUID    = 'a1b2c3d4-5678-90ab-cdef-1234567890ab'
 
-# Keep the last written value around for reads/notifications
-_last_value = b''
+# State
+_last_cmd = b''
 
-# --- 4) Robot command stub ---
-def robot_execute_command(cmd_str: str) -> bool:
-    """
-    Replace this stub with your actual robot-control logic.
-    Return True on success, False on recoverable failure.
-    Raise on fatal errors.
-    """
-    print(f"[Robot] Executing: {cmd_str}")
-    # TODO: hook up GPIO, serial, etc.
+# 4) Stub for your robot logic
+def robot_execute_command(cmd: str) -> bool:
+    print(f"[Robot] → {cmd}")
+    # TODO: send to your hardware; return False or raise on error
     return True
 
-# --- 5) Callbacks ---
-def on_connect(device_address):
-    print(f"[BLE] Device connected: {device_address}")
+# 5) Callbacks
+def on_connect(dev):
+    print(f"[BLE] Connected: {dev}")
 
-def on_disconnect(device_address):
-    print(f"[BLE] Device disconnected: {device_address}")
+def on_disconnect(dev):
+    print(f"[BLE] Disconnected: {dev}")
 
-def on_write(value):
-    global _last_value
+def on_write_cmd(value):
+    global _last_cmd
+    _last_cmd = bytes(value)
+    cmd_str = _last_cmd.decode('utf-8', errors='replace').strip()
+    print(f"[CMD WRITE] '{cmd_str}'")
+
     try:
-        _last_value = bytes(value)
-        cmd = _last_value.decode('utf-8', errors='replace').strip()
-        print(f"[on_write] Got {len(value)} bytes: '{cmd}'")
-
-        # Send to robot
-        ok = robot_execute_command(cmd)
+        ok = robot_execute_command(cmd_str)
         if not ok:
-            send_error(f"Command failed: '{cmd}'")
-
-        # Acknowledge via notify back on the same characteristic
-        my_peripheral.notify(srv_id=1, chr_id=1)
-
+            raise RuntimeError('robot_execute_command returned False')
     except Exception as e:
-        print(f"[on_write error] {e}")
-        try:
-            send_error(f"Internal error: {e}")
-        except Exception as ne:
-            print(f"[send_error failed] {ne}")
+        send_notification(f"ERROR: {e}")
+        return
 
-def on_read():
-    print(f"[on_read] Returning {len(_last_value)} bytes")
-    return list(_last_value)
+    # Acknowledge back on the notify characteristic
+    send_notification(f"ACK: {cmd_str}")
 
-# --- 6) Error notification helper ---
-def send_error(msg: str):
-    """
-    Write `msg` into the characteristic and send a notify.
-    """
+def on_read_cmd():
+    # Let a client read back the last command if desired
+    print(f"[CMD READ] returning {_last_cmd!r}")
+    return list(_last_cmd)
+
+def on_read_noti():
+    # This won't be used; notifications are pushed.
+    return []
+
+# 6) Notification helper (second characteristic)
+def send_notification(msg: str):
     data = list(msg.encode('utf-8'))
-    my_peripheral.update_characteristic_value(
+    peripheral.update_characteristic_value(
         srv_id=1,
-        chr_id=1,
+        chr_id=2,
         value=data
     )
-    my_peripheral.notify(srv_id=1, chr_id=1)
-    print(f"[Error → iPhone] {msg}")
+    peripheral.notify(srv_id=1, chr_id=2)
+    print(f"[NOTIFY] {msg}")
 
-# --- 7) Build Peripheral ---
-my_peripheral = peripheral.Peripheral(ADAPTER_ADDR, LOCAL_NAME)
+# 7) Build the peripheral
+peripheral = peripheral.Peripheral(ADAPTER_ADDR, LOCAL_NAME)
+peripheral.on_connect    = on_connect
+peripheral.on_disconnect = on_disconnect
 
-# Register connect/disconnect hooks
-my_peripheral.on_connect    = on_connect
-my_peripheral.on_disconnect = on_disconnect
+# -- Service --
+peripheral.add_service(srv_id=1, uuid=SERVICE_UUID, primary=True)
 
-# Add primary service
-my_peripheral.add_service(
-    srv_id=1,
-    uuid=SERVICE_UUID,
-    primary=True
-)
-
-# Add characteristic (read, write, notify)
-my_peripheral.add_characteristic(
+# -- Characteristic 1: Command (iPhone→Pi) --
+peripheral.add_characteristic(
     srv_id=1,
     chr_id=1,
-    uuid=CHAR_UUID,
+    uuid=CMD_UUID,
     value=[],
     notifying=False,
     flags=[
-        'read',
-        'write',
-        'write-without-response',
-        'notify'
+        'write',                   # write w/ response
+        'write-without-response',  # write w/o response
+        'read'                     # optional: let them read back last cmd
     ],
-    write_callback=on_write,
-    read_callback=on_read
+    write_callback=on_write_cmd,
+    read_callback=on_read_cmd
 )
 
-# --- 8) Start advertising & event loop ---
-print(f'Advertising "{LOCAL_NAME}" on {ADAPTER_ADDR}…')
-my_peripheral.publish()
-my_peripheral.run()
+# -- Characteristic 2: Notifications (Pi→iPhone) --
+peripheral.add_characteristic(
+    srv_id=1,
+    chr_id=2,
+    uuid=NOTI_UUID,
+    value=[],
+    notifying=False,
+    flags=[
+        'read',   # so client can discover initial state
+        'notify'  # adds the CCCD for subscribe
+    ],
+    read_callback=on_read_noti
+)
+
+# 8) Advertise & loop
+print(f'Advertising "{LOCAL_NAME}" @ {ADAPTER_ADDR}…')
+peripheral.publish()
+peripheral.run()
