@@ -146,7 +146,7 @@ WALK_GAIT = (
     ([0, 1, 2], 0, 0, 0),
     ([3], -STEP_SIZE, 0, 0),
     ([0, 1, 2], 0, 0, 0),
-    ([3], 0, STEP_RAISE, 0),
+    ([3], 0, STEP_RAISE + 5, 0),
     ([0, 1, 2], 0, 0, 0),
 
     # shift into new stable position
@@ -161,7 +161,7 @@ WALK_GAIT = (
     ([0, 3, 2], 0, 0, 0),
 
     # shift into new stable position
-    ([4], 50, 0, 0),
+    ([4], 45, 0, 0),
 
     # move back left leg forward
     ([2], 0, -STEP_RAISE, 0),
@@ -183,7 +183,7 @@ WALK_GAIT = (
     ([2, 1, 3], 0, 0, 0),
 
     # shift back to starting position
-    ([4], 40, 0, 0),
+    ([4], 45, 0, 0),
 )
 
 TROT = (([0, 3], -30, -30, 0),
