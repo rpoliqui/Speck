@@ -67,7 +67,7 @@ import bluetooth
 import cv2
 import datetime
 import os
-from easing import Ease_out_quad
+from easing import Ease_out_sine
 import subprocess
 from picamera2 import Picamera2
 from math import atan2, sin, asin, acos, sqrt, fabs
@@ -363,7 +363,7 @@ class Leg:
         self.set_position(self.current_position[0] + dx, self.current_position[1] + dy, self.current_position[2] + dz)
         return None
 
-    def smooth_move(self, dx: float, dy: float, dz: float, duration: float = 0.5):
+    def smooth_move(self, dx: float, dy: float, dz: float, duration: float = 2.0):
         """
         A function to change, or move, the position of the foot smoothly to prevent choppy movements. The given position
         is relative to the current position. Uses servo easing for smoother motion
@@ -385,7 +385,7 @@ class Leg:
         end = (start[0] + dx, start[1] + dy, start[2] + dz)  # end position is the start plus the necessary change
 
         # default easing method is ease out circular method
-        easer = Ease_out_quad(start=0, end=1, duration=1)
+        easer = Ease_out_sine(start=0, end=1, duration=1)
 
         for frame in range(steps + 1):
             alpha = frame / steps  # in [0..1]
