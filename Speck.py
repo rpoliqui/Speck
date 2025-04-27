@@ -70,8 +70,9 @@ import os
 from easing import Ease_out_quart
 import subprocess
 from picamera2 import Picamera2
-from math import atan2, sin, asin, acos, sqrt, fabs
-from threading import Thread, Timer, Barrier, Lock
+from math import atan2, sin, asin, acos, sqrt
+from multiprocessing import Process, Barrier, Lock
+from threading import Timer, Thread, Barrier, Lock
 from queue import Queue
 from gpiozero import AngularServo, Button, Device, OutputDevice, LED
 from gpiozero.pins.pigpio import PiGPIOFactory
@@ -796,11 +797,13 @@ class Speck:
         # create a queue of movements for each leg to perform. Start with an infinite size
         #                  [RF_Queue, LF_Queue, RB_Queue, LB_Queue]
         self.move_queues = [Queue(0), Queue(0), Queue(0), Queue(0)]
+        # Initialize pigpio for improved servo control
+        subprocess.run(['sudo', 'systemctl', 'enable', 'pigpiod'])
         # create movement threads to allow motion of each leg to be controlled in the background
-        RF_move_thread = Thread(target=self.leg_thread_function, daemon=True, args=(0,))
-        LF_move_thread = Thread(target=self.leg_thread_function, daemon=True, args=(1,))
-        RB_move_thread = Thread(target=self.leg_thread_function, daemon=True, args=(2,))
-        LB_move_thread = Thread(target=self.leg_thread_function, daemon=True, args=(3,))
+        RF_move_thread = Process(target=self.leg_thread_function, daemon=True, args=(0,))
+        LF_move_thread = Process(target=self.leg_thread_function, daemon=True, args=(1,))
+        RB_move_thread = Process(target=self.leg_thread_function, daemon=True, args=(2,))
+        LB_move_thread = Process(target=self.leg_thread_function, daemon=True, args=(3,))
         self.move_threads = [RF_move_thread, LF_move_thread, RB_move_thread, LB_move_thread]
         # start all movement threads running in the background
         self.lock = Lock()  # Prevents simultaneous uncoordinated movements
