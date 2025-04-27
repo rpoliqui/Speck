@@ -839,10 +839,10 @@ class Speck:
                 duration = 0.75
             if move[0] == 4:  # if command is for all legs
                 self.thread_barrier.wait()  # wait for all threads to be ready
-                self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
+                self.Legs[leg_id].smooth_move(move[1], move[2], move[3], duration)  # move the leg
             elif move[0] == leg_id:  # if command is target at this leg
                 with self.lock:  # lock all other threads and release after movement
-                    self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
+                    self.Legs[leg_id].smooth_move(move[1], move[2], move[3], duration)  # move the leg
             else:  # not for this leg, do nothing
                 pass
 
