@@ -184,7 +184,7 @@ WALK_GAIT = (
     ([2, 1, 3], 0, 0, 0),
 
     # shift back to starting position
-    ([4], 45, 0, 0),
+    ([4], 42.5, 0, 0),
 )
 
 TROT = (([0, 3], -30, -30, 0),
@@ -364,7 +364,7 @@ class Leg:
         self.set_position(self.current_position[0] + dx, self.current_position[1] + dy, self.current_position[2] + dz)
         return None
 
-    def smooth_move(self, dx: float, dy: float, dz: float, duration: float = 1.0):
+    def smooth_move(self, dx: float, dy: float, dz: float, duration: float = 0.5):
         """
         A function to change, or move, the position of the foot smoothly to prevent choppy movements. The given position
         is relative to the current position. Uses servo easing for smoother motion
@@ -379,8 +379,8 @@ class Leg:
         if dx == 0 and dy == 0 and dz == 0:
             return None
 
-        # Number of frames: ~30 Hz
-        fps = 20
+        # Number of frames: ~10 Hz
+        fps = 10
         steps = int(duration * fps)  # number of steps that will occur
         start = tuple(self.current_position)  # current position is the starting position of the servo.
         end = (start[0] + dx, start[1] + dy, start[2] + dz)  # end position is the start plus the necessary change
