@@ -379,7 +379,7 @@ class Leg:
         if dx == 0 and dy == 0 and dz == 0:
             return None
 
-        # Number of frames: ~10 Hz
+        # Number of frames: ~30 Hz
         fps = 30
         steps = int(duration * fps)  # number of steps that will occur
         start = tuple(self.current_position)  # current position is the starting position of the servo.
