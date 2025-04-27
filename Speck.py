@@ -67,7 +67,7 @@ import bluetooth
 import cv2
 import datetime
 import os
-from easing import Ease_in_out_sine
+from easing import Ease_out_quad
 import subprocess
 from picamera2 import Picamera2
 from math import atan2, sin, asin, acos, sqrt, fabs
@@ -161,7 +161,7 @@ WALK_GAIT = (
     ([0, 3, 2], 0, 0, 0),
 
     # shift into new stable position
-    ([4], 40, 0, 0),
+    ([4], 35, 0, 0),
 
     # move back left leg forward
     ([2], 0, -STEP_RAISE, 0),
@@ -385,7 +385,7 @@ class Leg:
         end = (start[0] + dx, start[1] + dy, start[2] + dz)  # end position is the start plus the necessary change
 
         # default easing method is ease out circular method
-        easer = Ease_in_out_sine(start=0, end=1, duration=1)
+        easer = Ease_out_quad(start=0, end=1, duration=1)
 
         for frame in range(steps + 1):
             alpha = frame / steps  # in [0..1]
@@ -838,7 +838,6 @@ class Speck:
                     self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
             else:  # not for this leg, do nothing
                 pass
-            #time.sleep(0.03)
 
     # __________Bluetooth Server Function__________
     def bluetooth_server(self):
@@ -847,42 +846,7 @@ class Speck:
         separate thread so that Speck is always looking for new commands.
         :return: None
         """
-        # setup pi to enable bluetooth connection
-        # subprocess.run(['sudo', 'service', 'bluetooth', 'start'])  # start bluetooth on pi
-        # bluetoothctl_commands = f"""
-        #                                     power on
-        #                                     manufacturer 0xffff 0x12 0x34
-        #                                     name SPECK
-        #                                     register-service e2d36f99-8909-4136-9a49-d825508b297b
-        #                                     yes
-        #                                     register-characteristic 0x1234 read
-        #                                     07
-        #                                     register-characteristic 0x5678 read,write
-        #                                     13
-        #                                     register-application
-        #                                     advertise on
-        #                                     pairable on
-        #                                     """
-        #
-        # # Run bluetoothctl with input commands
-        # process = subprocess.Popen(['bluetoothctl'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-        #                            stderr=subprocess.PIPE, text=True)
-        # out, err = process.communicate(bluetoothctl_commands)
-        # if err:
-        #     print("[Bluetoothctl Error]", err)
-        # server_sock.listen(1)
-        # print("Waiting for connection on RFCOMM channel 3...")
-        # client_sock, address = server_sock.accept()
-        # print("Client Address: ", address)
-        # while True:
-        #     recv_data = client_sock.recv(1024)
-        #     print("Info Received: %s" % recv_data)
-        #     if recv_data == "Q":
-        #         print("End.")
-        #         break
-        #
-        # client_sock.close()
-        # server_sock.close()
+        pass
 
     # __________Define Speck's Functions__________
     def check_collision(self):
