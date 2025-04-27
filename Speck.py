@@ -67,7 +67,7 @@ import bluetooth
 import cv2
 import datetime
 import os
-from easing import Ease_out_sine
+from easing import Ease_out_quart
 import subprocess
 from picamera2 import Picamera2
 from math import atan2, sin, asin, acos, sqrt, fabs
@@ -385,7 +385,7 @@ class Leg:
         end = (start[0] + dx, start[1] + dy, start[2] + dz)  # end position is the start plus the necessary change
 
         # default easing method is ease out circular method
-        easer = Ease_out_sine(start=0, end=1, duration=1)
+        easer = Ease_out_quart(start=0, end=1, duration=1)
 
         for frame in range(steps + 1):
             alpha = frame / steps  # in [0..1]
