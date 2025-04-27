@@ -135,7 +135,7 @@ AvailablePins = np.ones(40)
 # LEGS: [RF, LF, RB, LB] 4 = ALL
 # DIRECTIONS: [X, Y, Z] +X = backwards, +Y = downward
 
-STEP_SIZE = 60
+STEP_SIZE = 75
 STEP_RAISE = 40
 VERTICAL_SHIFT = 10
 
@@ -162,7 +162,7 @@ WALK_GAIT = (
     ([0, 3, 2], 0, 0, 0),
 
     # shift into new stable position
-    ([4], 35, 0, 0),
+    ([4], 40, 0, 0),
 
     # move back left leg forward
     ([2], 0, -STEP_RAISE, 0),
