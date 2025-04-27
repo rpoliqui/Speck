@@ -363,7 +363,7 @@ class Leg:
         self.set_position(self.current_position[0] + dx, self.current_position[1] + dy, self.current_position[2] + dz)
         return None
 
-    def smooth_move(self, dx: float, dy: float, dz: float, duration: float = 2.0):
+    def smooth_move(self, dx: float, dy: float, dz: float, duration: float = 1.0):
         """
         A function to change, or move, the position of the foot smoothly to prevent choppy movements. The given position
         is relative to the current position. Uses servo easing for smoother motion
@@ -379,7 +379,7 @@ class Leg:
             return None
 
         # Number of frames: ~30 Hz
-        fps = 30
+        fps = 20
         steps = int(duration * fps)  # number of steps that will occur
         start = tuple(self.current_position)  # current position is the starting position of the servo.
         end = (start[0] + dx, start[1] + dy, start[2] + dz)  # end position is the start plus the necessary change
