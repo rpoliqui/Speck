@@ -380,7 +380,7 @@ class Leg:
             return None
 
         # Number of frames: ~10 Hz
-        fps = 10
+        fps = 30
         steps = int(duration * fps)  # number of steps that will occur
         start = tuple(self.current_position)  # current position is the starting position of the servo.
         end = (start[0] + dx, start[1] + dy, start[2] + dz)  # end position is the start plus the necessary change
