@@ -140,7 +140,7 @@ STEP_RAISE = 40
 VERTICAL_SHIFT = 10
 
 WALK_GAIT = (
-    ([4], 25, 0, 0),  # shift backwards to a stable position
+    ([4], 27.5, 0, 0),  # shift backwards to a stable position
 
     # move back left leg forward
     ([3], 0, -STEP_RAISE, 0),
