@@ -950,7 +950,7 @@ class Speck:
         """
         if not self.is_standing:  # if Speck isn't standing
             self.stand()
-            time.sleep(1)  # wait 1 second before walking
+            time.sleep(2)  # wait 2 second before walking
         for step in range(steps):
             self.gait(self.Gaits[0])
 
@@ -1078,9 +1078,9 @@ class Speck:
             found, shiftx, shifty, twist = self.Camera.detect_crate()
         if found:
             if shiftx >= 7 or shiftx <= 3:
-                self.shift(forward=True, distance=shiftx)
+                self.shift(forward=True, distance=-shiftx)
             if shifty >= 2 or shifty <= -2:
-                self.shift(forward=False, distance=shifty)
+                self.shift(forward=False, distance=-shifty)
             if twist > 10:
                 self.twist(cw=True, theta=twist)
             elif twist < -10:
