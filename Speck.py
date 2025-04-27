@@ -833,9 +833,9 @@ class Speck:
             self.thread_barrier.wait()  # wait for all threads to be ready, prevents threads from getting ahead,
             # only one loop is performed at a time
             move = self.move_queues[leg_id].get(block=True) # get the next movement in the queue when one is available
-            if move[4]:
+            try:
                 duration = move[4]
-            else:
+            except IndexError:
                 duration = 0.75
             if move[0] == 4:  # if command is for all legs
                 self.thread_barrier.wait()  # wait for all threads to be ready
