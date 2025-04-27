@@ -833,6 +833,10 @@ class Speck:
             self.thread_barrier.wait()  # wait for all threads to be ready, prevents threads from getting ahead,
             # only one loop is performed at a time
             move = self.move_queues[leg_id].get(block=True) # get the next movement in the queue when one is available
+            if move[4]:
+                duration = move[4]
+            else:
+                duration = 0.75
             if move[0] == 4:  # if command is for all legs
                 self.thread_barrier.wait()  # wait for all threads to be ready
                 self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
@@ -889,10 +893,10 @@ class Speck:
         self.is_standing = False
         for i in range(0, 2, 1):
             self.move_queues[i].put([4, 25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
-                                     HIP_LENGTH - self.Legs[i].current_position[2]])
+                                     HIP_LENGTH - self.Legs[i].current_position[2], 1.5])
         for i in range(2, 4, 1):
             self.move_queues[i].put([4, 25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
-                                     HIP_LENGTH - self.Legs[i].current_position[2]])
+                                     HIP_LENGTH - self.Legs[i].current_position[2], 1.5])
 
     def set_sit(self):
         """
@@ -914,7 +918,7 @@ class Speck:
         self.is_standing = False
         for i in range(0, 4, 1):
             self.move_queues[i].put([4, 18 - self.Legs[i].current_position[0], 40 - self.Legs[i].current_position[1],
-                                     HIP_LENGTH - self.Legs[i].current_position[2]])
+                                     HIP_LENGTH - self.Legs[i].current_position[2], 2.0])
         return None
 
     def gait(self, gait):
