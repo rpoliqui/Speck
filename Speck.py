@@ -72,7 +72,7 @@ import subprocess
 from picamera2 import Picamera2
 from math import atan2, sin, asin, acos, sqrt
 from multiprocessing import Process, Barrier, Lock
-from threading import Timer, Thread, Barrier, Lock
+from threading import Timer, Thread
 from queue import Queue
 from gpiozero import AngularServo, Button, Device, OutputDevice, LED
 from gpiozero.pins.pigpio import PiGPIOFactory
@@ -807,7 +807,7 @@ class Speck:
         self.move_threads = [RF_move_thread, LF_move_thread, RB_move_thread, LB_move_thread]
         # start all movement threads running in the background
         self.lock = Lock()  # Prevents simultaneous uncoordinated movements
-        self.thread_barrier = Barrier(4)  # Ensures 4 threads synchronize
+        self.Process_barrier = Barrier(4)  # Ensures 4 threads synchronize
         for thread in self.move_threads:
             thread.start()
         # start Speck in sitting position
@@ -830,11 +830,11 @@ class Speck:
         :return: None
         """
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
-            self.thread_barrier.wait()  # wait for all threads to be ready, prevents threads from getting ahead,
+            self.Process_barrier.wait()  # wait for all threads to be ready, prevents threads from getting ahead,
             # only one loop is performed at a time
             move = self.move_queues[leg_id].get(block=True) # get the next movement in the queue when one is available
             if move[0] == 4:  # if command is for all legs
-                self.thread_barrier.wait()  # wait for all threads to be ready
+                self.Process_barrier.wait()  # wait for all threads to be ready
                 self.Legs[leg_id].smooth_move(move[1], move[2], move[3])  # move the leg
             elif move[0] == leg_id:  # if command is target at this leg
                 with self.lock:  # lock all other threads and release after movement
