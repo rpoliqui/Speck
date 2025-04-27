@@ -73,7 +73,8 @@ from picamera2 import Picamera2
 from math import atan2, sin, asin, acos, sqrt
 from threading import Timer, Thread, Barrier, Lock
 from queue import Queue
-from gpiozero import AngularServo, Button, Device, OutputDevice, LED
+import pigpio
+from gpiozero import Button, Device, OutputDevice, LED
 from gpiozero.pins.pigpio import PiGPIOFactory
 
 # __________Pin Definition__________
@@ -228,15 +229,10 @@ class Joint:
         self.min_angle = min_angle  # define min angle
         self.max_angle = max_angle  # define max angle
         self.current_angle = starting_angle  # set the starting angle
-        # create servo object to control physical servo object
-        if flipped:  # flip the min and max angles
-            self.servo = AngularServo(self.pin, min_angle=self.max_angle, max_angle=self.min_angle,
-                                      initial_angle=starting_angle, min_pulse_width=0.0006,
-                                      max_pulse_width=0.0025, pin_factory=factory)
-        else:
-            self.servo = AngularServo(self.pin, min_angle=self.min_angle, max_angle=self.max_angle,
-                                      initial_angle=starting_angle, min_pulse_width=0.0006,
-                                      max_pulse_width=0.0025, pin_factory=factory)
+        self.pi = pigpio.pi()       # access the local Pi's GPIO
+        # tunable pulsewidth for accruate angle control
+        self.min_pulse_width = 500
+        self.max_pulse_width = 2500
         self.set_angle(starting_angle)  # properly set the starting angle of the joint
 
     def set_angle(self, angle: float):
@@ -246,16 +242,21 @@ class Joint:
         :argument angle:type float: the angle to set the joint to
         :return: None
         """
-        # check to make sure the requested angle is within the range of the joint
-        if (angle <= self.max_angle) & (angle >= self.min_angle):
-            self.current_angle = angle  # update the current angle of the joint to the required angle
-            self.servo.angle = angle  # set the physical angle of the servo
-        elif angle > self.max_angle:
-            self.current_angle = self.max_angle
-            self.servo.angle = self.max_angle
-        elif angle < self.min_angle:
-            self.current_angle = self.min_angle
-            self.servo.angle = self.min_angle
+        # constrain angle to defined range
+        angle = max(self.min_angle, min(self.max_angle, angle))
+
+        # update angle if flipped
+        if self.flipped:
+            # e.g. if min=0, max=180, angle=30  -> flipped_angle = 150
+            angle = self.max_angle - (angle - self.min_angle)
+        # update current angle parameter
+        self.current_angle = angle
+        # calculate necessary pulsewidth for anlge
+        span = self.max_angle - self.min_angle
+        pulse_width = self.min_pulse_width + ((angle - self.min_angle) / span) * (self.max_pulse_width - self.min_pulse_width)
+
+        # set servo angle
+        self.pi.set_servo_pulsewidth(self.pin, pulse_width)
         return None
 
     def change_angle(self, change_in_angle: float):
