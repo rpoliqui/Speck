@@ -2,6 +2,10 @@
 Ryan Poliquin, started on 2/12/2025
 This code is used to set up a Raspberry Pi to run Speck. It will install all necessary packages and properly configure
 the Pi for ease of use.
+References:
+    https://stackoverflow.com/questions/8247605/configuring-so-that-pip-install-can-work-from-github
+    https://gitpython.readthedocs.io/en/stable/tutorial.html
+    https://packaging.python.org/en/latest/tutorials/packaging-projects/
 """
 
 import os

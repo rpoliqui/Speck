@@ -228,5 +228,5 @@ if __name__ == '__main__':
     CRATE_WIDTH = 75  # mm
 
     # Read the image
-    img = cv2.imread('Test Images/IMG_7294.jpg')
+    img = cv2.imread('Test Images/IMG_7288.jpg')
     process_image(img, 9, 0.2)

@@ -58,6 +58,8 @@ References:
     https://www.youtube.com/watch?v=RvbWl8rZOoQ
     https://github.com/ukBaz/python-bluezero/blob/main/examples/peripheral_read_with_without_options.py
     https://www.kevsrobots.com/blog/servo-easing-with-pancake-bot.html
+
+    https://www.youtube.com/watch?v=hGHnLUXNN9k&ab_channel=EngineerM
 """
 # __________Import Statements__________
 import numpy as np
@@ -70,7 +72,7 @@ import os
 from easing import Ease_out_quart
 import subprocess
 from picamera2 import Picamera2
-from math import atan2, sin, asin, acos, sqrt
+from math import atan2, sin, asin, acos, sqrt, cos
 from threading import Timer, Thread, Barrier, Lock
 from queue import Queue
 import pigpio
@@ -122,6 +124,9 @@ STEP_TIME = .05  # s
 SPECK_LENGTH = 181.3  # distance from center of longitudinal hip joints
 SPECK_WIDTH = 276.7  # distance from outside both legs
 CRATE_WIDTH = 75  # mm
+JOINT_X_OFFSET = 90.65  # mm
+JOINT_Y_OFFSET = 57.75  # mm
+JOINT_Z_OFFSET = 47.5  # mm
 
 # __________Global Variables__________
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
@@ -317,6 +322,15 @@ class Leg:
             raise RuntimeError("Pin " + str(knee_pin) + " is not available for the knee joint")
         self.flipped = flipped  # specify whether all angles need to be flipped or not
         self.current_position = [0, 0, 0]  # assume robot starts at origin until the position of the joints is set.
+        self.origin = [0, 0, JOINT_Z_OFFSET]  # location of leg origin with respect to robot origin
+        if hip_flip:
+            self.origin[0] = -JOINT_X_OFFSET
+        else:
+            self.origin[0] = JOINT_X_OFFSET
+        if flipped:
+            self.origin[1] = -JOINT_Y_OFFSET
+        else:
+            self.origin[1] = JOINT_Y_OFFSET
 
     def __repr__(self):
         return "Hip_Lat Pin: %s , Hip_Long Pin: %s , Knee Pin: %s , Flipped: %s" % (
@@ -331,6 +345,9 @@ class Leg:
         :argument y:type int: The position of the foot in the up - down direction in millimeters
         :argument z:type int: The position of the foot in the in - out direction in millimeters
         :return: None
+
+        References:
+        https://www.youtube.com/watch?v=4rc8N1xuWvc&t=2s&ab_channel=AdvancedHobbyLab
         """
         self.current_position = [x, y, z]
         # calculate geometry used in angle calculations
@@ -474,7 +491,7 @@ class Camera:
 
     def __init__(self):
         """
-        Constructor for the Camera class
+        Constructor for the Camera class    
         """
         # define directory to store images
         self.directory = "Images"
@@ -1021,31 +1038,47 @@ class Speck:
                 self.move_queues[leg].put([4, 0, 0, ((-1) ** (leg % 2)) * distance])
         return None
 
-    def twist(self, cw: bool, theta: int):
+    def rotate(self, pitch:int, roll:int, yaw:int, center_of_rotation:[float,float,float]=[0.,0.,0.]):
         """
-        Function used to rotate Speck to align crate.
-        :param cw: Boolean variable to control direction of rotation. True will turn clock wise. False will turn counter
-        clock wise
-        :param theta: the angle to rotate
+        function used to rotate Speck about its three primary axis.
+
+        :param pitch: degrees to rotate about the Y axis
+        :param roll: degrees to rotate about the X axis
+        :param yaw: degrees to rotate about the Z axis
+        :param center_of_rotation: point with respect to the origin about which to perform the rotation. If no value is
+        specified, the default center of rotation is the origin
         :return: None
+
+        References:
+        https://www.youtube.com/watch?v=hGHnLUXNN9k&ab_channel=EngineerM
         """
-        theta_rad = math.radians(theta)
-        # tan(theta) = (2*dz / SPECK_LENGTH)
-        # dz = tan(theta) * SPECK_LENGTH / 2
-        dz = theta_rad / (2 * SPECK_LENGTH)
-        if cw:
-            for leg in range(4):
-                if leg == 0 or leg == 1:
-                    self.Legs[leg].move(0, 0, dz)
-                elif leg == 2 or leg == 3:
-                    self.Legs[leg].move(0, 0, -dz)
-        else:
-            for leg in range(4):
-                if leg == 0 or leg == 1:
-                    self.Legs[leg].move(0, 0, -dz)
-                elif leg == 2 or leg == 3:
-                    self.Legs[leg].move(0, 0, dz)
-        return None
+        # convert inputs into radians
+        pitch *= np.pi / 180
+        roll *= np.pi / 180
+        yaw *= np.pi / 180
+
+        # Calculate rotation matrices about each of the three axis
+        PitchMatrix = np.matrix([[cos(pitch) , 0, sin(pitch)],
+                                 [          0, 1,          0],
+                                 [-sin(pitch), 0, cos(pitch)]])
+        RollMatrix = np.matrix([[1,         0,          0],
+                                [0, cos(roll), -sin(roll)],
+                                [0, sin(roll),  cos(roll)])
+        YawMatrix = np.matrix([[cos(yaw), -sin(yaw), 0],
+                               [sin(yaw),  cos(yaw), 0],
+                               [       0,         0, 1]])
+
+        # Calculate the total rotation matrix
+        RotMatrix = PitchMatrix * RollMatrix * YawMatrix
+
+        for leg in self.Legs:
+            # create matrices from input
+            center_of_rotation = np.matrix([center_of_rotation[0], center_of_rotation[1], center_of_rotation[2]])
+            origin = np.matrix([leg.origin[0], leg.origin[1], leg.origin[2]])
+            leg_position = np.matrix([leg.current_position[0], leg.current_position[1], leg.current_position[2]])
+            # transform coordinate system
+            transformed_position = leg_position + origin - center_of_rotation
+
 
     def grab(self):
         """
