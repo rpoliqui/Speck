@@ -1038,9 +1038,9 @@ class Speck:
                 self.move_queues[leg].put([4, 0, 0, ((-1) ** (leg % 2)) * distance])
         return None
 
-    def rotate(self, pitch: int, roll: int, yaw: int, center_of_rotation=[0.0, 0.0, 0.0]):
+    def rotate(self, pitch: int, roll: int, yaw: int, center_of_rotation=[0.0, 0.0, 0.0], duration=1.0):
         """
-        Simulate rotation of the robot's body about its three axes by adjusting foot positions.
+        Simulate body rotation by adjusting foot positions using smooth movement.
         Pitch = forward/backward tilt (Y-axis)
         Roll = left/right tilt (X-axis)
         Yaw = rotation around vertical (Z-axis)
@@ -1048,45 +1048,42 @@ class Speck:
         :param pitch: degrees to rotate around Y-axis
         :param roll: degrees to rotate around X-axis
         :param yaw: degrees to rotate around Z-axis
-        :param center_of_rotation: 3D point about which to rotate
+        :param center_of_rotation: rotation reference point (usually body center)
+        :param duration: time to complete movement (in seconds)
         """
-        # Convert to radians
         pitch = np.radians(pitch)
         roll = np.radians(roll)
         yaw = np.radians(yaw)
 
-        # Convert center of rotation to np.array
         center = np.array(center_of_rotation)
 
         for leg in self.Legs:
-            # Global position of foot
             origin = np.array(leg.origin)
-            foot_global = origin + np.array(leg.current_position)
+            current = np.array(leg.current_position)
+            foot_global = origin + current
+            rel = foot_global - center
+            x, y, z = rel
 
-            # Position relative to center of rotation
-            relative = foot_global - center
-            x, y, z = relative  # unpack
-
-            # Apply roll (rotation around X) → affects Y and Z
+            # Roll (X-axis): affects Y and Z
             y_r = y * np.cos(roll) - z * np.sin(roll)
             z_r = y * np.sin(roll) + z * np.cos(roll)
 
-            # Apply pitch (rotation around Y) → affects X and Z
-            x_r = x * np.cos(yaw) + z_r * np.sin(yaw)
-            z_p = -x * np.sin(yaw) + z_r * np.cos(yaw)
+            # Pitch (Y-axis): affects X and Z
+            x_p = x * np.cos(pitch) + z_r * np.sin(pitch)
+            z_p = -x * np.sin(pitch) + z_r * np.cos(pitch)
 
-            # Apply yaw (rotation around Z) → affects X and Y
-            x_y = x_r * np.cos(pitch) - y_r * np.sin(pitch)
-            y_y = x_r * np.sin(pitch) + y_r * np.cos(pitch)
+            # Yaw (Z-axis): affects X and Y
+            x_y = x_p * np.cos(yaw) - y_r * np.sin(yaw)
+            y_y = x_p * np.sin(yaw) + y_r * np.cos(yaw)
 
-            # Final rotated position relative to center
-            rotated = np.array([x_y, y_y, z_p])
+            # Final rotated foot global position
+            rotated = np.array([x_y, y_y, z_p]) + center
 
-            # Convert back to local leg position
-            new_position = rotated + center - origin
+            # Convert to local leg coordinates
+            new_local = rotated - origin
+            delta = new_local - current  # for smooth_move
 
-            # Apply to leg
-            leg.set_position(*new_position.tolist())
+            leg.smooth_move(*delta.tolist(), duration=duration)
 
     def grab(self):
         """
