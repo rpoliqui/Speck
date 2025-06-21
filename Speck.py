@@ -1038,7 +1038,7 @@ class Speck:
                 self.move_queues[leg].put([4, 0, 0, ((-1) ** (leg % 2)) * distance])
         return None
 
-    def rotate(self, pitch:int, roll:int, yaw:int, center_of_rotation:[float,float,float]=[0.,0.,0.]):
+    def rotate(self, pitch: int, roll: int, yaw: int, center_of_rotation=[0.0, 0.0, 0.0]):
         """
         function used to rotate Speck about its three primary axis.
 
@@ -1052,33 +1052,52 @@ class Speck:
         References:
         https://www.youtube.com/watch?v=hGHnLUXNN9k&ab_channel=EngineerM
         """
-        # convert inputs into radians
-        pitch *= np.pi / 180
-        roll *= np.pi / 180
-        yaw *= np.pi / 180
+        # Convert degrees to radians
+        pitch = np.radians(pitch)
+        roll = np.radians(roll)
+        yaw = np.radians(yaw)
 
-        # Calculate rotation matrices about each of the three axis
-        PitchMatrix = np.matrix([[cos(pitch) , 0, sin(pitch)],
-                                 [          0, 1,          0],
-                                 [-sin(pitch), 0, cos(pitch)]])
-        RollMatrix = np.matrix([[1,         0,          0],
-                                [0, cos(roll), -sin(roll)],
-                                [0, sin(roll),  cos(roll)])
-        YawMatrix = np.matrix([[cos(yaw), -sin(yaw), 0],
-                               [sin(yaw),  cos(yaw), 0],
-                               [       0,         0, 1]])
+        # Rotation matrices
+        PitchMatrix = np.array([
+            [np.cos(pitch), 0, np.sin(pitch)],
+            [0, 1, 0],
+            [-np.sin(pitch), 0, np.cos(pitch)]
+        ])
+        RollMatrix = np.array([
+            [1, 0, 0],
+            [0, np.cos(roll), -np.sin(roll)],
+            [0, np.sin(roll), np.cos(roll)]
+        ])
+        YawMatrix = np.array([
+            [np.cos(yaw), -np.sin(yaw), 0],
+            [np.sin(yaw), np.cos(yaw), 0],
+            [0, 0, 1]
+        ])
 
-        # Calculate the total rotation matrix
-        RotMatrix = PitchMatrix * RollMatrix * YawMatrix
+        # Combined rotation matrix: yaw → pitch → roll (Z → Y → X)
+        RotMatrix = YawMatrix @ PitchMatrix @ RollMatrix
+
+        # Convert center to np.array
+        center = np.array(center_of_rotation)
 
         for leg in self.Legs:
-            # create matrices from input
-            center_of_rotation = np.matrix([center_of_rotation[0], center_of_rotation[1], center_of_rotation[2]])
-            origin = np.matrix([leg.origin[0], leg.origin[1], leg.origin[2]])
-            leg_position = np.matrix([leg.current_position[0], leg.current_position[1], leg.current_position[2]])
-            # transform coordinate system
-            transformed_position = leg_position + origin - center_of_rotation
+            # Global position of the foot
+            global_position = np.array(leg.origin) + np.array(leg.current_position)
 
+            # Translate to center of rotation
+            relative_position = global_position - center
+
+            # Rotate
+            rotated_relative_position = RotMatrix @ relative_position
+
+            # Translate back to global space
+            new_global_position = rotated_relative_position + center
+
+            # Convert back to local leg frame
+            new_foot_position = new_global_position - np.array(leg.origin)
+
+            # Move foot to new position
+            leg.set_position(*new_foot_position.tolist())
 
     def grab(self):
         """
