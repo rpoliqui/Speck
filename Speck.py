@@ -1072,12 +1072,12 @@ class Speck:
             z_r = y * np.sin(roll) + z * np.cos(roll)
 
             # Apply pitch (rotation around Y) → affects X and Z
-            x_r = x * np.cos(pitch) + z_r * np.sin(pitch)
-            z_p = -x * np.sin(pitch) + z_r * np.cos(pitch)
+            x_r = x * np.cos(yaw) + z_r * np.sin(yaw)
+            z_p = -x * np.sin(yaw) + z_r * np.cos(yaw)
 
             # Apply yaw (rotation around Z) → affects X and Y
-            x_y = x_r * np.cos(yaw) - y_r * np.sin(yaw)
-            y_y = x_r * np.sin(yaw) + y_r * np.cos(yaw)
+            x_y = x_r * np.cos(pitch) - y_r * np.sin(pitch)
+            y_y = x_r * np.sin(pitch) + y_r * np.cos(pitch)
 
             # Final rotated position relative to center
             rotated = np.array([x_y, y_y, z_p])
@@ -1086,7 +1086,7 @@ class Speck:
             new_position = rotated + center - origin
 
             # Apply to leg
-            leg.set_position(*new_position.tolist())
+            leg.smooth_move(*new_position.tolist())
 
     def grab(self):
         """
