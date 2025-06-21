@@ -356,8 +356,10 @@ class Leg:
         # calculate all three joint angles using inverse kinematics
         lat_hip_angle = atan2(z, y) + math.atan2(d, HIP_LENGTH)
 
-        knee_angle = acos((g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) /
-                          (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
+        knee_arg = (g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) / (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH)
+        # Clamp to valid range
+        knee_arg = max(-1.0, min(1.0, knee_arg))
+        knee_angle = acos(knee_arg)
         try:
             long_hip_angle = atan2(x, d) + asin((LOWER_LEG_LENGTH * sin(knee_angle)) / g)
         except ZeroDivisionError:
@@ -1040,15 +1042,19 @@ class Speck:
 
     def rotate(self, pitch: int, roll: int, yaw: int, center_of_rotation=[0.0, 0.0, 0.0], duration=0.5):
         """
-        Simulate body rotation by adjusting foot positions using smooth movement.
-        Accounts for mirrored Z axis across robot body.
-
-        :param pitch: degrees to rotate around Y-axis
-        :param roll: degrees to rotate around X-axis
-        :param yaw: degrees to rotate around Z-axis
-        :param center_of_rotation: rotation reference point (usually body center)
-        :param duration: time to complete movement (in seconds)
+        Simulate body rotation with limits to prevent unreachable leg positions.
         """
+        # ---- MAX LIMITS ----
+        MAX_PITCH = 15  # degrees
+        MAX_ROLL = 15  # degrees
+        MAX_YAW = 30  # degrees
+
+        # Clamp inputs
+        pitch = max(-MAX_PITCH, min(MAX_PITCH, pitch))
+        roll = max(-MAX_ROLL, min(MAX_ROLL, roll))
+        yaw = max(-MAX_YAW, min(MAX_YAW, yaw))
+
+        # Convert to radians
         pitch = np.radians(pitch)
         roll = np.radians(roll)
         yaw = np.radians(yaw)
@@ -1062,28 +1068,29 @@ class Speck:
             rel = foot_global - center
             x, y, z = rel
 
-            # MIRROR FIX: flip Z for one side (e.g., use sign of origin[1])
+            # MIRROR FIX: flip Z for mirrored sides
             z_mirrored = z * (-1 if origin[1] < 0 else 1)
 
-            # Roll (X-axis): affects Y and Z
+            # Apply roll (around X)
             y_r = y * np.cos(roll) - z_mirrored * np.sin(roll)
             z_r = y * np.sin(roll) + z_mirrored * np.cos(roll)
 
-            # Pitch (Y-axis): affects X and Z
+            # Apply pitch (around Y)
             x_p = x * np.cos(pitch) + z_r * np.sin(pitch)
             z_p = -x * np.sin(pitch) + z_r * np.cos(pitch)
 
-            # Yaw (Z-axis): affects X and Y
+            # Apply yaw (around Z)
             x_y = x_p * np.cos(yaw) - y_r * np.sin(yaw)
             y_y = x_p * np.sin(yaw) + y_r * np.cos(yaw)
 
-            # Final rotated global position
+            # Final rotated foot global position
             rotated = np.array([x_y, y_y, z_p]) + center
 
-            # Convert to local leg coordinates
+            # Convert back to leg-local space
             new_local = rotated - origin
             delta = new_local - current
 
+            # Move smoothly
             leg.smooth_move(*delta.tolist(), duration=duration)
 
     def grab(self):
