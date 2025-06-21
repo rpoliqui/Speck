@@ -1086,7 +1086,7 @@ class Speck:
             new_position = rotated + center - origin
 
             # Apply to leg
-            leg.smooth_move(*new_position.tolist()-leg.current_position)
+            leg.set_position(*new_position.tolist())
 
     def grab(self):
         """
