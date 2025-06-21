@@ -1040,64 +1040,53 @@ class Speck:
 
     def rotate(self, pitch: int, roll: int, yaw: int, center_of_rotation=[0.0, 0.0, 0.0]):
         """
-        function used to rotate Speck about its three primary axis.
+        Simulate rotation of the robot's body about its three axes by adjusting foot positions.
+        Pitch = forward/backward tilt (Y-axis)
+        Roll = left/right tilt (X-axis)
+        Yaw = rotation around vertical (Z-axis)
 
-        :param pitch: degrees to rotate about the Y axis
-        :param roll: degrees to rotate about the X axis
-        :param yaw: degrees to rotate about the Z axis
-        :param center_of_rotation: point with respect to the origin about which to perform the rotation. If no value is
-        specified, the default center of rotation is the origin
-        :return: None
-
-        References:
-        https://www.youtube.com/watch?v=hGHnLUXNN9k&ab_channel=EngineerM
+        :param pitch: degrees to rotate around Y-axis
+        :param roll: degrees to rotate around X-axis
+        :param yaw: degrees to rotate around Z-axis
+        :param center_of_rotation: 3D point about which to rotate
         """
-        # Convert degrees to radians
+        # Convert to radians
         pitch = np.radians(pitch)
         roll = np.radians(roll)
         yaw = np.radians(yaw)
 
-        # Rotation matrices
-        PitchMatrix = np.array([
-            [np.cos(pitch), 0, np.sin(pitch)],
-            [0, 1, 0],
-            [-np.sin(pitch), 0, np.cos(pitch)]
-        ])
-        RollMatrix = np.array([
-            [1, 0, 0],
-            [0, np.cos(roll), -np.sin(roll)],
-            [0, np.sin(roll), np.cos(roll)]
-        ])
-        YawMatrix = np.array([
-            [np.cos(yaw), -np.sin(yaw), 0],
-            [np.sin(yaw), np.cos(yaw), 0],
-            [0, 0, 1]
-        ])
-
-        # Combined rotation matrix: yaw → pitch → roll (Z → Y → X)
-        RotMatrix = YawMatrix @ PitchMatrix @ RollMatrix
-
-        # Convert center to np.array
+        # Convert center of rotation to np.array
         center = np.array(center_of_rotation)
 
         for leg in self.Legs:
-            # Global position of the foot
-            global_position = np.array(leg.origin) + np.array(leg.current_position)
+            # Global position of foot
+            origin = np.array(leg.origin)
+            foot_global = origin + np.array(leg.current_position)
 
-            # Translate to center of rotation
-            relative_position = global_position - center
+            # Position relative to center of rotation
+            relative = foot_global - center
+            x, y, z = relative  # unpack
 
-            # Rotate
-            rotated_relative_position = RotMatrix @ relative_position
+            # Apply roll (rotation around X) → affects Y and Z
+            y_r = y * np.cos(roll) - z * np.sin(roll)
+            z_r = y * np.sin(roll) + z * np.cos(roll)
 
-            # Translate back to global space
-            new_global_position = rotated_relative_position + center
+            # Apply pitch (rotation around Y) → affects X and Z
+            x_r = x * np.cos(pitch) + z_r * np.sin(pitch)
+            z_p = -x * np.sin(pitch) + z_r * np.cos(pitch)
 
-            # Convert back to local leg frame
-            new_foot_position = new_global_position - np.array(leg.origin)
+            # Apply yaw (rotation around Z) → affects X and Y
+            x_y = x_r * np.cos(yaw) - y_r * np.sin(yaw)
+            y_y = x_r * np.sin(yaw) + y_r * np.cos(yaw)
 
-            # Move foot to new position
-            leg.set_position(*new_foot_position.tolist())
+            # Final rotated position relative to center
+            rotated = np.array([x_y, y_y, z_p])
+
+            # Convert back to local leg position
+            new_position = rotated + center - origin
+
+            # Apply to leg
+            leg.set_position(*new_position.tolist())
 
     def grab(self):
         """
