@@ -1038,12 +1038,10 @@ class Speck:
                 self.move_queues[leg].put([4, 0, 0, ((-1) ** (leg % 2)) * distance])
         return None
 
-    def rotate(self, pitch: int, roll: int, yaw: int, center_of_rotation=[0.0, 0.0, 0.0], duration=1.0):
+    def rotate(self, pitch: int, roll: int, yaw: int, center_of_rotation=[0.0, 0.0, 0.0], duration=0.5):
         """
         Simulate body rotation by adjusting foot positions using smooth movement.
-        Pitch = forward/backward tilt (Y-axis)
-        Roll = left/right tilt (X-axis)
-        Yaw = rotation around vertical (Z-axis)
+        Accounts for mirrored Z axis across robot body.
 
         :param pitch: degrees to rotate around Y-axis
         :param roll: degrees to rotate around X-axis
@@ -1064,9 +1062,12 @@ class Speck:
             rel = foot_global - center
             x, y, z = rel
 
+            # MIRROR FIX: flip Z for one side (e.g., use sign of origin[1])
+            z_mirrored = z * (-1 if origin[1] < 0 else 1)
+
             # Roll (X-axis): affects Y and Z
-            y_r = y * np.cos(roll) - z * np.sin(roll)
-            z_r = y * np.sin(roll) + z * np.cos(roll)
+            y_r = y * np.cos(roll) - z_mirrored * np.sin(roll)
+            z_r = y * np.sin(roll) + z_mirrored * np.cos(roll)
 
             # Pitch (Y-axis): affects X and Z
             x_p = x * np.cos(pitch) + z_r * np.sin(pitch)
@@ -1076,12 +1077,12 @@ class Speck:
             x_y = x_p * np.cos(yaw) - y_r * np.sin(yaw)
             y_y = x_p * np.sin(yaw) + y_r * np.cos(yaw)
 
-            # Final rotated foot global position
+            # Final rotated global position
             rotated = np.array([x_y, y_y, z_p]) + center
 
             # Convert to local leg coordinates
             new_local = rotated - origin
-            delta = new_local - current  # for smooth_move
+            delta = new_local - current
 
             leg.smooth_move(*delta.tolist(), duration=duration)
 
