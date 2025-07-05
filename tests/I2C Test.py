@@ -4,7 +4,7 @@ import time
 # I2C bus number (usually 1 on Raspberry Pi)
 bus_number = 1
 # I2C address of your device
-device_address = 0x48  # Replace with your device's address
+device_address = 0x40  # Replace with your device's address
 
 try:
     # Create an SMBus object for the specified bus
