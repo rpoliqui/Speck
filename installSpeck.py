@@ -38,6 +38,10 @@ if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
     subprocess.run(['sudo', 'apt-get', 'install', '-y', 'bluetooth'])  # Install bluetooth package
     subprocess.run(['sudo', 'apt-get', 'install', '-y', 'bluez'])  # Install bluetooth package
     subprocess.run(['sudo', 'apt-get', 'install', '-y', 'python3-bluez'])  # Install python package to use bluetooth
+
+    subprocess.run(['sudo', 'apt-get', 'install', '-y', 'python3-smbus'])  # Install python package for I2C control
+    subprocess.run(['sudo', 'apt-get', 'install', '-y', 'python3-i2c-tools'])  # Install python package for I2C control
+
     subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-picamera2'])  # Install python package to use camera
     subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-libcamera'])  # Install python package to use camera
     subprocess.run(['pip', 'install', 'pyzmq==21.0.0'])  # Update pyzmq for messages, was throwing error of outdated version
