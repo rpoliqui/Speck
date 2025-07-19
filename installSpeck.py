@@ -39,8 +39,11 @@ if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
     subprocess.run(['sudo', 'apt-get', 'install', '-y', 'bluez'])  # Install bluetooth package
     subprocess.run(['sudo', 'apt-get', 'install', '-y', 'python3-bluez'])  # Install python package to use bluetooth
 
-    subprocess.run(['sudo', 'apt-get', 'install', '-y', 'python3-smbus'])  # Install python package for I2C control
+    subprocess.run(['sudo', 'apt-get', 'install', '-y', 'git', 'build-essential', 'python-dev'])  # Install python package for I2C control
     subprocess.run(['sudo', 'apt-get', 'install', '-y', 'python3-i2c-tools'])  # Install python package for I2C control
+    subprocess.run(['git', 'clone', 'https://github.com/adafruit/Adafruit_Python_PCA9685.git'])
+    subprocess.run(['cd', 'Adafruit_Python_PCA9685'])
+    subprocess.run(['sudo', 'python3', 'setup.py', 'install'])
 
     subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-picamera2'])  # Install python package to use camera
     subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-libcamera'])  # Install python package to use camera

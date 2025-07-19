@@ -58,10 +58,11 @@ References:
     https://www.youtube.com/watch?v=RvbWl8rZOoQ
     https://github.com/ukBaz/python-bluezero/blob/main/examples/peripheral_read_with_without_options.py
     https://www.kevsrobots.com/blog/servo-easing-with-pancake-bot.html
-
     https://www.youtube.com/watch?v=hGHnLUXNN9k&ab_channel=EngineerM
+    https://blog.garybricks.com/control-16-servos-with-raspberry-pi-pca9685-driver
 """
 # __________Import Statements__________
+from __future__ import division
 import numpy as np
 import math
 import time
@@ -78,21 +79,23 @@ from queue import Queue
 import pigpio
 from gpiozero import Button, Device, OutputDevice, LED
 from gpiozero.pins.pigpio import PiGPIOFactory
+import Adafruit_PCA9685
+
 
 # __________Pin Definition__________
 # Joint Pins
-PIN_RF_HIP_LAT = 14
-PIN_RF_HIP_LONG = 15
-PIN_RF_KNEE = 18
-PIN_LF_HIP_LAT = 17
-PIN_LF_HIP_LONG = 27
-PIN_LF_KNEE = 22
-PIN_RB_HIP_LAT = 23
-PIN_RB_HIP_LONG = 24
-PIN_RB_KNEE = 25
-PIN_LB_HIP_LAT = 10
-PIN_LB_HIP_LONG = 9
-PIN_LB_KNEE = 11
+PIN_RF_HIP_LAT = 0
+PIN_RF_HIP_LONG = 1
+PIN_RF_KNEE = 2
+PIN_LF_HIP_LAT = 4
+PIN_LF_HIP_LONG = 5
+PIN_LF_KNEE = 6
+PIN_RB_HIP_LAT = 8
+PIN_RB_HIP_LONG = 9
+PIN_RB_KNEE = 10
+PIN_LB_HIP_LAT = 12
+PIN_LB_HIP_LONG = 13
+PIN_LB_KNEE = 14
 
 # Motor Driver Pins
 PIN_IN1 = 8
@@ -206,6 +209,10 @@ TROT = (([0, 3], -30, -30, 0),
 factory = PiGPIOFactory()  # define pin factory to use servos for more accurate servo control
 Device.pin_factory = factory
 
+# __________PWM Controller Setup__________
+pwm = Adafruit_PCA9685.PCA9685()
+pwm.set_pwm_freq(60)
+
 
 # __________Class Definitions__________
 class Joint:
@@ -218,24 +225,22 @@ class Joint:
     :param self.current_angle: int: the angle that the joint is currently at
     """
 
-    def __init__(self, pin: int, min_angle=0.0, max_angle=180.0, starting_angle=0.0, flipped=False):
+    def __init__(self, channel: int, min_angle=0.0, max_angle=180.0, starting_angle=0.0, flipped=False):
         """
         Constructor for the Joint class.
         
-        :argument pin:type int: the GPIO pin that the joint servo is connected to
+        :argument channel:type int: the PWM generator channel where the servo is attached
         :argument min_angle:type float: the minimum angle that the joint can be set to
         :argument max_angle:type float: the maximum angle that the joint can be set to
         :argument starting_angle:type float: the angle to set the joint to on startup
         """
-        if AvailablePins[pin - 1] == 1:  # If the pin is available, set it up and mark it as used
-            self.pin = pin
-            AvailablePins[pin - 1] = 0
         self.flipped = flipped  # keep track of if all angles need to be flipped
         self.min_angle = min_angle  # define min angle
         self.max_angle = max_angle  # define max angle
         self.current_angle = starting_angle  # set the starting angle
-        self.pi = pigpio.pi()       # access the local Pi's GPIO
-        # tunable pulsewidth for accruate angle control
+        self.channel = channel  # define channel where this joint is connected
+
+        # tunable pulsewidth for accurate angle control
         self.min_pulse_width = 600
         self.max_pulse_width = 2500
         self.set_angle(starting_angle)  # properly set the starting angle of the joint
@@ -261,7 +266,7 @@ class Joint:
         pulse_width = self.min_pulse_width + ((angle - self.min_angle) / span) * (self.max_pulse_width - self.min_pulse_width)
 
         # set servo angle
-        self.pi.set_servo_pulsewidth(self.pin, pulse_width)
+        pwm.set_pwm(self.channel, 0, pulse_width)
         return None
 
     def change_angle(self, change_in_angle: float):
@@ -291,35 +296,20 @@ class Leg:
     :parameter self.flipped:type bool: Flag to flip and angles of the leg joints
     """
 
-    def __init__(self, hip_lat_pin: int, hip_long_pin: int, knee_pin: int, flipped=False, hip_flip=False):
+    def __init__(self, hip_lat_channel: int, hip_long_channel: int, knee_channel: int, flipped=False, hip_flip=False):
         """
         Constructor for the Leg class.
 
-        :argument hip_lat_pin:type int: The pin that the lateral hip joint servo is connected to
-        :argument hip_long_pin:type int: The pin that the longitudinal hip joint servo is connected to
-        :argument knee_pin:type int: The pin that the knee joint is connected to
+        :argument hip_lat_channel:type int: The pin that the lateral hip joint servo is connected to
+        :argument hip_long_channel:type int: The pin that the longitudinal hip joint servo is connected to
+        :argument knee_channel:type int: The pin that the knee joint is connected to
         """
-        # check to make sure all given pins are available. Raise an error if the pin is unavailable.
-        # Set the pins to taken
-        if AvailablePins[hip_lat_pin - 1] == 1:
-            # for correct functioning, the lateral hip joints needs to be flipped by default
-            self.hip_lat = Joint(hip_lat_pin, min_angle=-90, max_angle=90, starting_angle=0,
-                                 flipped=(flipped ^ hip_flip))
-            AvailablePins[hip_lat_pin - 1] = 0
-        else:
-            raise RuntimeError("Pin " + str(hip_lat_pin) + " is not available to use for the lateral hip joint.")
+        # Create joint objects for the three joints in the leg
+        # for correct functioning, the lateral hip joints needs to be flipped by default
+        self.hip_lat = Joint(hip_lat_channel, min_angle=-90, max_angle=90, starting_angle=0, flipped=(flipped ^ hip_flip))
+        self.hip_long = Joint(hip_long_channel, min_angle=-90, max_angle=90, starting_angle=-90, flipped=flipped)
+        self.knee = Joint(knee_channel, min_angle=0, max_angle=180, starting_angle=180, flipped=flipped)
 
-        if AvailablePins[hip_long_pin - 1] == 1:
-            self.hip_long = Joint(hip_long_pin, min_angle=-90, max_angle=90, starting_angle=-90, flipped=flipped)
-            AvailablePins[hip_long_pin - 1] = 0
-        else:
-            raise RuntimeError("Pin " + str(hip_long_pin) + " is not available to use for the longitudinal hip joint.")
-
-        if AvailablePins[knee_pin - 1] == 1:
-            self.knee = Joint(knee_pin, min_angle=0, max_angle=180, starting_angle=180, flipped=flipped)
-            AvailablePins[knee_pin - 1] = 0
-        else:
-            raise RuntimeError("Pin " + str(knee_pin) + " is not available for the knee joint")
         self.flipped = flipped  # specify whether all angles need to be flipped or not
         self.current_position = [0, 0, 0]  # assume robot starts at origin until the position of the joints is set.
         self.origin = [0, 0, JOINT_Z_OFFSET]  # location of leg origin with respect to robot origin
@@ -334,7 +324,7 @@ class Leg:
 
     def __repr__(self):
         return "Hip_Lat Pin: %s , Hip_Long Pin: %s , Knee Pin: %s , Flipped: %s" % (
-            self.hip_lat.pin, self.hip_long.pin, self.knee.pin, self.flipped)
+            self.hip_lat.channel, self.hip_long.channel, self.knee.channel, self.flipped)
 
     def set_position(self, x: float, y: float, z: float):
         """
