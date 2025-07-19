@@ -259,14 +259,22 @@ class Joint:
         if self.flipped:
             # e.g. if min=0, max=180, angle=30  -> flipped_angle = 150
             angle = self.max_angle - (angle - self.min_angle)
+
         # update current angle parameter
         self.current_angle = angle
-        # calculate necessary pulsewidth for anlge
+
+        # calculate necessary pulsewidth for angle in microseconds
         span = self.max_angle - self.min_angle
-        pulse_width = float(self.min_pulse_width + ((angle - self.min_angle) / span) * (self.max_pulse_width - self.min_pulse_width))
+        pulse_width_us = self.min_pulse_width + ((angle - self.min_angle) / span) * (
+                    self.max_pulse_width - self.min_pulse_width)
+
+        # convert pulsewidth from microseconds to PWM ticks for PCA9685
+        pulse_length_us = 1000000 / 60  # 60 Hz frequency => 16,666.67 µs per cycle
+        tick_length_us = pulse_length_us / 4096  # Each tick ≈ 4.069 µs
+        pulse_width_ticks = int(pulse_width_us / tick_length_us)
 
         # set servo angle
-        pwm.set_pwm(self.channel, 0, pulse_width)
+        pwm.set_pwm(self.channel, 0, pulse_width_ticks)
         return None
 
     def change_angle(self, change_in_angle: float):
