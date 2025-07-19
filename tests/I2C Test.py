@@ -9,5 +9,5 @@ pca.frequency = 60
 
 servo1 = servo.Servo(pca.channels[0])
 for i in range(180):
-servo1.angle = 180 - i
-time.sleep(0.03)
+    servo1.angle = 180 - i
+    time.sleep(0.03)
