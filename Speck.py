@@ -263,7 +263,7 @@ class Joint:
         self.current_angle = angle
         # calculate necessary pulsewidth for anlge
         span = self.max_angle - self.min_angle
-        pulse_width = self.min_pulse_width + ((angle - self.min_angle) / span) * (self.max_pulse_width - self.min_pulse_width)
+        pulse_width = int(self.min_pulse_width + ((angle - self.min_angle) / span) * (self.max_pulse_width - self.min_pulse_width))
 
         # set servo angle
         pwm.set_pwm(self.channel, 0, pulse_width)
