@@ -241,7 +241,7 @@ class Joint:
         self.channel = channel  # define channel where this joint is connected
 
         # tunable pulsewidth for accurate angle control
-        self.min_pulse_width = 600
+        self.min_pulse_width = 0
         self.max_pulse_width = 2500
         self.set_angle(starting_angle)  # properly set the starting angle of the joint
 
