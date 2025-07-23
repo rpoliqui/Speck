@@ -242,7 +242,7 @@ class Joint:
 
         # tunable pulsewidth for accurate angle control
         self.min_pulse_width = 600
-        self.max_pulse_width = 3000
+        self.max_pulse_width = 2900
         self.set_angle(starting_angle)  # properly set the starting angle of the joint
 
     def set_angle(self, angle: float):
