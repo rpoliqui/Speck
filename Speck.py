@@ -1090,7 +1090,7 @@ class Speck:
             print(f"Change in foot position: {delta}")
 
             # add change to movement list
-            delta[leg_num] = [leg_num, delta[0], delta[1], delta[2]]
+            deltas[leg_num] = [leg_num, delta[0], delta[1], delta[2]]
             leg_num += 1
 
         for leg_num in range(0,4):
