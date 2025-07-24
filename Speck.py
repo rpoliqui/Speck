@@ -1087,6 +1087,7 @@ class Speck:
             # Convert back to leg-local space
             new_local = rotated - origin
             delta = new_local - current
+            print(f"Change in foot position: {delta}")
 
             # Move smoothly
             leg.smooth_move(*delta.tolist(), duration=duration)
