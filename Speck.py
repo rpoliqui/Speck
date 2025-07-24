@@ -1059,8 +1059,8 @@ class Speck:
 
         center = np.array(center_of_rotation)
 
-        movements = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
-        leg_num=0
+        movements = [[0,0,0,0],[1,0,0,0],[2,0,0,0],[3,0,0,0]]
+        leg_num = 0
 
         for leg in self.Legs:
             origin = np.array(leg.origin)
@@ -1090,12 +1090,9 @@ class Speck:
             print(f"Change in foot position: {delta}")
 
             # add change to movement list
-            movements[leg_num] = delta.tolist()
+            self.move_queues[leg_num].put([leg_num, delta[0], delta[1], delta[2]])
             leg_num += 1
 
-        leg_num = 0
-        for leg in self.Legs:
-            leg.smooth_move(*movements[leg_num], duration=duration)
 
     def grab(self):
         """
