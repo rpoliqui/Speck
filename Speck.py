@@ -1066,12 +1066,9 @@ class Speck:
             rel = foot_global - center
             x, y, z = rel
 
-            # MIRROR FIX: flip Z for mirrored sides
-            z_mirrored = z * (-1 if origin[1] < 0 else 1)
-
             # Apply roll (around X)
-            y_r = y * np.cos(roll) - z_mirrored * np.sin(roll)
-            z_r = y * np.sin(roll) + z_mirrored * np.cos(roll)
+            y_r = y * np.cos(roll) - z* np.sin(roll)
+            z_r = y * np.sin(roll) + z * np.cos(roll)
 
             # Apply pitch (around Y)
             x_p = x * np.cos(pitch) + z_r * np.sin(pitch)
