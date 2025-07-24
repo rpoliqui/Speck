@@ -1089,7 +1089,10 @@ class Speck:
             print(f"Change in foot position: {delta}")
 
             # add change to movement list
-            deltas[leg_num] = [leg_num, delta[0], delta[1], delta[2]]
+            if leg.flipped:
+                deltas[leg_num] = [leg_num, delta[0], delta[1], -delta[2]]
+            else:
+                deltas[leg_num] = [leg_num, delta[0], delta[1], delta[2]]
             leg_num += 1
 
         for leg_num in range(0,4):
