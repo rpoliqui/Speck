@@ -347,7 +347,7 @@ class Leg:
         self.current_position = [x, y, z]  # update the parameter storing the current position
 
         # Introduce a vertical offset for the lateral hip joint
-        LATERAL_HIP_VERTICAL_OFFSET = 25  # mm, adjust this based on your robot’s mechanical design
+        LATERAL_HIP_VERTICAL_OFFSET = 5  # mm, adjust this based on your robot’s mechanical design
 
         # Apply experimental adjustment on x position
         x += math.sqrt(max(0, y ** 2 - 175 ** 2))  # Ensure no math domain error
