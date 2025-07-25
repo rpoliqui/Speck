@@ -1042,37 +1042,38 @@ class Speck:
         Function used to rotate Speck in place by tilting or turning the body. This simulates a rotation of the body
         relative to the ground by adjusting the leg positions accordingly.
 
-        :param pitch: Rotation about the X-axis (tilting forward/backward), in degrees
-        :param roll: Rotation about the Y-axis (tilting left/right), in degrees
-        :param yaw: Rotation about the Z-axis (twisting left/right), in degrees
-        :param center_of_rotation: The point (in global coordinates) to rotate about. Default is [0, 0, 0]
+        :param pitch: Rotation about the local X-axis (tilting forward/backward), in degrees  → Global Z
+        :param roll:  Rotation about the local Z-axis (tilting left/right), in degrees       → Global X
+        :param yaw:   Rotation about the local Y-axis (twisting left/right), in degrees      → Global Y
+        :param center_of_rotation: The point (in global coordinates) to rotate about
         :param duration: The time in seconds for each leg to move to its new position
         :return: None
+
+        Axis Mapping:
+            Local  →  Global
+             X     →     Z
+             Y     →     X
+             Z     →     Y
         """
-        # Traditional Axis    Local Axis
-        #       X                  Z
-        #       Y                  X
-        #       Z                  Y
-
         # ---- MAX LIMITS ----
-        MAX_PITCH = 15  # degrees
-        MAX_ROLL = 15  # degrees
-        MAX_YAW = 30  # degrees
+        MAX_PITCH = 15  # deg forward/back tilt
+        MAX_ROLL = 15  # deg left/right tilt
+        MAX_YAW = 30  # deg in-place twist
 
-        # Clamp angles and convert to radians
-        pitch = np.radians(max(-MAX_PITCH, min(MAX_PITCH, pitch)))  # X-axis
-        roll = np.radians(max(-MAX_ROLL, min(MAX_ROLL, roll)))  # Y-axis
-        yaw = np.radians(max(-MAX_YAW, min(MAX_YAW, yaw)))  # Z-axis
+        # Clamp and convert to radians (applied to GLOBAL axes)
+        pitch = np.radians(max(-MAX_PITCH, min(MAX_PITCH, pitch)))  # Local X → Global Z
+        roll = np.radians(max(-MAX_ROLL, min(MAX_ROLL, roll)))  # Local Z → Global X
+        yaw = np.radians(max(-MAX_YAW, min(MAX_YAW, yaw)))  # Local Y → Global Y
 
-        # Precompute trig terms
-        cx, cy, cz = np.cos([pitch, roll, yaw])
-        sx, sy, sz = np.sin([pitch, roll, yaw])
+        # Map to GLOBAL frame as pitch=Z, roll=X, yaw=Y
+        cz, cx, cy = np.cos([pitch, roll, yaw])
+        sz, sx, sy = np.sin([pitch, roll, yaw])
 
-        # Rotation matrix: R = Rz @ Ry @ Rx (ZYX extrinsic)
+        # Rotation matrix: R = Ryaw @ Rpitch @ Rroll → R = R_y @ R_z @ R_x
         R = np.array([
-            [cz * cy, cz * sy * sx - sz * cx, cz * sy * cx + sz * sx],
-            [sz * cy, sz * sy * sx + cz * cx, sz * sy * cx - cz * sx],
-            [-sy, cy * sx, cy * cx]
+            [cy * cz, cy * sz * sx - sy * cx, cy * sz * cx + sy * sx],
+            [sy * cz, sy * sz * sx + cy * cx, sy * sz * cx - cy * sx],
+            [-sz, cz * sx, cz * cx]
         ])
 
         center = np.array(center_of_rotation)
@@ -1083,20 +1084,19 @@ class Speck:
             current = np.array(leg.current_position)
             global_foot = origin + current
 
-            # Rotate foot about center
+            # Rotate foot about the body center
             rotated = R @ (global_foot - center) + center
             new_local = rotated - origin
             delta = new_local - current
 
             print(f"Leg {leg_num} change in foot position: {delta}")
 
-            # Flip x-delta if leg is mirrored (flipped)
+            # Flip x (forward/back) if leg is mirrored
             delta_x = -delta[0] if leg.flipped else delta[0]
 
-            # Add movement command to queue
+            # Output as [Z, Y, X] to match your local [X, Y, Z]
             deltas[leg_num] = [leg_num, delta[2], delta[1], delta_x, duration]
 
-        # Enqueue movements for all 4 legs
         for leg_num in range(4):
             self.move_queues[leg_num].put(deltas[leg_num])
 
