@@ -1037,65 +1037,67 @@ class Speck:
                 self.move_queues[leg].put([4, 0, 0, ((-1) ** (leg % 2)) * distance])
         return None
 
-    def rotate(self, pitch: int, roll: int, yaw: int, center_of_rotation=[0.0, 0.0, 0.0], duration=0.5):
+    def rotate(self, pitch: float, roll: float, yaw: float, center_of_rotation=[0.0, 0.0, 0.0], duration=0.5):
         """
-        Simulate body rotation with limits to prevent unreachable leg positions.
+        Function used to rotate Speck in place by tilting or turning the body. This simulates a rotation of the body
+        relative to the ground by adjusting the leg positions accordingly.
+
+        :param pitch: Rotation about the X-axis (tilting forward/backward), in degrees
+        :param roll: Rotation about the Y-axis (tilting left/right), in degrees
+        :param yaw: Rotation about the Z-axis (twisting left/right), in degrees
+        :param center_of_rotation: The point (in global coordinates) to rotate about. Default is [0, 0, 0]
+        :param duration: The time in seconds for each leg to move to its new position
+        :return: None
         """
+        # Traditional Axis    Local Axis
+        #       X                  Z
+        #       Y                  X
+        #       Z                  Y
+
         # ---- MAX LIMITS ----
         MAX_PITCH = 15  # degrees
         MAX_ROLL = 15  # degrees
         MAX_YAW = 30  # degrees
 
-        # Clamp inputs
-        pitch = max(-MAX_PITCH, min(MAX_PITCH, pitch))
-        roll = max(-MAX_ROLL, min(MAX_ROLL, roll))
-        yaw = max(-MAX_YAW, min(MAX_YAW, yaw))
+        # Clamp angles and convert to radians
+        pitch = np.radians(max(-MAX_PITCH, min(MAX_PITCH, pitch)))  # X-axis
+        roll = np.radians(max(-MAX_ROLL, min(MAX_ROLL, roll)))  # Y-axis
+        yaw = np.radians(max(-MAX_YAW, min(MAX_YAW, yaw)))  # Z-axis
 
-        # Convert to radians
-        pitch = np.radians(pitch)
-        roll = np.radians(roll)
-        yaw = np.radians(yaw)
+        # Precompute trig terms
+        cx, cy, cz = np.cos([pitch, roll, yaw])
+        sx, sy, sz = np.sin([pitch, roll, yaw])
+
+        # Rotation matrix: R = Rz @ Ry @ Rx (ZYX extrinsic)
+        R = np.array([
+            [cz * cy, cz * sy * sx - sz * cx, cz * sy * cx + sz * sx],
+            [sz * cy, sz * sy * sx + cz * cx, sz * sy * cx - cz * sx],
+            [-sy, cy * sx, cy * cx]
+        ])
 
         center = np.array(center_of_rotation)
+        deltas = [[0], [0], [0], [0]]
 
-        deltas = [[0],[0],[0],[0]]
-        leg_num = 0
-
-        for leg in self.Legs:
+        for leg_num, leg in enumerate(self.Legs):
             origin = np.array(leg.origin)
             current = np.array(leg.current_position)
-            foot_global = origin + current
-            rel = foot_global - center
-            x, y, z = rel
+            global_foot = origin + current
 
-            # Apply roll (around X)
-            y_r = y * np.cos(roll) - z* np.sin(roll)
-            z_r = y * np.sin(roll) + z * np.cos(roll)
-
-            # Apply pitch (around Y)
-            x_p = x * np.cos(pitch) + z_r * np.sin(pitch)
-            z_p = -x * np.sin(pitch) + z_r * np.cos(pitch)
-
-            # Apply yaw (around Z)
-            x_y = x_p * np.cos(yaw) - y_r * np.sin(yaw)
-            y_y = x_p * np.sin(yaw) + y_r * np.cos(yaw)
-
-            # Final rotated foot global position
-            rotated = np.array([x_y, y_y, z_p]) + center
-
-            # Convert back to leg-local space
+            # Rotate foot about center
+            rotated = R @ (global_foot - center) + center
             new_local = rotated - origin
             delta = new_local - current
-            print(f"Change in foot position: {delta}")
 
-            # add change to movement list
-            if leg.flipped:
-                deltas[leg_num] = [leg_num, delta[0], delta[1], -delta[2]]
-            else:
-                deltas[leg_num] = [leg_num, delta[0], delta[1], delta[2]]
-            leg_num += 1
+            print(f"Leg {leg_num} change in foot position: {delta}")
 
-        for leg_num in range(0,4):
+            # Flip x-delta if leg is mirrored (flipped)
+            delta_x = -delta[0] if leg.flipped else delta[0]
+
+            # Add movement command to queue
+            deltas[leg_num] = [leg_num, delta[2], delta[1], delta_x, duration]
+
+        # Enqueue movements for all 4 legs
+        for leg_num in range(4):
             self.move_queues[leg_num].put(deltas[leg_num])
 
     def grab(self):
