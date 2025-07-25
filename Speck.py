@@ -334,7 +334,7 @@ class Leg:
         return "Hip_Lat Pin: %s , Hip_Long Pin: %s , Knee Pin: %s , Flipped: %s" % (
             self.hip_lat.channel, self.hip_long.channel, self.knee.channel, self.flipped)
 
-    def set_position(self, x: int, y: int, z: int):
+    def set_position(self, x: float, y: float, z: float):
         """
         A function used to set the position of the foot. The position is relative to the point where the longitudinal
         hip joint and upper leg meet.
@@ -343,25 +343,28 @@ class Leg:
         :argument y:type int: The position of the foot in the up - down direction in millimeters
         :argument z:type int: The position of the foot in the in - out direction in millimeters
         :return: None
-        """
-        self.current_position = [x, y, z]  # update the parameter storing the current position
-        x += math.sqrt(y ** 2 - 175 ** 2)  # perform adjustment on x position based on experiments
 
+        References:
+        https://www.youtube.com/watch?v=4rc8N1xuWvc&t=2s&ab_channel=AdvancedHobbyLab
+        """
+        self.current_position = [x, y, z]
         # calculate geometry used in angle calculations
         d = sqrt((z ** 2 + y ** 2) - HIP_LENGTH ** 2)  # distance from hip lat joint to the foot
         g = sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
-
         # calculate all three joint angles using inverse kinematics
         lat_hip_angle = atan2(z, y) + math.atan2(d, HIP_LENGTH)
 
-        knee_angle = acos((g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) /
-                          (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH))
-
-        long_hip_angle = atan2(x, d) + asin(LOWER_LEG_LENGTH * sin(knee_angle) / g)
-
+        knee_arg = (g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) / (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH)
+        # Clamp to valid range
+        knee_arg = max(-1.0, min(1.0, knee_arg))
+        knee_angle = acos(knee_arg)
+        try:
+            long_hip_angle = atan2(x, d) + asin((LOWER_LEG_LENGTH * sin(knee_angle)) / g)
+        except ZeroDivisionError:
+            long_hip_angle = 0
         # set all three servos to the calculated angles
         self.hip_lat.set_angle(-1 * (90 - math.degrees(lat_hip_angle)))
-        self.hip_long.set_angle(-1 * (90 - math.degrees(long_hip_angle)))
+        self.hip_long.set_angle(-math.degrees(long_hip_angle))
         self.knee.set_angle(180 - math.degrees(knee_angle))
         return None
 
