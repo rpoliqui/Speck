@@ -1095,7 +1095,7 @@ class Speck:
             delta_x = -delta[0] if leg.flipped else delta[0]
 
             # Output as [Z, Y, X] to match your local [X, Y, Z]
-            deltas[leg_num] = [leg_num, delta_x, delta[1], delta[2], duration]
+            deltas[leg_num] = [leg_num, delta_x, delta[2], delta[1], duration]
 
         for leg_num in range(4):
             self.move_queues[leg_num].put(deltas[leg_num])
