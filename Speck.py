@@ -346,46 +346,34 @@ class Leg:
         """
         self.current_position = [x, y, z]  # update the parameter storing the current position
 
-        # Introduce a vertical offset for the lateral hip joint
-        LATERAL_HIP_VERTICAL_OFFSET = 0  # mm, adjust this based on your robot’s mechanical design
+        # Introduce a vertical offset for the lateral hip joint (positive if lateral is above longitudinal)
+        LATERAL_HIP_VERTICAL_OFFSET = 25  # mm; set to 0 to revert to original behavior
 
-        # Apply experimental adjustment on x position
+        # Perform adjustment on x position based on experiments (original behavior preserved)
         x += math.sqrt(max(0, y ** 2 - 175 ** 2))  # Ensure no math domain error
 
         # Adjust y for vertical offset of the lateral hip joint
         y_lat = y - LATERAL_HIP_VERTICAL_OFFSET
 
-        # Calculate distance from lateral hip to foot (in yz plane)
-        yz_dist_sq = z ** 2 + y_lat ** 2
-        if yz_dist_sq <= HIP_LENGTH ** 2:
-            yz_dist_sq = HIP_LENGTH ** 2 + 1e-5  # avoid sqrt of negative
-        d = math.sqrt(yz_dist_sq - HIP_LENGTH ** 2)
+        # Calculate geometry used in angle calculations
+        d = math.sqrt(max(1e-5, (z ** 2 + y_lat ** 2) - HIP_LENGTH ** 2))  # distance from hip lat joint to the foot
+        g = math.sqrt(d ** 2 + x ** 2)  # distance from hip long joint to the foot
 
-        # Full distance from longitudinal hip to foot
-        g = math.sqrt(d ** 2 + x ** 2)
-
-        # Lateral hip angle (in yz plane), with vertical offset
+        # Calculate all three joint angles using inverse kinematics
         lat_hip_angle = math.atan2(z, y_lat) + math.atan2(d, HIP_LENGTH)
 
-        # Knee angle
         cos_knee = (g ** 2 - UPPER_LEG_LENGTH ** 2 - LOWER_LEG_LENGTH ** 2) / (-2 * UPPER_LEG_LENGTH * LOWER_LEG_LENGTH)
-        cos_knee = max(-1, min(1, cos_knee))  # Clamp to avoid math domain errors
+        cos_knee = max(-1, min(1, cos_knee))  # Clamp to avoid math domain error
         knee_angle = math.acos(cos_knee)
 
-        # Longitudinal hip angle (in xy plane)
         sin_term = (LOWER_LEG_LENGTH * math.sin(knee_angle)) / g
-        sin_term = max(-1, min(1, sin_term))  # Clamp to avoid domain errors
+        sin_term = max(-1, min(1, sin_term))  # Clamp to avoid domain error
         long_hip_angle = math.atan2(x, d) + math.asin(sin_term)
 
-        # Convert angles to degrees and adjust for servos
-        lat_hip_angle_deg = -1 * (90 - math.degrees(lat_hip_angle))
-        long_hip_angle_deg = -1 * (90 - math.degrees(long_hip_angle))
-        knee_angle_deg = 180 - math.degrees(knee_angle)
-
-        # Set the servos
-        self.hip_lat.set_angle(lat_hip_angle_deg)
-        self.hip_long.set_angle(long_hip_angle_deg)
-        self.knee.set_angle(knee_angle_deg)
+        # Convert to degrees and send to servos
+        self.hip_lat.set_angle(-1 * (90 - math.degrees(lat_hip_angle)))
+        self.hip_long.set_angle(-1 * (90 - math.degrees(long_hip_angle)))
+        self.knee.set_angle(180 - math.degrees(knee_angle))
 
         return None
 
