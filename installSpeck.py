@@ -45,6 +45,9 @@ if wifi_ip is not None:  # Wi-Fi is connected, so Speck can be updated
     subprocess.run(['cd', 'Adafruit_Python_PCA9685'])
     subprocess.run(['sudo', 'python3', 'setup.py', 'install'])
 
+    subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-smbus'])  # Install python package for IMU
+    subprocess.run(['pip', 'install', 'mpu6050-raspberrypi'])  # Install python package for IMU
+
     subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-picamera2'])  # Install python package to use camera
     subprocess.run(['sudo', 'apt', 'install', '-y', 'python3-libcamera'])  # Install python package to use camera
     subprocess.run(['pip', 'install', 'pyzmq==21.0.0'])  # Update pyzmq for messages, was throwing error of outdated version
