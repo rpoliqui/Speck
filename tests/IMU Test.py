@@ -1,32 +1,38 @@
 import mpu6050
 import time
+import math
 
-# Create a new Mpu6050 object
-mpu6050 = mpu6050.mpu6050(0x68)
+# Create a new MPU6050 object
+mpu = mpu6050.mpu6050(0x68)
 
-# Define a function to read the sensor data
+# Function to read the sensor data
 def read_sensor_data():
-    # Read the accelerometer values
-    accelerometer_data = mpu6050.get_accel_data()
+    accel = mpu.get_accel_data()
+    gyro = mpu.get_gyro_data()
+    temp = mpu.get_temp()
+    return accel, gyro, temp
 
-    # Read the gyroscope values
-    gyroscope_data = mpu6050.get_gyro_data()
+# Function to calculate tilt angles from accelerometer data
+def calculate_angles(accel):
+    ax = accel['x']
+    ay = accel['y']
+    az = accel['z']
 
-    # Read temp
-    temperature = mpu6050.get_temp()
+    angle_x = math.degrees(math.atan2(ay, math.sqrt(ax**2 + az**2)))
+    angle_y = math.degrees(math.atan2(-ax, math.sqrt(ay**2 + az**2)))
+    angle_z = math.degrees(math.atan2(math.sqrt(ax**2 + ay**2), az))
 
-    return accelerometer_data, gyroscope_data, temperature
+    return angle_x, angle_y, angle_z
 
-# Start a while loop to continuously read the sensor data
+# Main loop
 while True:
+    accel, gyro, temp = read_sensor_data()
+    angle_x, angle_y, angle_z = calculate_angles(accel)
 
-    # Read the sensor data
-    accelerometer_data, gyroscope_data, temperature = read_sensor_data()
+    print(f"Accelerometer data: {accel}")
+    print(f"Gyroscope data: {gyro}")
+    print(f"Temperature: {temp:.2f} C")
+    print(f"Angles -> X: {angle_x:.2f}°, Y: {angle_y:.2f}°, Z: {angle_z:.2f}°")
+    print("-" * 40)
 
-    # Print the sensor data
-    print("Accelerometer data:", accelerometer_data)
-    print("Gyroscope data:", gyroscope_data)
-    print("Temp:", temperature)
-
-    # Wait for 1 second
     time.sleep(1)
