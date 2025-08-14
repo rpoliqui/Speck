@@ -77,8 +77,8 @@ while True:
     dt = last_time - current_time
     last_time = current_time
 
-    roll += (sensitivity * dt * roll_rate) + ((1-sensitivity) * accel_roll)
-    pitch += (sensitivity * dt * pitch_rate) + ((1-sensitivity) * accel_pitch)
+    roll = (sensitivity * dt * roll_rate) + ((1-sensitivity) * accel_roll)
+    pitch = (sensitivity * dt * pitch_rate) + ((1-sensitivity) * accel_pitch)
 
     print(f"Angles -> Roll: {roll:.2f}°, Pitch: {pitch:.2f}°")
     print("-" * 40)
