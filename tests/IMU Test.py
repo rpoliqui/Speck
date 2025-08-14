@@ -70,8 +70,8 @@ while True:
     accel, gyro, temp = read_sensor_data()
     accel_roll, accel_pitch = accel_angles(accel)
 
-    roll_rate = gyro[0]
-    pitch_rate = gyro[1]
+    roll_rate = gyro[0] + GYRO_OFFSET[0]
+    pitch_rate = gyro[1] + GYRO_OFFSET[1]
 
     current_time = time.time()
     dt = last_time - current_time
