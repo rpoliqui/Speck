@@ -18,7 +18,7 @@ def calibrate():
     readings = 0
     print("Starting Calibration")
     # Collect data for calibration
-    while time.time() - start_time <= 10:  # 10 seconds instead of 1000!
+    while time.time() - start_time <= 3:  # 3 second calibration
         accel, gyro, temp = read_sensor_data()
 
         total_accel[0] = total_accel[0] + accel[0]
