@@ -58,16 +58,16 @@ def calculate_angles(accel):
 
 
 calibrate()
-print(f"Accelerometer offset: {ACCEL_OFFSET: .4f}")
-print(f"Gyroscope offset: {GYRO_OFFSET: .4f}")
+print(f"Accelerometer offset: {np.array2string(ACCEL_OFFSET, precision=4)}")
+print(f"Gyroscope offset: {np.array2string(GYRO_OFFSET, precision=4)}")
 
 # Main loop
 while True:
     accel, gyro, temp = read_sensor_data()
     angle_x, angle_y = calculate_angles(accel)
 
-    print(f"Accelerometer data: {accel: .4f}")
-    print(f"Gyroscope data: {gyro: .4f}")
+    print(f"Accelerometer data: {np.array2string(accel, precision=4)}")
+    print(f"Gyroscope data: {np.array2string(gyro, precision=4)}")
     print(f"Temperature: {temp:.2f} C")
     print(f"Angles -> Roll: {angle_x:.2f}°, Pitch: {angle_y:.2f}°")
     print("-" * 40)
