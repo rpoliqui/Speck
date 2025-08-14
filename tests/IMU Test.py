@@ -69,17 +69,24 @@ roll, pitch = 0.0, 0.0
 while True:
     accel, gyro, temp = read_sensor_data()
     accel_roll, accel_pitch = accel_angles(accel)
+    accel_roll += ACCEL_OFFSET[0]
+    accel_pitch += ACCEL_OFFSET[1]
+
+    roll_rate = gyro[0] + GYRO_OFFSET[0]
+    pitch_rate = gyro[1] + GYRO_OFFSET[1]
+
     current_time = time.time()
     dt = last_time - current_time
     last_time = current_time
 
-    roll = (sensitivity * dt * gyro[0]) + ((1-sensitivity) * accel_roll)
-    pitch = (sensitivity * dt * gyro[1]) + ((1-sensitivity) * accel_pitch)
+    roll = (sensitivity * dt * roll_rate) + ((1-sensitivity) * accel_roll)
+    pitch = (sensitivity * dt * pitch_rate) + ((1-sensitivity) * accel_pitch)
 
     print(f"Accelerometer data: {np.array2string(accel, precision=4)}")
     print(f"Gyroscope data: {np.array2string(gyro, precision=4)}")
     print(f"Temperature: {temp:.2f} C")
     print(f"Angles -> Roll: {roll:.2f}°, Pitch: {pitch:.2f}°")
+    print(f"dt: {dt}")
     print("-" * 40)
 
     time.sleep(5)
