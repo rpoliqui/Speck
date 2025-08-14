@@ -1,19 +1,20 @@
 import mpu6050
 import time
 import math
+import numpy as np
 
 # Create a new MPU6050 object
 mpu = mpu6050.mpu6050(0x68)
 
-ACCEL_OFFSET = [0, 0, 0]
-GYRO_OFFSET = [0, 0, 0]
+ACCEL_OFFSET = np.zeros(3)  # [x, y, z]
+GYRO_OFFSET = np.zeros(3)  # [x, y, z]
 
 
 def calibrate():
     global ACCEL_OFFSET, GYRO_OFFSET
     start_time = time.time()
-    total_accel = [0, 0, 0]
-    total_gyro = [0, 0, 0]
+    total_accel = np.zeros(3)  # [x, y, z]
+    total_gyro = np.zeros(3)  # [x, y, z]
     readings = 0
 
     # Collect data for calibration
