@@ -60,6 +60,7 @@ References:
     https://www.kevsrobots.com/blog/servo-easing-with-pancake-bot.html
     https://www.youtube.com/watch?v=hGHnLUXNN9k&ab_channel=EngineerM
     https://blog.garybricks.com/control-16-servos-with-raspberry-pi-pca9685-driver
+    https://github.com/shillehbean/youtube-p2/blob/main/mpu6050_test.py
 """
 # __________Import Statements__________
 from __future__ import division
@@ -80,6 +81,7 @@ import pigpio
 from gpiozero import Button, Device, OutputDevice, LED
 from gpiozero.pins.pigpio import PiGPIOFactory
 import Adafruit_PCA9685
+import mpu6050
 
 
 # __________Pin Definition__________
@@ -135,6 +137,7 @@ JOINT_Z_OFFSET = 47.5  # mm
 # Create an array of boolean values to keep track of what GPIO pins are available on the pi
 # 1 = available; 0 = unavailable
 AvailablePins = np.ones(40)
+IMU_sensitivity = 0.98
 
 # __________Gait Arrays__________
 # array storing changes in x, y and z positions for each leg to enable Speck to walk. Layout:
@@ -830,6 +833,13 @@ class Speck:
         # start Speck in sitting position
         self.set_sit()
 
+        # Create a new MPU6050 object for IMU
+        self.IMU = mpu6050.mpu6050(0x68)
+        self.ACCEL_OFFSET = np.zeros(3)  # [x, y, z]
+        self.GYRO_OFFSET = np.zeros(3)  # [x, y, z]
+        self.calibrate_IMU()
+        self.start_balance()
+
         # Start bluetooth thread
         Bluetooth_thread = Thread(target=self.bluetooth_server(), daemon=False)
         Bluetooth_thread.start()
@@ -838,6 +848,36 @@ class Speck:
         self.Version = "0.0.1"
 
     # __________Define Movement Thread Function_________
+    def start_balance(self):
+        last_time = time.time()
+        sensitivity = 0.98
+        roll, pitch = 0.0, 0.0
+
+        while True:
+            accel, gyro, temp = self.read_sensor_data()
+            accel_roll, accel_pitch = self.accel_angles(accel)
+            accel_roll += self.ACCEL_OFFSET[0]
+            accel_pitch += self.ACCEL_OFFSET[1]
+
+            roll_rate = gyro[0] + self.GYRO_OFFSET[0]
+            pitch_rate = gyro[1] + self.GYRO_OFFSET[1]
+
+            current_time = time.time()
+            dt = last_time - current_time
+            last_time = current_time
+
+            roll = (sensitivity * dt * roll_rate) + ((1 - sensitivity) * accel_roll)
+            pitch = (sensitivity * dt * pitch_rate) + ((1 - sensitivity) * accel_pitch)
+
+            print(f"Accelerometer data: {np.array2string(accel, precision=4)}")
+            print(f"Gyroscope data: {np.array2string(gyro, precision=4)}")
+            print(f"Temperature: {temp:.2f} C")
+            print(f"Angles -> Roll: {roll:.2f}°, Pitch: {pitch:.2f}°")
+            print(f"dt: {dt}")
+            print("-" * 40)
+
+            time.sleep(5)
+
     def leg_thread_function(self, leg_id):
         """
         Function to continuously check the movement queue for movement commands for this leg. This function runs in a
@@ -870,6 +910,48 @@ class Speck:
         :return: None
         """
         pass
+
+    # __________IMU Functions__________
+    def read_sensor_data(self):
+        accel = self.IMU.get_accel_data()
+        gyro = self.IMU.get_gyro_data()
+        temp = self.IMU.get_temp()
+        return np.array([accel['x'], accel['y'], accel['z']]), np.array([gyro['x'], gyro['y'], gyro['z']]), temp
+
+    def calibrate_IMU(self):
+        start_time = time.time()
+        total_accel = np.zeros(3)  # [x, y, z]
+        total_gyro = np.zeros(3)  # [x, y, z]
+        readings = 0
+        print("Starting IMU Calibration")
+        # Collect data for calibration
+        while time.time() - start_time <= 5:  # 5 seconds
+            accel, gyro, temp = self.read_sensor_data()
+
+            total_accel[0] = total_accel[0] + accel[0]
+            total_accel[1] = total_accel[1] + accel[1]
+            total_accel[2] = total_accel[2] + accel[2]
+
+            total_gyro[0] = total_gyro[0] + gyro[0]
+            total_gyro[1] = total_gyro[1] + gyro[1]
+            total_gyro[2] = total_gyro[2] + gyro[2]
+
+            readings += 1
+
+        print(f"Calibration Readings: {readings}")
+        # Calculate offsets (average)
+        self.ACCEL_OFFSET = total_accel / readings
+        self.GYRO_OFFSET = total_gyro / readings
+
+    def accel_angles(self, accel):
+        ax = accel[0]
+        ay = accel[1]
+        az = accel[2]
+
+        angle_x = math.degrees(math.atan2(ay, math.sqrt(ax ** 2 + az ** 2)))
+        angle_y = math.degrees(math.atan2(-ax, math.sqrt(ay ** 2 + az ** 2)))
+
+        return angle_x, angle_y
 
     # __________Define Speck's Functions__________
     def check_collision(self):

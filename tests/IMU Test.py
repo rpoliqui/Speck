@@ -84,9 +84,7 @@ while True:
 
     print(f"Accelerometer data: {np.array2string(accel, precision=4)}")
     print(f"Gyroscope data: {np.array2string(gyro, precision=4)}")
-    print(f"Temperature: {temp:.2f} C")
     print(f"Angles -> Roll: {roll:.2f}°, Pitch: {pitch:.2f}°")
-    print(f"dt: {dt}")
     print("-" * 40)
 
-    time.sleep(5)
+    time.sleep(0.01)
