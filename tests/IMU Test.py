@@ -82,9 +82,7 @@ while True:
     roll = (sensitivity * dt * roll_rate) + ((1-sensitivity) * accel_roll)
     pitch = (sensitivity * dt * pitch_rate) + ((1-sensitivity) * accel_pitch)
 
-    print(f"Accelerometer data: {np.array2string(accel, precision=4)}")
-    print(f"Gyroscope data: {np.array2string(gyro, precision=4)}")
     print(f"Angles -> Roll: {roll:.2f}°, Pitch: {pitch:.2f}°")
     print("-" * 40)
 
-    time.sleep(0.01)
+    time.sleep(0.1)
