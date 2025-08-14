@@ -76,10 +76,12 @@ while True:
     roll_rate = gyro[0] - GYRO_OFFSET[0]
     pitch_rate = gyro[1] - GYRO_OFFSET[1]
 
+    # Measure time past in last cycle
     current_time = time.time()
     dt = current_time - last_time
     last_time = current_time
 
+    # Apply Karman Filter to measure pitch and roll
     roll = sensitivity * (roll + (dt * roll_rate)) + ((1-sensitivity) * accel_roll)
     pitch = sensitivity * (pitch + (dt * pitch_rate)) + ((1-sensitivity) * accel_pitch)
 
