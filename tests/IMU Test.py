@@ -16,7 +16,7 @@ def calibrate():
     total_accel = np.zeros(3)  # [x, y, z]
     total_gyro = np.zeros(3)  # [x, y, z]
     readings = 0
-
+    print("Starting Calibration")
     # Collect data for calibration
     while time.time() - start_time <= 10:  # 10 seconds instead of 1000!
         accel, gyro, temp = read_sensor_data()
@@ -31,6 +31,7 @@ def calibrate():
 
         readings += 1
 
+    print(f"Calibration Readings: {readings}")
     # Calculate offsets (average)
     ACCEL_OFFSET = total_accel/readings
     GYRO_OFFSET = total_gyro/readings
@@ -46,7 +47,6 @@ def read_sensor_data():
 
 # Function to calculate tilt angles from accelerometer data
 def calculate_angles(accel):
-    print(accel)
     ax = accel[0]
     ay = accel[1]
     az = accel[2]
@@ -58,18 +58,18 @@ def calculate_angles(accel):
 
 
 calibrate()
-print(f"Accelerometer offset: {ACCEL_OFFSET}")
-print(f"Gyroscope offset: {GYRO_OFFSET}")
+print(f"Accelerometer offset: {ACCEL_OFFSET: .4f}")
+print(f"Gyroscope offset: {GYRO_OFFSET: .4f}")
 
 # Main loop
 while True:
     accel, gyro, temp = read_sensor_data()
     angle_x, angle_y = calculate_angles(accel)
 
-    print(f"Accelerometer data: {accel}")
-    print(f"Gyroscope data: {gyro}")
+    print(f"Accelerometer data: {accel: .4f}")
+    print(f"Gyroscope data: {gyro: .4f}")
     print(f"Temperature: {temp:.2f} C")
     print(f"Angles -> Roll: {angle_x:.2f}°, Pitch: {angle_y:.2f}°")
     print("-" * 40)
 
-    time.sleep(1)
+    time.sleep(5)
