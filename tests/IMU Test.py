@@ -42,7 +42,7 @@ def read_sensor_data():
     accel = mpu.get_accel_data()
     gyro = mpu.get_gyro_data()
     temp = mpu.get_temp()
-    return np.array(accel['x'], accel['y'], accel['z']), np.array(gyro['x'], gyro['y'], gyro['z']), temp
+    return np.array([accel['x'], accel['y'], accel['z']]), np.array([gyro['x'], gyro['y'], gyro['z']]), temp
 
 
 # Function to calculate tilt angles from accelerometer data
