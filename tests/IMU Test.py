@@ -62,7 +62,7 @@ print(f"Accelerometer offset: {np.array2string(ACCEL_OFFSET, precision=4)}")
 print(f"Gyroscope offset: {np.array2string(GYRO_OFFSET, precision=4)}")
 
 last_time = time.time()
-sensitivity = 0.98
+sensitivity = 0.90
 roll, pitch = 0.0, 0.0
 
 # Main loop
@@ -85,6 +85,7 @@ while True:
     roll = sensitivity * (roll + (dt * roll_rate)) + ((1-sensitivity) * accel_roll)
     pitch = sensitivity * (pitch + (dt * pitch_rate)) + ((1-sensitivity) * accel_pitch)
 
+    print(accel_pitch, accel_roll)
     print(f"Angles -> Roll: {roll:.2f}°, Pitch: {pitch:.2f}°")
     print("-" * 40)
 
