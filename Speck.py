@@ -839,7 +839,6 @@ class Speck:
         # Create a new MPU6050 object for IMU
         try:
             self.IMU = mpu6050.mpu6050(0x68)
-            self.ACCEL_OFFSET = np.zeros(3)  # [x, y, z]
             self.GYRO_OFFSET = np.zeros(3)  # [x, y, z]
             self.calibrate_IMU()  # calibrate IMU
             balance_thread = Thread(target=self.balance(), daemon=True)  # start thread to balance Speck
@@ -871,7 +870,6 @@ class Speck:
             # get data from the IMU
             accel, gyro, temp = self.read_sensor_data()
             # Adjust for calibration offsets
-            accel = accel - self.ACCEL_OFFSET
             gyro = gyro - self.GYRO_OFFSET
             # calculate pitch and roll based on Accelerometer data
             accel_roll, accel_pitch = self.accel_angles(accel)
@@ -956,10 +954,6 @@ class Speck:
         while time.time() - start_time <= 3:  # 3 seconds
             accel, gyro, temp = self.read_sensor_data()
 
-            total_accel[0] = total_accel[0] + accel[0]
-            total_accel[1] = total_accel[1] + accel[1]
-            total_accel[2] = total_accel[2] + accel[2]
-
             total_gyro[0] = total_gyro[0] + gyro[0]
             total_gyro[1] = total_gyro[1] + gyro[1]
             total_gyro[2] = total_gyro[2] + gyro[2]
@@ -967,7 +961,6 @@ class Speck:
             readings += 1
 
         # Calculate offsets (average)
-        self.ACCEL_OFFSET = total_accel / readings
         self.GYRO_OFFSET = total_gyro / readings
 
     def accel_angles(self, accel):

@@ -68,7 +68,6 @@ roll, pitch = 0.0, 0.0
 # Main loop
 while True:
     accel, gyro, temp = read_sensor_data()
-    accel = accel - ACCEL_OFFSET
     gyro = gyro - GYRO_OFFSET
     accel_roll, accel_pitch = accel_angles(accel)
 
