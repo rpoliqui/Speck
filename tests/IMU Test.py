@@ -50,6 +50,7 @@ def calibrate():
     print(f"Calibration Readings: {readings}")
     # Calculate offsets (average)
     ANGLE_OFFSET = total_angles/readings
+    print(f"Angle Offsets: {ANGLE_OFFSET}")
     GYRO_OFFSET = total_gyro/readings
 
 
