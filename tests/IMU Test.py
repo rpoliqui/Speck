@@ -97,10 +97,7 @@ while True:
     roll = sensitivity * (roll + (dt * roll_rate)) + ((1-sensitivity) * accel_roll)
     pitch = sensitivity * (pitch + (dt * pitch_rate)) + ((1-sensitivity) * accel_pitch)
 
-    pitch += ANGLE_OFFSET[0]
-    roll += ANGLE_OFFSET[1]
-
-    print(f"Angles -> Roll: {roll:.2f}°, Pitch: {pitch:.2f}°")
+    print(f"Angles -> Roll: {roll - ANGLE_OFFSET[1]:.2f}°, Pitch: {pitch - ANGLE_OFFSET[0]:.2f}°")
     print("-" * 40)
 
     time.sleep(0.1)
