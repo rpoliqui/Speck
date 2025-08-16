@@ -213,8 +213,11 @@ factory = PiGPIOFactory()  # define pin factory to use servos for more accurate 
 Device.pin_factory = factory
 
 # __________PWM Controller Setup__________
-pwm = Adafruit_PCA9685.PCA9685()
-pwm.set_pwm_freq(60)
+try:
+    pwm = Adafruit_PCA9685.PCA9685()
+    pwm.set_pwm_freq(60)
+except IOError:
+    print("Could not connect to PWM Generator. Check I2C Connection and try again.")
 
 
 # __________Class Definitions__________
@@ -834,11 +837,15 @@ class Speck:
         self.set_sit()
 
         # Create a new MPU6050 object for IMU
-        self.IMU = mpu6050.mpu6050(0x68)
-        self.ACCEL_OFFSET = np.zeros(3)  # [x, y, z]
-        self.GYRO_OFFSET = np.zeros(3)  # [x, y, z]
-        self.calibrate_IMU()
-        self.start_balance()
+        try:
+            self.IMU = mpu6050.mpu6050(0x68)
+            self.ACCEL_OFFSET = np.zeros(3)  # [x, y, z]
+            self.GYRO_OFFSET = np.zeros(3)  # [x, y, z]
+            self.calibrate_IMU()  # calibrate IMU
+            balance_thread = Thread(target=self.balance(), daemon=True)  # start thread to balance Speck
+            balance_thread.start()
+        except IOError:
+            print("Could not connect to IMU. Check I2C Connection and try again.")
 
         # Start bluetooth thread
         Bluetooth_thread = Thread(target=self.bluetooth_server(), daemon=False)
@@ -847,36 +854,45 @@ class Speck:
         # Store the version of code
         self.Version = "0.0.1"
 
-    # __________Define Movement Thread Function_________
-    def start_balance(self):
+    # __________Define Movement Thread Functions_________
+    def balance(self):
+        """
+        Function to balance Speck using onboard IMU
+        :return: None
+        """
+        # store start time
         last_time = time.time()
-        sensitivity = 0.98
+        # define sensitivity of Karman Filter
+        sensitivity = 0.90
+        # initialize pitch and roll angles to 0
         roll, pitch = 0.0, 0.0
 
         while True:
+            # get data from the IMU
             accel, gyro, temp = self.read_sensor_data()
+            # Adjust for calibration offsets
+            accel = accel - self.ACCEL_OFFSET
+            gyro = gyro - self.GYRO_OFFSET
+            # calculate pitch and roll based on Accelerometer data
             accel_roll, accel_pitch = self.accel_angles(accel)
-            accel_roll += self.ACCEL_OFFSET[0]
-            accel_pitch += self.ACCEL_OFFSET[1]
 
-            roll_rate = gyro[0] + self.GYRO_OFFSET[0]
-            pitch_rate = gyro[1] + self.GYRO_OFFSET[1]
+            # Adjust Gyro data with calibration offsets
+            roll_rate = gyro[0]
+            pitch_rate = gyro[1]
 
+            # Measure time past in last cycle
             current_time = time.time()
-            dt = last_time - current_time
+            dt = current_time - last_time
             last_time = current_time
 
-            roll = (sensitivity * dt * roll_rate) + ((1 - sensitivity) * accel_roll)
-            pitch = (sensitivity * dt * pitch_rate) + ((1 - sensitivity) * accel_pitch)
+            # Apply Karman Filter to measure pitch and roll
+            roll = sensitivity * (roll + (dt * roll_rate)) + ((1-sensitivity) * accel_roll)
+            pitch = sensitivity * (pitch + (dt * pitch_rate)) + ((1-sensitivity) * accel_pitch)
 
-            print(f"Accelerometer data: {np.array2string(accel, precision=4)}")
-            print(f"Gyroscope data: {np.array2string(gyro, precision=4)}")
-            print(f"Temperature: {temp:.2f} C")
             print(f"Angles -> Roll: {roll:.2f}°, Pitch: {pitch:.2f}°")
-            print(f"dt: {dt}")
             print("-" * 40)
 
-            time.sleep(5)
+            time.sleep(0.1)
 
     def leg_thread_function(self, leg_id):
         """
@@ -890,6 +906,7 @@ class Speck:
             self.thread_barrier.wait()  # wait for all threads to be ready, prevents threads from getting ahead,
             # only one loop is performed at a time
             move = self.move_queues[leg_id].get(block=True) # get the next movement in the queue when one is available
+            # if no duration argument is given, default to 0.75 seconds
             try:
                 duration = move[4]
             except IndexError:
@@ -913,19 +930,30 @@ class Speck:
 
     # __________IMU Functions__________
     def read_sensor_data(self):
+        """
+        Function used to get data from the IMU
+        :return: Accelerometer Data in m/s^2: [X, Y, Z]
+        :return: Gyroscope Data in degrees/s: [X, Y, Z]
+        :return: Temperature Data is C
+        """
         accel = self.IMU.get_accel_data()
         gyro = self.IMU.get_gyro_data()
         temp = self.IMU.get_temp()
         return np.array([accel['x'], accel['y'], accel['z']]), np.array([gyro['x'], gyro['y'], gyro['z']]), temp
 
     def calibrate_IMU(self):
+        """
+        Function used to calculate offsets for accurate Gyro and Accelerometer measurements. Updates Speck parameters
+        ACCEL_OFFSET and GYRO_OFFSET
+        :return: None
+        """
         start_time = time.time()
         total_accel = np.zeros(3)  # [x, y, z]
         total_gyro = np.zeros(3)  # [x, y, z]
         readings = 0
         print("Starting IMU Calibration")
         # Collect data for calibration
-        while time.time() - start_time <= 5:  # 5 seconds
+        while time.time() - start_time <= 3:  # 3 seconds
             accel, gyro, temp = self.read_sensor_data()
 
             total_accel[0] = total_accel[0] + accel[0]
@@ -938,20 +966,24 @@ class Speck:
 
             readings += 1
 
-        print(f"Calibration Readings: {readings}")
         # Calculate offsets (average)
         self.ACCEL_OFFSET = total_accel / readings
         self.GYRO_OFFSET = total_gyro / readings
 
     def accel_angles(self, accel):
+        """
+        Calculate the pitch and roll of Speck from the accelerometer data
+        :param accel:
+        :return:
+        """
         ax = accel[0]
         ay = accel[1]
         az = accel[2]
 
-        angle_x = math.degrees(math.atan2(ay, math.sqrt(ax ** 2 + az ** 2)))
-        angle_y = math.degrees(math.atan2(-ax, math.sqrt(ay ** 2 + az ** 2)))
+        roll = math.degrees(math.atan2(ay, math.sqrt(ax ** 2 + az ** 2)))
+        pitch = math.degrees(math.atan2(-ax, math.sqrt(ay ** 2 + az ** 2)))
 
-        return angle_x, angle_y
+        return roll, pitch
 
     # __________Define Speck's Functions__________
     def check_collision(self):

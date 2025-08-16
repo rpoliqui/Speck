@@ -68,13 +68,12 @@ roll, pitch = 0.0, 0.0
 # Main loop
 while True:
     accel, gyro, temp = read_sensor_data()
+    accel = accel - ACCEL_OFFSET
+    gyro = gyro - GYRO_OFFSET
     accel_roll, accel_pitch = accel_angles(accel)
 
-    accel_roll -= ACCEL_OFFSET[0]
-    accel_pitch -= ACCEL_OFFSET[1]
-
-    roll_rate = gyro[0] - GYRO_OFFSET[0]
-    pitch_rate = gyro[1] - GYRO_OFFSET[1]
+    roll_rate = gyro[0]
+    pitch_rate = gyro[1]
 
     # Measure time past in last cycle
     current_time = time.time()
@@ -85,7 +84,6 @@ while True:
     roll = sensitivity * (roll + (dt * roll_rate)) + ((1-sensitivity) * accel_roll)
     pitch = sensitivity * (pitch + (dt * pitch_rate)) + ((1-sensitivity) * accel_pitch)
 
-    print(accel_pitch, accel_roll)
     print(f"Angles -> Roll: {roll:.2f}°, Pitch: {pitch:.2f}°")
     print("-" * 40)
 
