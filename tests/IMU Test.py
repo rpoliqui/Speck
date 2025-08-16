@@ -21,7 +21,7 @@ def calibrate():
     last_time = time.time()
     sensitivity = 0.95
     roll, pitch = 0.0, 0.0
-    while time.time() - start_time <= 3:  # 3 second calibration
+    while time.time() - start_time <= 5:  # 3 second calibration
         accel, gyro, temp = read_sensor_data()
         gyro = gyro - GYRO_OFFSET
         accel_roll, accel_pitch = accel_angles(accel)
