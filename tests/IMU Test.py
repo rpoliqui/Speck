@@ -62,7 +62,7 @@ print(f"Accelerometer offset: {np.array2string(ACCEL_OFFSET, precision=4)}")
 print(f"Gyroscope offset: {np.array2string(GYRO_OFFSET, precision=4)}")
 
 last_time = time.time()
-sensitivity = 0.90
+sensitivity = 0.95
 roll, pitch = 0.0, 0.0
 
 # Main loop
