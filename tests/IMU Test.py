@@ -77,7 +77,7 @@ def accel_angles(accel):
 calibrate()
 last_time = time.time()
 sensitivity = 0.95
-roll, pitch = 0.0, 0.0
+roll, pitch = ANGLE_OFFSET[1], ANGLE_OFFSET[0]
 
 # Main loop
 while True:
