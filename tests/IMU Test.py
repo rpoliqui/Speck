@@ -6,24 +6,40 @@ import numpy as np
 # Create a new MPU6050 object
 mpu = mpu6050.mpu6050(0x68)
 
-ACCEL_OFFSET = np.zeros(3)  # [x, y, z]
+ANGLE_OFFSET = np.zeros(2)  # [pitch, roll]
 GYRO_OFFSET = np.zeros(3)  # [x, y, z]
 
 
 def calibrate():
-    global ACCEL_OFFSET, GYRO_OFFSET
+    global ANGLE_OFFSET, GYRO_OFFSET
     start_time = time.time()
-    total_accel = np.zeros(3)  # [x, y, z]
     total_gyro = np.zeros(3)  # [x, y, z]
+    total_angles = np.zeros(2)  # [pitch, roll]
     readings = 0
     print("Starting Calibration")
     # Collect data for calibration
+    last_time = time.time()
+    sensitivity = 0.95
+    roll, pitch = 0.0, 0.0
     while time.time() - start_time <= 3:  # 3 second calibration
         accel, gyro, temp = read_sensor_data()
+        gyro = gyro - GYRO_OFFSET
+        accel_roll, accel_pitch = accel_angles(accel)
 
-        total_accel[0] = total_accel[0] + accel[0]
-        total_accel[1] = total_accel[1] + accel[1]
-        total_accel[2] = total_accel[2] + accel[2]
+        roll_rate = gyro[0]
+        pitch_rate = gyro[1]
+
+        # Measure time past in last cycle
+        current_time = time.time()
+        dt = current_time - last_time
+        last_time = current_time
+
+        # Apply Karman Filter to measure pitch and roll
+        pitch = sensitivity * (pitch + (dt * pitch_rate)) + ((1 - sensitivity) * accel_pitch)
+        roll = sensitivity * (roll + (dt * roll_rate)) + ((1 - sensitivity) * accel_roll)
+
+        total_angles[0] += pitch
+        total_angles[1] += roll
 
         total_gyro[0] = total_gyro[0] + gyro[0]
         total_gyro[1] = total_gyro[1] + gyro[1]
@@ -33,7 +49,7 @@ def calibrate():
 
     print(f"Calibration Readings: {readings}")
     # Calculate offsets (average)
-    ACCEL_OFFSET = total_accel/readings
+    ANGLE_OFFSET = total_angles/readings
     GYRO_OFFSET = total_gyro/readings
 
 
@@ -58,9 +74,6 @@ def accel_angles(accel):
 
 
 calibrate()
-print(f"Accelerometer offset: {np.array2string(ACCEL_OFFSET, precision=4)}")
-print(f"Gyroscope offset: {np.array2string(GYRO_OFFSET, precision=4)}")
-
 last_time = time.time()
 sensitivity = 0.95
 roll, pitch = 0.0, 0.0
@@ -82,6 +95,9 @@ while True:
     # Apply Karman Filter to measure pitch and roll
     roll = sensitivity * (roll + (dt * roll_rate)) + ((1-sensitivity) * accel_roll)
     pitch = sensitivity * (pitch + (dt * pitch_rate)) + ((1-sensitivity) * accel_pitch)
+
+    pitch -= ANGLE_OFFSET[0]
+    roll -= ANGLE_OFFSET[1]
 
     print(f"Angles -> Roll: {roll:.2f}°, Pitch: {pitch:.2f}°")
     print("-" * 40)
