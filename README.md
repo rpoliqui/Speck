@@ -28,6 +28,25 @@ make sure your Pi is set up to run Speck. To do this, run the following command:
 `sudo apt install git` and `git clone https://github.com/rpoliqui/Speck/` to install git and clone the repository into
 your current directory
 
+## Basic Code Usage
+To begin controlling Speck, import the `Speck` object from `Speck.py` using the following syntax.
+
+`from Speck import Speck`
+
+Next, an instance of the Speck object can be created. Once the instance is initialized, Speck will default to a sitting position. All of the subsystems will be engaged and ready to be used. Below is an example of creating an instance of Speck.
+
+`speck = Speck()`
+
+To control Speck, special methods can be used that encapsulate common actions. Below are some common examples. All available commands can be seen in `Speck.py`.
+
+`speck.stand()` - Speck will return to a standing position.
+
+`speck.sit()` - Speck will return to a standing position.
+
+`speck.set_sit()` - Speck will quickly jolt to a sitting position an reset all joint angles. This can be used if joints are stuck or move out of range.
+
+`speck.walk(steps)` - Speck will walk forward the given number of steps.
+
 ## Required Equipment
 Below is a list of all the hardware required to build Speck and a reference link for purchasing these items. This hardware
 can be purchased from other sources. The reference link is there to provide an initial source.
@@ -47,5 +66,3 @@ can be purchased from other sources. The reference link is there to provide an i
 | X728 (Max 5.1V 6A) UPS & Power Management Board                            | 1        |                 |
 | M2.5 Shoulder Screws, 3mm shoulder, 4mm shoulder length, 5mm thread length | 4        |                 |
 | 683ZZ Ball Bearing 3mm x 7mm x 3mm                                         | 4        |                 |
-|                                                                            | 5        |                 |
-|                                                                            |          |                 |
