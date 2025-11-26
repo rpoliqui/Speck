@@ -93,11 +93,11 @@ PIN_LF_HIP_LAT = 4
 PIN_LF_HIP_LONG = 5
 PIN_LF_KNEE = 6
 PIN_RB_HIP_LAT = 8
-PIN_RB_HIP_LONG = 9
-PIN_RB_KNEE = 10
+PIN_RB_HIP_LONG = 10
+PIN_RB_KNEE = 9
 PIN_LB_HIP_LAT = 12
-PIN_LB_HIP_LONG = 13
-PIN_LB_KNEE = 14
+PIN_LB_HIP_LONG = 14
+PIN_LB_KNEE = 13
 
 # Motor Driver Pins
 PIN_IN1 = 8
@@ -847,14 +847,16 @@ class Speck:
         self.I = 0
         self.D = 0
 
+        self.is_balancing = False
+
         # Create a new MPU6050 object for IMU
         try:
             self.IMU = mpu6050.mpu6050(0x68)
             self.GYRO_OFFSET = np.zeros(3)  # [x, y, z]
             self.ANGLE_OFFSET = np.zeros(2)  # [pitch, roll]
             self.calibrate_IMU()  # calibrate IMU
-            balance_thread = Thread(target=self.balance(), daemon=True)  # start thread to balance Speck
-            balance_thread.start()
+            self.balance_thread = Thread(target=self.balance(), daemon=True)  # start thread to balance Speckself.balance_thread.start()
+            self.balance_thread.start()
         except IOError:
             print("Could not connect to IMU. Check I2C Connection and try again.")
 
@@ -899,27 +901,26 @@ class Speck:
             roll = sensitivity * (roll + (dt * roll_rate)) + ((1-sensitivity) * accel_roll)
             pitch = sensitivity * (pitch + (dt * pitch_rate)) + ((1-sensitivity) * accel_pitch)
 
-            print(f"Angles -> Roll: {roll - self.ANGLE_OFFSET[1]:.2f}°, Pitch: {pitch - self.ANGLE_OFFSET[0]:.2f}°")
-            print("-" * 40)
+            # only move balancing is set to true
+            if self.is_balancing:
+                # Use PID controller to determine actual pitch and roll to rotate
+                self.pitch_error += pitch
+                self.roll_error += pitch
 
-            # Use PID controller to determine actual pitch and roll to rotate
-            self.pitch_error += pitch
-            self.roll_error += pitch
+                self.delta_pitch = pitch - self.last_pitch
+                self.delta_roll = roll - self.last_roll
 
-            self.delta_pitch = pitch - self.last_pitch
-            self.delta_roll = roll - self.last_roll
+                roll_adjustment = (self.P * pitch) + (self.I * self.pitch_error) + (self.D * self.delta_pitch)
+                pitch_adjustment =(self.P * roll) + (self.I * self.roll_error) + (self.D * self.delta_roll)
 
-            roll_adjustment = (self.P * pitch) + (self.I * self.pitch_error) + (self.D * self.delta_pitch)
-            pitch_adjustment =(self.P * roll) + (self.I * self.roll_error) + (self.D * self.delta_roll)
-
-            # Move Speck based on PID controller output
-            self.rotate(pitch_adjustment, roll_adjustment, 0)
+                # Move Speck based on PID controller output
+                self.rotate(pitch_adjustment, roll_adjustment, 0)
 
             # Update variables to keep track of lsat state of Speck
             self.last_pitch = pitch
             self.last_roll = roll
 
-            time.sleep(0.5)
+            time.sleep(0.1)
 
     def leg_thread_function(self, leg_id):
         """
@@ -956,6 +957,12 @@ class Speck:
         pass
 
     # __________IMU Functions__________
+    def start_balance(self):
+        self.is_balancing = True
+
+    def stop_balance(self):
+        self.is_balancing = False
+
     def read_sensor_data(self):
         """
         Function used to get data from the IMU
@@ -990,7 +997,9 @@ class Speck:
             readings += 1
 
         # Calculate offsets (average)
+        # Calculate offsets (average)
         self.GYRO_OFFSET = total_gyro / readings
+        print("IMU Calibrated")
 
     def accel_angles(self, accel):
         """
@@ -1225,7 +1234,7 @@ class Speck:
             new_local = rotated - origin
             delta = new_local - current
 
-            print(f"Leg {leg_num} change in foot position: {delta}")
+            # print(f"Leg {leg_num} change in foot position: {delta}")
 
             # Flip x (forward/back) if leg is mirrored
             delta[2] = -delta[2] if leg.flipped else delta[2]
