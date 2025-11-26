@@ -836,10 +836,22 @@ class Speck:
         # start Speck in sitting position
         self.set_sit()
 
+        # Define Variables for Balancing
+        self.pitch_error = 0
+        self.delta_pitch = 0
+        self.last_pitch = 0
+        self.roll_error = 0
+        self.delta_roll = 0
+        self.last_roll = 0
+        self.P = 0.5
+        self.I = 0
+        self.D = 0
+
         # Create a new MPU6050 object for IMU
         try:
             self.IMU = mpu6050.mpu6050(0x68)
             self.GYRO_OFFSET = np.zeros(3)  # [x, y, z]
+            self.ANGLE_OFFSET = np.zeros(2)  # [pitch, roll]
             self.calibrate_IMU()  # calibrate IMU
             balance_thread = Thread(target=self.balance(), daemon=True)  # start thread to balance Speck
             balance_thread.start()
@@ -862,9 +874,9 @@ class Speck:
         # store start time
         last_time = time.time()
         # define sensitivity of Karman Filter
-        sensitivity = 0.90
+        sensitivity = 0.95
         # initialize pitch and roll angles to 0
-        roll, pitch = 0.0, 0.0
+        roll, pitch = self.ANGLE_OFFSET[1], self.ANGLE_OFFSET[0]
 
         while True:
             # get data from the IMU
@@ -887,10 +899,27 @@ class Speck:
             roll = sensitivity * (roll + (dt * roll_rate)) + ((1-sensitivity) * accel_roll)
             pitch = sensitivity * (pitch + (dt * pitch_rate)) + ((1-sensitivity) * accel_pitch)
 
-            print(f"Angles -> Roll: {roll:.2f}°, Pitch: {pitch:.2f}°")
+            print(f"Angles -> Roll: {roll - self.ANGLE_OFFSET[1]:.2f}°, Pitch: {pitch - self.ANGLE_OFFSET[0]:.2f}°")
             print("-" * 40)
 
-            time.sleep(0.1)
+            # Use PID controller to determine actual pitch and roll to rotate
+            self.pitch_error += pitch
+            self.roll_error += pitch
+
+            self.delta_pitch = pitch - self.last_pitch
+            self.delta_roll = roll - self.last_roll
+
+            roll_adjustment = (self.P * pitch) + (self.I * self.pitch_error) + (self.D * self.delta_pitch)
+            pitch_adjustment =(self.P * roll) + (self.I * self.roll_error) + (self.D * self.delta_roll)
+
+            # Move Speck based on PID controller output
+            self.rotate(pitch_adjustment, roll_adjustment, 0)
+
+            # Update variables to keep track of lsat state of Speck
+            self.last_pitch = pitch
+            self.last_roll = roll
+
+            time.sleep(0.5)
 
     def leg_thread_function(self, leg_id):
         """
