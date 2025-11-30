@@ -93,11 +93,11 @@ PIN_LF_HIP_LAT = 4
 PIN_LF_HIP_LONG = 5
 PIN_LF_KNEE = 6
 PIN_RB_HIP_LAT = 8
-PIN_RB_HIP_LONG = 10
-PIN_RB_KNEE = 9
+PIN_RB_HIP_LONG = 9
+PIN_RB_KNEE = 10
 PIN_LB_HIP_LAT = 12
-PIN_LB_HIP_LONG = 14
-PIN_LB_KNEE = 13
+PIN_LB_HIP_LONG = 13
+PIN_LB_KNEE = 14
 
 # Motor Driver Pins
 PIN_IN1 = 8
@@ -125,7 +125,7 @@ UPPER_LEG_LENGTH = 124.5  # mm
 LOWER_LEG_LENGTH = 110  # mm
 JAW_OPEN_TIME = 4.5  # s
 JAW_CLOSE_TIME = 4.5  # s
-STEP_TIME = .05  # s
+STEP_TIME = .01  # s
 SPECK_LENGTH = 181.3  # distance from center of longitudinal hip joints
 SPECK_WIDTH = 276.7  # distance from outside both legs
 CRATE_WIDTH = 75  # mm
@@ -402,8 +402,8 @@ class Leg:
         if dx == 0 and dy == 0 and dz == 0:
             return None
 
-        # Number of frames: ~30 Hz
-        fps = 30
+        # Number of frames: ~60 Hz
+        fps = 60
         steps = int(duration * fps)  # number of steps that will occur
         start = tuple(self.current_position)  # current position is the starting position of the servo.
         end = (start[0] + dx, start[1] + dy, start[2] + dz)  # end position is the start plus the necessary change
@@ -786,8 +786,8 @@ class Speck:
         # [RF, LF, RB, LB]
         self.Legs = [Leg(PIN_RF_HIP_LAT, PIN_RF_HIP_LONG, PIN_RF_KNEE, hip_flip=True),
                      Leg(PIN_LF_HIP_LAT, PIN_LF_HIP_LONG, PIN_LF_KNEE, flipped=True, hip_flip=True),
-                     Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE),
-                     Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE, flipped=True)]
+                     Leg(PIN_RB_HIP_LAT, PIN_RB_HIP_LONG, PIN_RB_KNEE, flipped=True),
+                     Leg(PIN_LB_HIP_LAT, PIN_LB_HIP_LONG, PIN_LB_KNEE)]
 
         # create an array of 5 button objects to represent the object detectors.
         self.ObjectSensors = [Button(PIN_FAR_LEFT_SENSOR), Button(PIN_LEFT_SENSOR), Button(PIN_CENTER_SENSOR),
@@ -845,7 +845,7 @@ class Speck:
         self.last_roll = 0
         self.P = 0.5
         self.I = 0
-        self.D = 0
+        self.D = 0.1
 
         self.is_balancing = False
 
@@ -855,17 +855,22 @@ class Speck:
             self.GYRO_OFFSET = np.zeros(3)  # [x, y, z]
             self.ANGLE_OFFSET = np.zeros(2)  # [pitch, roll]
             self.calibrate_IMU()  # calibrate IMU
-            self.balance_thread = Thread(target=self.balance(), daemon=True)  # start thread to balance Speckself.balance_thread.start()
+            self.balance_thread = Thread(target=self.balance, daemon=True)  # start thread to balance Speck
             self.balance_thread.start()
+            print("IMU Ready for use")
         except IOError:
             print("Could not connect to IMU. Check I2C Connection and try again.")
 
         # Start bluetooth thread
-        Bluetooth_thread = Thread(target=self.bluetooth_server(), daemon=False)
-        Bluetooth_thread.start()
+        # Bluetooth_thread = Thread(target=self.bluetooth_server(), daemon=False)
+        # Bluetooth_thread.start()
+        # print("Bluetooth Ready for use")
 
         # Store the version of code
         self.Version = "0.0.1"
+        print("________________________________________")
+        print("Speck Ready for use")
+        print("________________________________________")
 
     # __________Define Movement Thread Functions_________
     def balance(self):
@@ -880,6 +885,7 @@ class Speck:
         # initialize pitch and roll angles to 0
         roll, pitch = self.ANGLE_OFFSET[1], self.ANGLE_OFFSET[0]
 
+        print("IMU Thread Started")
         while True:
             # get data from the IMU
             accel, gyro, temp = self.read_sensor_data()
@@ -920,8 +926,6 @@ class Speck:
             self.last_pitch = pitch
             self.last_roll = roll
 
-            time.sleep(0.1)
-
     def leg_thread_function(self, leg_id):
         """
         Function to continuously check the movement queue for movement commands for this leg. This function runs in a
@@ -930,6 +934,7 @@ class Speck:
         :param leg_id: The ID of the leg to move.
         :return: None
         """
+        print("Leg ", leg_id, " Thread Started")
         while True:  # create infinite loop to continue checking for commands in the movement queue and execute them
             self.thread_barrier.wait()  # wait for all threads to be ready, prevents threads from getting ahead,
             # only one loop is performed at a time
@@ -938,7 +943,7 @@ class Speck:
             try:
                 duration = move[4]
             except IndexError:
-                duration = 0.75
+                duration = 0.05
             if move[0] == 4:  # if command is for all legs
                 self.thread_barrier.wait()  # wait for all threads to be ready
                 self.Legs[leg_id].smooth_move(move[1], move[2], move[3], duration)  # move the leg
@@ -1054,10 +1059,10 @@ class Speck:
         self.is_standing = False
         for i in range(0, 2, 1):
             self.move_queues[i].put([4, 25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
-                                     HIP_LENGTH - self.Legs[i].current_position[2], 1.5])
+                                     HIP_LENGTH - self.Legs[i].current_position[2], .75])
         for i in range(2, 4, 1):
             self.move_queues[i].put([4, 25 - self.Legs[i].current_position[0], 175 - self.Legs[i].current_position[1],
-                                     HIP_LENGTH - self.Legs[i].current_position[2], 1.5])
+                                     HIP_LENGTH - self.Legs[i].current_position[2], .75])
 
     def set_sit(self):
         """
@@ -1079,7 +1084,7 @@ class Speck:
         self.is_standing = False
         for i in range(0, 4, 1):
             self.move_queues[i].put([4, 18 - self.Legs[i].current_position[0], 40 - self.Legs[i].current_position[1],
-                                     HIP_LENGTH - self.Legs[i].current_position[2], 2.0])
+                                     HIP_LENGTH - self.Legs[i].current_position[2], 1])
         return None
 
     def gait(self, gait):
@@ -1111,7 +1116,7 @@ class Speck:
         """
         if not self.is_standing:  # if Speck isn't standing
             self.stand()
-            time.sleep(2)  # wait 2 second before walking
+            time.sleep(1)  # wait 1 second before walking
         for step in range(steps):
             self.gait(self.Gaits[0])
 
