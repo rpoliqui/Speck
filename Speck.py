@@ -920,7 +920,7 @@ class Speck:
                 pitch_adjustment =(self.P * roll) + (self.I * self.roll_error) + (self.D * self.delta_roll)
 
                 # Move Speck based on PID controller output
-                self.rotate(pitch_adjustment, roll_adjustment, 0)
+                self.smooth_rotate(pitch_adjustment, roll_adjustment, 0)
 
             # Update variables to keep track of lsat state of Speck
             self.last_pitch = pitch
@@ -944,13 +944,18 @@ class Speck:
                 duration = move[4]
             except IndexError:
                 duration = 0.05
-            if move[0] == 4:  # if command is for all legs
+            try:
+                move_type = move[5]
+            except IndexError:
+                move_type = 0
+            if move[0] == 4 or move[0] == leg_id:  # if command is for all legs or just this leg
                 self.thread_barrier.wait()  # wait for all threads to be ready
-                self.Legs[leg_id].smooth_move(move[1], move[2], move[3], duration)  # move the leg
-            elif move[0] == leg_id:  # if command is target at this leg
-                self.Legs[leg_id].smooth_move(move[1], move[2], move[3], duration)  # move the leg
-            else:  # not for this leg, do nothing
-                pass
+                if move_type == 0:
+                    self.Legs[leg_id].smooth_move(move[1], move[2], move[3], duration)  # move the leg
+                elif move_type == 1:
+                    self.Legs[leg_id].move(move[1], move[2], move[3])  # move the leg quickly
+            else:  # not for this leg, do nothing, just wait to be ready
+                self.thread_barrier.wait()  # wait for all threads to be ready
 
     # __________Bluetooth Server Function__________
     def bluetooth_server(self):
@@ -1180,17 +1185,17 @@ class Speck:
         if forward:
             for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
-                self.move_queues[leg].put([4, distance, 0, 0])
+                self.move_queues[leg].put([4, distance, 0, 0, 0])
         else:
             for leg in range(4):  # add movement to all four move queues,
                 # if the command is not meant for one leg, nothing will happen
-                self.move_queues[leg].put([4, 0, 0, ((-1) ** (leg % 2)) * distance])
+                self.move_queues[leg].put([4, 0, 0, ((-1) ** (leg % 2)) * distance, 0])
         return None
 
-    def rotate(self, pitch: float, roll: float, yaw: float, center_of_rotation=[0.0, 0.0, 0.0], duration=0.5):
+    def smooth_rotate(self, pitch: float, roll: float, yaw: float, center_of_rotation=[0.0, 0.0, 0.0], duration=0.5):
         """
         Function used to rotate Speck in place by tilting or turning the body. This simulates a rotation of the body
-        relative to the ground by adjusting the leg positions accordingly.
+        relative to the ground by adjusting the leg positions accordingly. The movement is smoothed with servo easing.
 
         :param pitch: Rotation about the local X-axis (tilting forward/backward), in degrees  → Global Z
         :param roll:  Rotation about the local Z-axis (tilting left/right), in degrees       → Global X
@@ -1245,7 +1250,70 @@ class Speck:
             delta[2] = -delta[2] if leg.flipped else delta[2]
 
             # Output as [Z, Y, X] to match your local [X, Y, Z]
-            deltas[leg_num] = [leg_num, delta[0], delta[1], delta[2], duration]
+            deltas[leg_num] = [leg_num, delta[0], delta[1], delta[2], duration, 0]
+
+        for leg_num in range(4):
+            self.move_queues[leg_num].put(deltas[leg_num])
+
+    def rotate(self, pitch: float, roll: float, yaw: float, center_of_rotation=[0.0, 0.0, 0.0], duration=0.5):
+        """
+        Function used to rotate Speck in place by tilting or turning the body. This simulates a rotation of the body
+        relative to the ground by adjusting the leg positions accordingly. The movement is not smoothed and move abruptly
+
+        :param pitch: Rotation about the local X-axis (tilting forward/backward), in degrees  → Global Z
+        :param roll:  Rotation about the local Z-axis (tilting left/right), in degrees       → Global X
+        :param yaw:   Rotation about the local Y-axis (twisting left/right), in degrees      → Global Y
+        :param center_of_rotation: The point (in global coordinates) to rotate about
+        :param duration: The time in seconds for each leg to move to its new position
+        :return: None
+
+        Axis Mapping:
+            Local  →  Global
+             X     →     Z
+             Y     →     X
+             Z     →     Y
+        """
+        # ---- MAX LIMITS ----
+        MAX_PITCH = 15  # deg forward/back tilt
+        MAX_ROLL = 15  # deg left/right tilt
+        MAX_YAW = 30  # deg in-place twist
+
+        # Clamp and convert to radians (applied to GLOBAL axes)
+        pitch = np.radians(max(-MAX_PITCH, min(MAX_PITCH, pitch)))  # Local X → Global Z
+        roll = np.radians(max(-MAX_ROLL, min(MAX_ROLL, roll)))  # Local Z → Global X
+        yaw = np.radians(max(-MAX_YAW, min(MAX_YAW, yaw)))  # Local Y → Global Y
+
+        # Map to GLOBAL frame as pitch=Z, roll=X, yaw=Y
+        cz, cx, cy = np.cos([pitch, roll, yaw])
+        sz, sx, sy = np.sin([pitch, roll, yaw])
+
+        # Rotation matrix: R = Ryaw @ Rpitch @ Rroll → R = R_y @ R_z @ R_x
+        R = np.array([
+            [cy * cz, cy * sz * sx - sy * cx, cy * sz * cx + sy * sx],
+            [sy * cz, sy * sz * sx + cy * cx, sy * sz * cx - cy * sx],
+            [-sz, cz * sx, cz * cx]
+        ])
+
+        center = np.array(center_of_rotation)
+        deltas = [[0], [0], [0], [0]]
+
+        for leg_num, leg in enumerate(self.Legs):
+            origin = np.array(leg.origin)
+            current = np.array(leg.current_position)
+            global_foot = origin + current
+
+            # Rotate foot about the body center
+            rotated = R @ (global_foot - center) + center
+            new_local = rotated - origin
+            delta = new_local - current
+
+            # print(f"Leg {leg_num} change in foot position: {delta}")
+
+            # Flip x (forward/back) if leg is mirrored
+            delta[2] = -delta[2] if leg.flipped else delta[2]
+
+            # Output as [Z, Y, X] to match your local [X, Y, Z]
+            deltas[leg_num] = [leg_num, delta[0], delta[1], delta[2], duration, 1]
 
         for leg_num in range(4):
             self.move_queues[leg_num].put(deltas[leg_num])
